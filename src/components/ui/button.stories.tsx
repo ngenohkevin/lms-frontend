@@ -1,7 +1,11 @@
+// eslint-disable-next-line storybook/no-renderer-packages
 import type { Meta, StoryObj } from '@storybook/react'
-const action = (name: string) => () => console.log(`${name} clicked`)
-import { Button } from './button'
 import { BookOpen, Download, Heart, Plus, Settings, Trash2 } from 'lucide-react'
+
+import { Button } from './button'
+
+// eslint-disable-next-line no-console
+const action = (name: string) => () => console.log(`${name} clicked`)
 
 const meta = {
   title: 'UI/Button',

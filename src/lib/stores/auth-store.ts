@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+
 import type { User, Session } from '@/types'
 
 interface AuthState {
@@ -23,7 +24,7 @@ interface AuthActions {
 
 export const useAuthStore = create<AuthState & AuthActions>()(
   persist(
-    immer((set, get) => ({
+    immer((set, _get) => ({
       // Initial state
       user: null,
       session: null,

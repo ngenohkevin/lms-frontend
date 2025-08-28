@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@/lib/test-utils'
+
 import { Button } from '../button'
 
 describe('Button Component', () => {

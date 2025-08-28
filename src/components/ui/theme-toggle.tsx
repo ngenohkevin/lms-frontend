@@ -1,16 +1,18 @@
 'use client'
 
-import React from 'react'
 import { Moon, Sun, Monitor } from 'lucide-react'
 import { useTheme } from 'next-themes'
-import { GlassButton } from './glass-button'
+import React from 'react'
+
+import { cn } from '@/lib/utils'
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from './dropdown-menu'
-import { cn } from '@/lib/utils'
+import { GlassButton } from './glass-button'
 
 interface ThemeToggleProps {
   variant?: 'icon' | 'full'

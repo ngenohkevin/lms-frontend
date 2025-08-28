@@ -1,4 +1,5 @@
 import { render, screen } from '@/lib/test-utils'
+
 import Home from '../page'
 
 // Mock Next.js components

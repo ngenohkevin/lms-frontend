@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { immer } from 'zustand/middleware/immer'
+
 import type { Theme, SidebarState } from '@/types'
 
 interface UIState {
@@ -43,7 +44,7 @@ interface UIActions {
 
 export const useUIStore = create<UIState & UIActions>()(
   persist(
-    immer((set, get) => ({
+    immer((set, _get) => ({
       // Initial state
       theme: { mode: 'system' },
       sidebar: {

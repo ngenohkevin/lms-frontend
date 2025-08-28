@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+
 import { api } from '@/lib/api/client'
 import { useAuthStore } from '@/lib/stores/auth-store'
 import type { LoginFormData, SignupFormData } from '@/lib/validations/auth'
@@ -105,7 +106,7 @@ export const useSignup = () => {
 
   return useMutation({
     mutationFn: (userData: SignupFormData) => api.post('/auth/signup', userData),
-    onSuccess: (data) => {
+    onSuccess: (_data) => {
       // Invalidate users list if it exists
       queryClient.invalidateQueries({ queryKey: ['users'] })
       toast.success('User created successfully')

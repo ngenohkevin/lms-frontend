@@ -42,7 +42,7 @@ export function PerformanceMonitor() {
 
       try {
         observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
-      } catch (e) {
+      } catch {
         // Fallback for browsers that don't support all entry types
       }
 
@@ -53,7 +53,7 @@ export function PerformanceMonitor() {
 
       try {
         fcpObserver.observe({ entryTypes: ['paint'] });
-      } catch (e) {
+      } catch {
         // Fallback
       }
 

@@ -31,6 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // eslint-disable-next-line no-console
     console.error('Uncaught error:', error, errorInfo);
     
     this.setState({
@@ -41,10 +42,15 @@ export class ErrorBoundary extends Component<Props, State> {
     // In development, you might want to send to an error reporting service
     if (isDevelopment()) {
       // Log detailed error info for development
+      // eslint-disable-next-line no-console
       console.group('🚨 React Error Boundary');
+      // eslint-disable-next-line no-console
       console.error('Error:', error);
+      // eslint-disable-next-line no-console
       console.error('Error Info:', errorInfo);
+      // eslint-disable-next-line no-console
       console.error('Component Stack:', errorInfo.componentStack);
+      // eslint-disable-next-line no-console
       console.groupEnd();
     }
   }
@@ -135,7 +141,7 @@ export class ErrorBoundary extends Component<Props, State> {
               Oops! Something went wrong
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              We're sorry for the inconvenience. Please try refreshing the page.
+              We&apos;re sorry for the inconvenience. Please try refreshing the page.
             </p>
             <button
               onClick={() => window.location.reload()}

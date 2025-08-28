@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+
 import { Sidebar } from '@/components/ui/sidebar'
 import { useSidebar } from '@/lib/stores/ui-store'
 import { cn } from '@/lib/utils'

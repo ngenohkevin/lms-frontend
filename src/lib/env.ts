@@ -35,6 +35,7 @@ const envSchema = z.object({
 const envValidation = envSchema.safeParse(process.env);
 
 if (!envValidation.success) {
+  // eslint-disable-next-line no-console
   console.error("❌ Invalid environment variables:", envValidation.error.format());
   throw new Error("Invalid environment configuration");
 }

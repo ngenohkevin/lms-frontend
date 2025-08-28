@@ -1,7 +1,9 @@
+// eslint-disable-next-line storybook/no-renderer-packages
 import type { Meta, StoryObj } from '@storybook/react'
-import { GlassCard } from './glass-card'
 import { BookOpen, Users, BarChart3, Settings } from 'lucide-react'
+
 import { Button } from './button'
+import { GlassCard } from './glass-card'
 
 const meta = {
   title: 'UI/GlassCard',

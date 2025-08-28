@@ -1,9 +1,10 @@
 'use client'
 
+import { BookOpen, Users, BarChart3, Settings, Sparkles } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { BookOpen, Users, BarChart3, Settings, Sparkles } from "lucide-react";
 
 export default function Home() {
   return (

@@ -20,7 +20,6 @@ const eslintConfig = [...compat.extends("next/core-web-vitals", "next/typescript
       varsIgnorePattern: "^_",
     }],
     "@typescript-eslint/no-explicit-any": "warn",
-    "@typescript-eslint/prefer-const": "error",
     
     // React 19 optimizations
     "react/react-in-jsx-scope": "off",

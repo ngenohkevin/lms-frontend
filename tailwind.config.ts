@@ -178,7 +178,7 @@ export default {
   },
   plugins: [
     // Add custom utilities for glass morphism and advanced effects
-    ({ addUtilities }) => {
+    ({ addUtilities }: { addUtilities: any }) => {
       addUtilities({
         '.glass': {
           background: 'var(--glass-background)',

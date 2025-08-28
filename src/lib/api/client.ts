@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios'
 import { toast } from 'sonner'
+
 import type { ApiResponse } from '@/types'
 
 // API Configuration
@@ -167,7 +168,7 @@ const handleApiError = (error: AxiosError<ApiResponse>): void => {
     toast.error(data?.message || 'Validation error occurred.')
   } else if (response?.status === 429) {
     toast.error('Too many requests. Please try again later.')
-  } else if (response?.status >= 500) {
+  } else if (response && response.status >= 500) {
     toast.error('Server error. Please try again later.')
   } else if (error.code === 'ECONNABORTED') {
     toast.error('Request timeout. Please check your connection.')
@@ -209,22 +210,22 @@ export const api = {
 
   async post<T = any>(url: string, data?: any): Promise<T> {
     const response = await apiClient.post<ApiResponse<T>>(url, data)
-    return response.data.data
+    return response.data.data as T
   },
 
   async put<T = any>(url: string, data?: any): Promise<T> {
     const response = await apiClient.put<ApiResponse<T>>(url, data)
-    return response.data.data
+    return response.data.data as T
   },
 
   async patch<T = any>(url: string, data?: any): Promise<T> {
     const response = await apiClient.patch<ApiResponse<T>>(url, data)
-    return response.data.data
+    return response.data.data as T
   },
 
   async delete<T = any>(url: string): Promise<T> {
     const response = await apiClient.delete<ApiResponse<T>>(url)
-    return response.data.data
+    return response.data.data as T
   },
 
   // File upload
@@ -243,7 +244,7 @@ export const api = {
         }
       },
     })
-    return response.data.data
+    return response.data.data as T
   },
 }
 

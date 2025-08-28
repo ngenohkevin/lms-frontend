@@ -1,11 +1,13 @@
 'use client'
 
-import React from 'react'
-import { Search, X, Loader2, Command } from 'lucide-react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { Search, X, Loader2, Command } from 'lucide-react'
+import React from 'react'
+
 import { cn } from '@/lib/utils'
-import { Input } from './input'
+
 import { GlassButton } from './glass-button'
+import { Input } from './input'
 
 const searchInputVariants = cva(
   [
@@ -73,7 +75,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     const [internalValue, setInternalValue] = React.useState(value as string)
     const [showSuggestions, setShowSuggestions] = React.useState(false)
     const [highlightedIndex, setHighlightedIndex] = React.useState(-1)
-    const debounceRef = React.useRef<NodeJS.Timeout>()
+    const debounceRef = React.useRef<NodeJS.Timeout | undefined>()
     const inputRef = React.useRef<HTMLInputElement>(null)
     const suggestionsRef = React.useRef<HTMLDivElement>(null)
 
@@ -266,7 +268,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             <div className="flex items-center pr-3">
               <div className="flex items-center gap-1 rounded border border-border px-1.5 py-0.5 text-xs text-text-tertiary">
                 <Command className="h-3 w-3" />
-                <span>K</span>
+                <span>{shortcut?.replace('⌘', '') || 'K'}</span>
               </div>
             </div>
           )}

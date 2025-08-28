@@ -1,10 +1,12 @@
 'use client'
 
 import React from 'react'
+
+import { ErrorBoundary, DevTools } from '@/components/dev'
+import { Toaster } from '@/components/ui/sonner'
+
 import { QueryProvider } from './query-provider'
 import { ThemeProvider } from './theme-provider'
-import { Toaster } from '@/components/ui/sonner'
-import { ErrorBoundary, DevTools } from '@/components/dev'
 
 interface ProvidersProps {
   children: React.ReactNode
