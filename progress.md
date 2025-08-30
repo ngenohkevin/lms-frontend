@@ -1,6 +1,27 @@
 # Library Management System—Implementation Progress
 
 **BACKEND HAS FULLY BEEN IMPLEMENTED AND THE PROJECT FOLDER IS HERE:**`/Users/kevin/dev/backend/lms`
+
+## 🔑 LOGIN CREDENTIALS (for frontend testing)
+
+### Admin User
+- **Username:** `admin`
+- **Password:** `admin123`
+- **Email:** admin@library.com
+- **Role:** Admin (full system access)
+
+### Librarian User
+- **Username:** `librarian`
+- **Password:** `librarian123`
+- **Email:** librarian@library.com
+- **Role:** Librarian (book and student management)
+
+### Backend API Endpoint
+- **URL:** http://localhost:8080/api/v1/auth/login
+- **Method:** POST
+- **CORS:** Fixed - allows `http://localhost:3000` with credentials
+
+
 ## Project Overview
 **Goal**: Build a librarian-focused Library Management System to automate manual library operations, with scalability for future school-wide deployment.
 
