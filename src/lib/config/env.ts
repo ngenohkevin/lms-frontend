@@ -84,8 +84,7 @@ function validateEnv(): z.infer<typeof envSchema> {
     return envSchema.parse(safeEnv);
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const missingVars = error.errors.map((err: z.ZodIssue) => `${err.path?.join('.') ?? 'unknown'}: ${err.message}`);
+      const missingVars = error.issues.map((err: z.ZodIssue) => `${err.path?.join('.') ?? 'unknown'}: ${err.message}`);
       
       // In development, log the error but provide fallback values
       if (typeof window !== 'undefined' && isDevelopment) {
@@ -93,7 +92,6 @@ function validateEnv(): z.infer<typeof envSchema> {
       } else {
         // In production, this is a critical error
         throw new Error(
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           `❌ Environment validation failed:\n${missingVars.join('\n')}\n\nPlease check your .env.local file.`
         );
       }
@@ -127,6 +125,15 @@ export const env = validateEnv();
 export const isDevelopment = env.NEXT_PUBLIC_APP_ENV === 'development';
 export const isProduction = env.NEXT_PUBLIC_APP_ENV === 'production';
 export const isTest = env.NEXT_PUBLIC_APP_ENV === 'test';
+
+// Features object for easier access
+export const features = {
+  analytics: env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+  devTools: env.NEXT_PUBLIC_ENABLE_DEV_TOOLS,
+  debug: env.NEXT_PUBLIC_ENABLE_DEBUG,
+  csp: env.NEXT_PUBLIC_ENABLE_CSP,
+  serviceWorker: env.NEXT_PUBLIC_ENABLE_SW,
+};
 
 // Log environment in development
 if (isDevelopment && typeof window !== 'undefined') {

@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
+import React, { ReactNode } from 'react';
 
-export default function DashboardLayout({ children }: { children: ReactNode }): JSX.Element {
+export default function DashboardLayout({ children }: { children: ReactNode }): React.JSX.Element {
   return (
     <div className='from-accent/5 via-background to-muted/10 min-h-screen bg-gradient-to-br'>
       <div className='flex h-screen'>

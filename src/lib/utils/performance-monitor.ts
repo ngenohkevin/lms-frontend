@@ -40,8 +40,8 @@ interface NavigationTiming {
   ttfb: number; // Time to First Byte
   domContentLoaded: number;
   loadComplete: number;
-  firstPaint?: number;
-  firstContentfulPaint?: number;
+  firstPaint: number | undefined;
+  firstContentfulPaint: number | undefined;
   largestContentfulPaint?: number;
   cumulativeLayoutShift?: number;
   firstInputDelay?: number;
@@ -201,8 +201,8 @@ class PerformanceMonitor {
         ? navigation.connectEnd - navigation.secureConnectionStart 
         : 0,
       ttfb: navigation.responseStart - navigation.requestStart,
-      domContentLoaded: navigation.domContentLoadedEventEnd - navigation.navigationStart,
-      loadComplete: navigation.loadEventEnd - navigation.navigationStart,
+      domContentLoaded: navigation.domContentLoadedEventEnd - navigation.startTime,
+      loadComplete: navigation.loadEventEnd - navigation.startTime,
       firstPaint: this.getPerformanceMark('first-paint'),
       firstContentfulPaint: this.getPerformanceMark('first-contentful-paint'),
     };
@@ -211,7 +211,7 @@ class PerformanceMonitor {
   // Get performance paint timing
   private getPerformanceMark(name: string): number | undefined {
     const entries = performance.getEntriesByName(name);
-    return entries.length > 0 ? entries[0].startTime : undefined;
+    return entries.length > 0 ? entries[0]?.startTime : undefined;
   }
 
   // Record a performance metric
@@ -301,7 +301,7 @@ class PerformanceMonitor {
     try {
       performance.measure(name, startMark, endMark);
       const entries = performance.getEntriesByName(name, 'measure');
-      return entries.length > 0 ? entries[entries.length - 1].duration : null;
+      return entries.length > 0 ? entries[entries.length - 1]?.duration ?? null : null;
     } catch (error) {
       console.warn('Failed to create performance measure:', error);
       return null;

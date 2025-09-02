@@ -1,6 +1,7 @@
 import { BookOpen, Users, Clock, TrendingUp } from 'lucide-react';
+import React from 'react';
 
-export default function DashboardPage(): JSX.Element {
+export default function DashboardPage(): React.JSX.Element {
   return (
     <div className='p-8'>
       <div className='mb-8'>

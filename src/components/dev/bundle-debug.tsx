@@ -36,11 +36,13 @@ export function BundleDebug(): React.ReactElement | null {
 
     try {
       // Try to get build manifest from Next.js
-      const buildManifest = (window as Record<string, unknown>).__BUILD_MANIFEST as {
+      const buildManifest = (window as unknown as Record<string, unknown>)['__BUILD_MANIFEST'] as {
         pages?: Record<string, unknown>;
         ampFirstPages?: Record<string, unknown>;
       } | undefined;
-      const _buildManifestPages = (window as Record<string, unknown>).__BUILD_MANIFEST_CB;
+      const buildManifestCb = (window as unknown as Record<string, unknown>)['__BUILD_MANIFEST_CB'];
+      // Future use for build manifest callbacks
+      void buildManifestCb;
 
       if (buildManifest) {
         const allFiles = [
@@ -149,7 +151,7 @@ export function BundleDebug(): React.ReactElement | null {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   }, []);
 
-  const getBundleSizeStatus = useCallback((size: number): { status: string; color: string; icon: React.ComponentType } => {
+  const getBundleSizeStatus = useCallback((size: number): { status: string; color: string; icon: React.ComponentType<{ className?: string }> } => {
     if (size < 250 * 1024) return { status: 'good', color: 'text-green-400', icon: TrendingUp };
     if (size < 500 * 1024) return { status: 'warning', color: 'text-yellow-400', icon: AlertCircle };
     return { status: 'poor', color: 'text-red-400', icon: TrendingDown };

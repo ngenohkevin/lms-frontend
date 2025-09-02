@@ -15,9 +15,9 @@ export enum ErrorType {
 // Enhanced error class with additional metadata
 export class AppError extends Error {
   public readonly type: ErrorType;
-  public readonly statusCode?: number;
+  public readonly statusCode: number | undefined;
   public readonly digest?: string;
-  public readonly context?: Record<string, unknown>;
+  public readonly context: Record<string, unknown> | undefined;
   public readonly timestamp: Date;
 
   constructor(
@@ -71,7 +71,7 @@ class ErrorReportingService {
         url: typeof window !== 'undefined' ? window.location.href : '',
         userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : '',
         timestamp: new Date().toISOString(),
-      },
+      } as Record<string, unknown>,
     };
 
     if (isDevelopment && features.debug) {
@@ -196,10 +196,10 @@ export function setupGlobalErrorHandling(): void {
       ErrorType.CLIENT,
       undefined,
       {
-        filename: event.filename,
-        lineno: event.lineno,
-        colno: event.colno,
-      }
+        filename: event.filename ?? undefined,
+        lineno: event.lineno ?? undefined,
+        colno: event.colno ?? undefined,
+      } as Record<string, unknown>
     );
 
     void errorReporter.reportError(error, {

@@ -14,7 +14,7 @@ interface ErrorBoundaryState {
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
-  fallback?: React.ComponentType<ErrorFallbackProps>;
+  fallback?: React.ComponentType<ErrorFallbackProps> | undefined;
 }
 
 export interface ErrorFallbackProps {
@@ -43,7 +43,7 @@ class ErrorBoundaryClass extends React.Component<
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     this.setState({
       error,
       errorInfo,
@@ -72,7 +72,7 @@ class ErrorBoundaryClass extends React.Component<
     });
   };
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback ?? DefaultErrorFallback;
       return (
@@ -186,12 +186,12 @@ export class AsyncErrorBoundary extends React.Component<
     };
   }
 
-  componentDidMount(): void {
+  override componentDidMount(): void {
     // Handle unhandled promise rejections
     window.addEventListener('unhandledrejection', this.handlePromiseRejection);
   }
 
-  componentWillUnmount(): void {
+  override componentWillUnmount(): void {
     window.removeEventListener(
       'unhandledrejection',
       this.handlePromiseRejection
@@ -203,12 +203,15 @@ export class AsyncErrorBoundary extends React.Component<
       (event.reason as Error)?.message ?? 'Unhandled promise rejection'
     );
     error.name = 'UnhandledPromiseRejection';
-    error.stack = (event.reason as Error)?.stack;
+    const reasonError = event.reason as Error;
+    if (reasonError?.stack !== undefined) {
+      error.stack = reasonError.stack;
+    }
 
     this.setState({
       hasError: true,
       error,
-      errorInfo: { componentStack: '' },
+      errorInfo: { componentStack: '' } as React.ErrorInfo,
     });
 
     if (isDevelopment && features.debug) {
@@ -216,7 +219,7 @@ export class AsyncErrorBoundary extends React.Component<
     }
   };
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     this.setState({
       error,
       errorInfo,
@@ -237,7 +240,7 @@ export class AsyncErrorBoundary extends React.Component<
     });
   };
 
-  render(): React.ReactNode {
+  override render(): React.ReactNode {
     if (this.state.hasError) {
       const FallbackComponent = this.props.fallback ?? DefaultErrorFallback;
       return (

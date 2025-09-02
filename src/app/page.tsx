@@ -1,10 +1,11 @@
 import { BookOpen, Users, BarChart3 } from 'lucide-react';
+import React from 'react';
 
 import { BundleDebug } from '@/components/dev/bundle-debug';
 import { EnvDebug } from '@/components/dev/env-debug';
 import { PerformanceDebug } from '@/components/dev/performance-debug';
 
-export default function Home(): JSX.Element {
+export default function Home(): React.JSX.Element {
   return (
     <div className='from-accent/5 via-background to-muted/10 min-h-screen bg-gradient-to-br'>
       <main className='container mx-auto px-4 py-16'>
