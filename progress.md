@@ -86,7 +86,7 @@
 ## 🎨 Frontend Design System & UI Guidelines
 
 ### **Premium macOS-Inspired Design Language**
-The frontend embodies Apple's Human Interface Guidelines with meticulous attention to detail, creating an exceptionally polished and intuitive library management experience.
+The frontend embodies Apple's Human Interface Guidelines with meticulous attention to detail, creating an exceptionally polished and intuitive library management experience that adapts seamlessly across all devices and viewing conditions.
 
 #### **🎯 Core Design Philosophy**
 - **Clarity Through Refinement**: Every pixel serves a purpose; nothing is arbitrary
@@ -94,6 +94,8 @@ The frontend embodies Apple's Human Interface Guidelines with meticulous attenti
 - **Effortless Sophistication**: Complex functionality feels simple and natural
 - **Delightful Interactions**: Thoughtful micro-interactions enhance user engagement
 - **Accessibility First**: Beautiful design that works for everyone
+- **Responsive Excellence**: Fluid layouts that feel native on every screen size
+- **Adaptive Intelligence**: UI that responds to user preferences and context
 
 #### **🌈 Advanced Color System & Theme Architecture**
 
@@ -508,83 +510,481 @@ The frontend embodies Apple's Human Interface Guidelines with meticulous attenti
 
 #### **🔄 Advanced Theme System**
 
+**Intelligent Theme Management**:
+- **Triple Mode Selection**: System (default), Light, Dark
+- **Automatic System Detection**: Follows OS preference when set to 'system'
+- **Smooth Transitions**: Elegant theme switching with fade effects
+- **Persistent Preferences**: Remembers user choice across sessions
+- **Multi-tab Sync**: Theme changes sync across browser tabs
+- **Reduced Eye Strain**: Automatic adjustments based on time of day (optional)
+
 **Theme Toggle Implementation**:
 ```javascript
-// Theme detection and management
+// Advanced Theme Manager with System Detection
 const themeManager = {
+  themes: ['system', 'light', 'dark'],
+  
   init() {
     // Detect system preference
     const systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
     const savedTheme = localStorage.getItem('theme') || 'system';
     
-    // Apply theme with smooth transition
-    this.applyTheme(savedTheme);
+    // Apply initial theme without transition
+    this.applyTheme(savedTheme, false);
     
-    // Listen for system changes
-    systemTheme.addEventListener('change', () => {
+    // Listen for system theme changes
+    systemTheme.addEventListener('change', (e) => {
       if (this.getCurrentTheme() === 'system') {
-        this.applyTheme('system');
+        this.applyTheme('system', true);
+      }
+    });
+    
+    // Listen for storage changes (multi-tab sync)
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'theme') {
+        this.applyTheme(e.newValue || 'system', true);
       }
     });
   },
   
-  applyTheme(theme) {
+  applyTheme(theme, withTransition = true) {
     const root = document.documentElement;
-    root.style.transition = 'background 300ms ease-in-out';
     
-    if (theme === 'system') {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      root.setAttribute('data-theme', isDark ? 'dark' : 'light');
-    } else {
-      root.setAttribute('data-theme', theme);
+    // Add transition class for smooth switching
+    if (withTransition) {
+      root.classList.add('theme-transition');
+      setTimeout(() => root.classList.remove('theme-transition'), 500);
     }
     
+    // Determine actual theme to apply
+    let actualTheme = theme;
+    if (theme === 'system') {
+      actualTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    
+    // Apply theme attributes
+    root.setAttribute('data-theme', actualTheme);
+    root.setAttribute('data-theme-mode', theme); // Store user preference
+    
+    // Update meta theme-color for mobile browsers
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', 
+        actualTheme === 'dark' ? '#000000' : '#FFFFFF'
+      );
+    }
+    
+    // Save preference
     localStorage.setItem('theme', theme);
+    
+    // Dispatch custom event
+    window.dispatchEvent(new CustomEvent('themechange', { 
+      detail: { theme: actualTheme, mode: theme } 
+    }));
+  },
+  
+  getCurrentTheme() {
+    return localStorage.getItem('theme') || 'system';
+  },
+  
+  cycleTheme() {
+    const current = this.getCurrentTheme();
+    const currentIndex = this.themes.indexOf(current);
+    const nextIndex = (currentIndex + 1) % this.themes.length;
+    this.applyTheme(this.themes[nextIndex], true);
   }
 };
 ```
 
-#### **♿ Comprehensive Accessibility**
+**CSS for Smooth Theme Transitions**:
+```css
+/* Theme transition effects */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition: 
+    background-color 500ms var(--ease-out-expo),
+    border-color 500ms var(--ease-out-expo),
+    color 500ms var(--ease-out-expo),
+    fill 500ms var(--ease-out-expo),
+    stroke 500ms var(--ease-out-expo),
+    opacity 500ms var(--ease-out-expo),
+    box-shadow 500ms var(--ease-out-expo),
+    transform 200ms var(--ease-out-expo) !important;
+}
 
-**WCAG AAA Compliance**:
+/* Prevent layout shift during transition */
+.theme-transition * {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform !important;
+  transition-delay: 0 !important;
+}
+```
+
+#### **♿ Comprehensive Accessibility & Inclusivity**
+
+**WCAG AAA Compliance & Beyond**:
 ```css
 /* High Contrast Mode Support */
 @media (prefers-contrast: high) {
   :root {
-    --border: rgba(0, 0, 0, 0.3);
+    --border: rgba(0, 0, 0, 0.5);
+    --border-strong: rgba(0, 0, 0, 0.7);
     --text-secondary: var(--text-primary);
     --accent: #0055CC;
+    --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 0 0 2px rgba(0, 0, 0, 0.5);
+  }
+  
+  :root[data-theme='dark'] {
+    --border: rgba(255, 255, 255, 0.5);
+    --border-strong: rgba(255, 255, 255, 0.7);
+    --accent: #66B3FF;
+    --shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.5);
+    --shadow-md: 0 0 0 2px rgba(255, 255, 255, 0.5);
   }
 }
 
 /* Reduced Motion Support */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Maintain essential feedback */
+  .btn:active {
+    transform: scale(0.98) !important;
   }
 }
 
-/* Focus Visible Enhancement */
+/* Enhanced Focus Management */
 *:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+  transition: outline-offset 150ms ease-out;
 }
 
-/* Skip to Content */
+/* Keyboard Navigation Indicators */
+.keyboard-nav *:focus {
+  outline: 3px solid var(--accent);
+  outline-offset: 4px;
+}
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip Navigation Links */
 .skip-to-content {
   position: absolute;
   left: -9999px;
-  z-index: 999;
+  z-index: 9999;
+  padding: 1rem 2rem;
+  background: var(--accent);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .skip-to-content:focus {
   left: 50%;
   transform: translateX(-50%);
   top: 1rem;
+  animation: slideDown 300ms ease-out;
 }
+
+/* ARIA Live Regions */
+.aria-live-polite {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Touch Target Sizing (minimum 44x44px) */
+.touchable {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Color Blind Friendly Palette Adjustments */
+@media (prefers-color-scheme: dark) {
+  .colorblind-mode {
+    --success: #00D9FF;
+    --error: #FF6B6B;
+    --warning: #FFD93D;
+    --info: #6BCB77;
+  }
+}
+
+/* Text Spacing for Readability */
+.readable-text {
+  line-height: 1.5;
+  letter-spacing: 0.12em;
+  word-spacing: 0.16em;
+}
+```
+
+---
+
+## 🛡️ Frontend Code Quality & Lint Error Prevention (For Sonnet 4)
+
+### **Critical: Avoid These Common Lint Errors**
+
+When building this application, **ALWAYS** follow these guidelines to prevent ESLint and TypeScript errors:
+
+#### **1. 🚫 Never Use `any` Types - Use These Alternatives Instead:**
+
+❌ **WRONG:**
+```typescript
+// Don't use any
+function getData(): any { ... }
+const data: any = response.data;
+const callback: (value: any) => any = ...
+export interface ApiResponse<T = any> { ... }
+```
+
+✅ **CORRECT:**
+```typescript
+// Use specific types or unknown
+function getData(): User | null { ... }
+const data: unknown = response.data;
+const callback: (value: unknown) => unknown = ...
+export interface ApiResponse<T = unknown> { ... }
+
+// For function parameters, be specific
+function handleError(error: unknown) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return 'Unknown error occurred';
+}
+
+// For record types
+const config: Record<string, unknown> = {};
+const params: Record<string, string | number> = {};
+```
+
+#### **2. 🚫 Handle React Unescaped Entities:**
+
+❌ **WRONG:**
+```tsx
+<p>Welcome back! Here's an overview...</p>
+<div>"The Great Gatsby" by John Doe</div>
+<span>Learning "React" programming</span>
+```
+
+✅ **CORRECT:**
+```tsx
+<p>Welcome back! Here&apos;s an overview...</p>
+<div>&quot;The Great Gatsby&quot; by John Doe</div>
+<span>Learning &quot;React&quot; programming</span>
+
+// Alternative: Use template literals in expressions
+<p>{`Welcome back! Here's an overview...`}</p>
+<div>{`"The Great Gatsby" by John Doe`}</div>
+```
+
+#### **3. 🚫 Eliminate Unused Variables:**
+
+❌ **WRONG:**
+```typescript
+// Unused destructured variables
+const { className, variant, size, asChild = false, ...props } = buttonProps;
+return <button className={cn(variants({ variant, size, className }))} {...props} />;
+
+// Unused catch variables
+catch (error) {
+  console.log('Failed');
+}
+
+// Unused parameters
+function handleSubmit(data: FormData, event: SubmitEvent) {
+  submitForm(data);
+}
+```
+
+✅ **CORRECT:**
+```typescript
+// Remove unused variables
+const { className, variant, size, ...props } = buttonProps;
+return <button className={cn(variants({ variant, size, className }))} {...props} />;
+
+// Use underscore prefix for intentionally unused variables or omit
+catch (_error) {
+  console.log('Failed');
+}
+// Or completely omit if not needed
+catch {
+  console.log('Failed');
+}
+
+// Remove unused parameters
+function handleSubmit(data: FormData) {
+  submitForm(data);
+}
+```
+
+#### **4. ✅ Proper Error Handling with TypeScript:**
+
+❌ **WRONG:**
+```typescript
+try {
+  await apiCall();
+} catch (error: any) {
+  const message = error.response?.data?.message || 'Error';
+  setError(message);
+}
+```
+
+✅ **CORRECT:**
+```typescript
+try {
+  await apiCall();
+} catch (error: unknown) {
+  // Type-safe error handling
+  const message = error && typeof error === 'object' && 'response' in error && 
+    error.response && typeof error.response === 'object' && 'data' in error.response &&
+    error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data &&
+    typeof error.response.data.message === 'string' 
+    ? error.response.data.message 
+    : 'An error occurred';
+  setError(message);
+}
+
+// Or create a utility function for cleaner code
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  
+  // Handle axios errors
+  if (error && typeof error === 'object' && 'response' in error) {
+    const axiosError = error as { response?: { data?: { message?: string } } };
+    return axiosError.response?.data?.message || 'Request failed';
+  }
+  
+  return 'An unknown error occurred';
+}
+
+// Usage
+try {
+  await apiCall();
+} catch (error: unknown) {
+  setError(getErrorMessage(error));
+}
+```
+
+#### **5. ✅ Proper TypeScript Interface Definitions:**
+
+❌ **WRONG:**
+```typescript
+interface TableColumn<T> {
+  render?: (value: any, record: T) => React.ReactNode;
+}
+
+interface NavItem {
+  icon?: React.ComponentType<any>;
+}
+
+interface SearchResult<T> {
+  filters: Record<string, any>;
+}
+```
+
+✅ **CORRECT:**
+```typescript
+interface TableColumn<T> {
+  render?: (value: unknown, record: T) => React.ReactNode;
+}
+
+interface NavItem {
+  icon?: React.ComponentType<Record<string, unknown>>;
+}
+
+interface SearchResult<T> {
+  filters: Record<string, unknown>;
+}
+```
+
+#### **6. ✅ Function Type Definitions:**
+
+❌ **WRONG:**
+```typescript
+const debounce = <T extends (...args: any[]) => any>(func: T, wait: number) => {
+  // implementation
+};
+
+function buildQueryString(params: Record<string, any>): string {
+  // implementation
+}
+```
+
+✅ **CORRECT:**
+```typescript
+const debounce = <T extends (...args: unknown[]) => unknown>(func: T, wait: number) => {
+  // implementation
+};
+
+function buildQueryString(params: Record<string, unknown>): string {
+  // implementation
+}
+```
+
+### **🔧 Pre-Development Checklist:**
+
+Before writing any code, ensure:
+
+- [ ] TypeScript strict mode is enabled
+- [ ] ESLint is configured with React and TypeScript rules
+- [ ] All `any` types are replaced with specific types or `unknown`
+- [ ] All unused variables and parameters are removed
+- [ ] All React JSX text with quotes/apostrophes uses HTML entities
+- [ ] Error handling uses proper TypeScript typing
+- [ ] All interfaces use `unknown` instead of `any`
+
+### **🚀 Recommended Development Flow:**
+
+1. **Write code without `any` types** - Always start with proper typing
+2. **Run `npm run lint` frequently** - Check for issues early and often
+3. **Fix lint errors immediately** - Don't accumulate technical debt
+4. **Use TypeScript strict mode** - Catch errors at compile time
+5. **Review all destructured variables** - Remove unused ones
+
+### **📋 Quick Lint Error Reference:**
+
+| Error Type | Fix |
+|------------|-----|
+| `react/no-unescaped-entities` | Replace `'` with `&apos;` and `"` with `&quot;` |
+| `@typescript-eslint/no-unused-vars` | Remove unused variables/parameters or prefix with `_` |
+| `@typescript-eslint/no-explicit-any` | Replace `any` with specific types or `unknown` |
+
+### **💡 Pro Tips for Sonnet 4:**
+
+- **Always prefer `unknown` over `any`** - It forces type checking
+- **Use type guards for safe type narrowing** - Check types before using
+- **Create utility functions for common patterns** - Like error message extraction
+- **Use template literals in JSX expressions** - Avoids entity escaping issues
+- **Remove parameters you don't use** - Especially in destructuring
 
 ---
 
@@ -788,6 +1188,164 @@ const performanceTargets = {
 - **Caching Strategy**: Service worker with offline support
 - **Prefetching**: Smart link prefetching for instant navigation
 
+#### **📱 Responsive Design Excellence**
+
+**Mobile-First Responsive Strategy**:
+```css
+/* Responsive Breakpoints with Fluid Scaling */
+:root {
+  /* Viewport-based spacing that scales smoothly */
+  --space-dynamic: clamp(1rem, 2vw + 1rem, 3rem);
+  --container-padding: clamp(1rem, 5vw, 3rem);
+  
+  /* Responsive typography that adapts to screen size */
+  --text-responsive-xs: clamp(0.75rem, 1.5vw, 0.875rem);
+  --text-responsive-sm: clamp(0.875rem, 2vw, 1rem);
+  --text-responsive-base: clamp(1rem, 2.5vw, 1.125rem);
+  --text-responsive-lg: clamp(1.125rem, 3vw, 1.25rem);
+  --text-responsive-xl: clamp(1.25rem, 3.5vw, 1.5rem);
+  --text-responsive-2xl: clamp(1.5rem, 4vw, 2rem);
+  --text-responsive-3xl: clamp(2rem, 5vw, 3rem);
+}
+
+/* Mobile Layout (< 768px) */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    width: 85%;
+    max-width: 320px;
+    height: 100vh;
+    transition: left 300ms var(--ease-out-expo);
+    z-index: 1000;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .main-content {
+    width: 100%;
+    padding: var(--space-4);
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  /* Stack navigation items vertically on mobile */
+  .nav-horizontal {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  
+  /* Full-width buttons on mobile */
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Responsive tables with horizontal scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Tablet Layout (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .sidebar {
+    width: var(--sidebar-width-collapsed);
+    transition: width 300ms var(--ease-out-expo);
+  }
+  
+  .sidebar:hover {
+    width: var(--sidebar-width-expanded);
+  }
+  
+  .main-content {
+    margin-left: var(--sidebar-width-collapsed);
+    transition: margin-left 300ms var(--ease-out-expo);
+  }
+  
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+/* Desktop Layout (> 1024px) */
+@media (min-width: 1025px) {
+  .sidebar {
+    width: var(--sidebar-width-expanded);
+    position: sticky;
+    top: 0;
+  }
+  
+  .main-content {
+    margin-left: var(--sidebar-width-expanded);
+  }
+  
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-8);
+  }
+}
+
+/* Ultra-wide screens (> 1920px) */
+@media (min-width: 1921px) {
+  .container {
+    max-width: 1920px;
+    margin: 0 auto;
+  }
+  
+  .card-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .btn, .input, .select {
+    min-height: 48px;
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+  
+  /* Remove hover effects on touch devices */
+  .card:hover {
+    transform: none;
+  }
+  
+  /* Improve scrolling performance */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .sidebar,
+  .header,
+  .footer,
+  .no-print {
+    display: none;
+  }
+  
+  .main-content {
+    margin: 0;
+    width: 100%;
+  }
+  
+  * {
+    background: white !important;
+    color: black !important;
+  }
+}
+```
+
 #### **🎯 Key User Interfaces**
 
 **1. Dashboard (Main Screen)**:
@@ -824,6 +1382,48 @@ const performanceTargets = {
 - Export options (PDF, Excel, CSV)
 - Date range picker with presets
 - Comparison views with animations
+
+**6. Settings & Preferences**:
+- **Theme Selection Interface**:
+  - Visual theme previews (System/Light/Dark)
+  - Live preview on hover
+  - Smooth transition effects
+  - Keyboard shortcuts (Cmd+Shift+D for dark mode toggle)
+- **Accessibility Options**:
+  - Font size adjustment
+  - High contrast mode
+  - Reduced motion toggle
+  - Color blind friendly mode
+- **Notification Preferences**:
+  - Granular control per notification type
+  - Quiet hours configuration
+  - Email/In-app toggle per category
+
+#### **🖼️ Visual Design Consistency**
+
+**Component Visual Hierarchy**:
+1. **Primary Actions**: High contrast, prominent shadows, larger size
+2. **Secondary Actions**: Subtle backgrounds, medium emphasis
+3. **Tertiary Actions**: Text-only or ghost buttons, minimal emphasis
+4. **Disabled States**: 50% opacity, no hover effects, cursor not-allowed
+5. **Loading States**: Skeleton screens, smooth pulse animations
+6. **Error States**: Red accent, shake animation, clear error messages
+7. **Success States**: Green accent, checkmark animation, auto-dismiss
+
+**Dark Mode Optimization**:
+- **Depth Perception**: Use lighter surfaces for elevation in dark mode
+- **Contrast Ratios**: Maintain WCAG AAA (7:1) for all text
+- **Semantic Colors**: Adjust hues for optimal visibility in both themes
+- **Image Handling**: Apply slight opacity to images in dark mode
+- **Code Blocks**: Syntax highlighting optimized for each theme
+- **Charts & Graphs**: Dynamic color schemes based on theme
+
+**Responsive Touch Interactions**:
+- **Swipe Gestures**: Navigate between tabs on mobile
+- **Pull to Refresh**: Update data with elastic scroll
+- **Long Press**: Context menus on mobile devices
+- **Pinch to Zoom**: For images and charts
+- **Haptic Feedback**: Subtle vibrations for important actions (mobile)
 
 ---
 

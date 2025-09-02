@@ -1,0 +1,51 @@
+# Build outputs
+.next/
+build/
+dist/
+out/
+
+# Dependencies
+node_modules/
+
+# Environment and config files
+.env*
+*.log
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Generated files
+*.d.ts
+!src/**/*.d.ts
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# Tailwind CSS
+tailwind.config.*
+
+# Other config files that should not be formatted
+postcss.config.*
+next.config.*
