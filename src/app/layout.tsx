@@ -43,7 +43,7 @@ export default function RootLayout({
   return (
     <html lang='en' suppressHydrationWarning>
       <body
-        className={`${inter.className} bg-background text-foreground antialiased`}
+        className={`${inter.className} bg-background text-foreground antialiased theme-transition`}
       >
         <ThemeProvider
           attribute="class"

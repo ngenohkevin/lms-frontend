@@ -59,7 +59,7 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
         variant="ghost"
         size={size}
         onClick={toggleTheme}
-        className="bg-transparent hover:bg-transparent text-gray-800 dark:text-gray-200 p-2"
+        className="bg-transparent hover:bg-transparent text-foreground p-2"
         title={`Current theme: ${getLabel()}. Click to toggle.`}
       >
         {getIcon()}
@@ -73,7 +73,7 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
       variant="ghost" 
       size="icon" 
       onClick={toggleTheme}
-      className="bg-transparent hover:bg-transparent text-gray-800 dark:text-gray-200 p-2"
+      className="bg-transparent hover:bg-transparent text-foreground p-2"
       title={`Current theme: ${getLabel()}. Click to toggle.`}
     >
       {getIcon()}

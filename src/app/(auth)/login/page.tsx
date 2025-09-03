@@ -179,10 +179,10 @@ export default function LoginPage(): React.JSX.Element {
             <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </motion.div>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
             Welcome Back
           </h1>
-          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Sign in to your Library Management account
           </p>
         </motion.div>
@@ -192,7 +192,7 @@ export default function LoginPage(): React.JSX.Element {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6"
+          className="bg-card/70 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6 border border-border/50"
         >
           {/* Error Message */}
           <AnimatePresence>
@@ -249,7 +249,7 @@ export default function LoginPage(): React.JSX.Element {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -272,17 +272,17 @@ export default function LoginPage(): React.JSX.Element {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
+                    className="px-4 py-2 bg-muted/50 rounded-lg"
                   >
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">
+                      <span className="text-muted-foreground">
                         Password Strength:
                       </span>
                       <span className={cn('font-medium', passwordStrength.color)}>
                         {passwordStrength.label}
                       </span>
                     </div>
-                    <div className="mt-2 w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                    <div className="mt-2 w-full bg-muted rounded-full h-2">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(passwordStrength.score / 5) * 100}%` }}
@@ -306,10 +306,10 @@ export default function LoginPage(): React.JSX.Element {
                 <input
                   {...register('remember_me')}
                   type="checkbox"
-                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                  className="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                   disabled={isLoading}
                 />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-muted-foreground">
                   Remember me
                 </span>
               </label>
@@ -367,7 +367,7 @@ export default function LoginPage(): React.JSX.Element {
           transition={{ delay: 1 }}
           className="mt-8 text-center"
         >
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
             <Sparkles className="w-4 h-4" />
             Powered by Library Management System
             <Sparkles className="w-4 h-4" />

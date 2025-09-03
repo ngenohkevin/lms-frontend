@@ -96,28 +96,28 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       // Disabled styles
       'disabled:opacity-50 disabled:cursor-not-allowed',
       
-      // Autofill styles - prevent browser from overriding colors
-      'autofill:shadow-[inset_0_0_0_1000px_white] dark:autofill:shadow-[inset_0_0_0_1000px_rgb(31,41,55)]',
-      'autofill:[-webkit-text-fill-color:rgb(17,24,39)!important] dark:autofill:[-webkit-text-fill-color:white!important]',
+      // Autofill styles - prevent browser from overriding colors using CSS custom properties
+      'autofill:shadow-[inset_0_0_0_1000px_hsl(var(--background))]',
+      'autofill:[-webkit-text-fill-color:hsl(var(--foreground))!important]',
       
       // Variant styles
       {
         // Glass variant (default) - Fixed text visibility with strong contrast
-        'bg-white/95 backdrop-blur-md border-white/30 text-gray-900': variant === 'glass' && !error,
-        'placeholder:text-gray-500/70 dark:placeholder:text-gray-400/70': variant === 'glass' && !error,
-        'focus:bg-white/98 focus:border-blue-500/50 focus:ring-blue-500/20': variant === 'glass' && !error,
-        'dark:bg-gray-800/95 dark:border-gray-600/30 dark:text-white': variant === 'glass' && !error,
-        'dark:focus:bg-gray-800/98 dark:focus:border-blue-400/50': variant === 'glass' && !error,
+        'bg-card/95 backdrop-blur-md border-border/30 text-foreground': variant === 'glass' && !error,
+        'placeholder:text-muted-foreground/70': variant === 'glass' && !error,
+        'focus:bg-card/98 focus:border-primary/50 focus:ring-primary/20': variant === 'glass' && !error,
+        'dark:bg-card/95 dark:border-border/30': variant === 'glass' && !error,
+        'dark:focus:bg-card/98 dark:focus:border-primary/50': variant === 'glass' && !error,
         
         // Default variant
-        'bg-white border-gray-300 text-gray-900 placeholder:text-gray-500': variant === 'default' && !error,
-        'focus:border-blue-500 focus:ring-blue-500': variant === 'default' && !error,
-        'dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder:text-gray-400': variant === 'default' && !error,
+        'bg-background border-border text-foreground placeholder:text-muted-foreground': variant === 'default' && !error,
+        'focus:border-primary focus:ring-primary': variant === 'default' && !error,
+        'dark:bg-background dark:border-border': variant === 'default' && !error,
         
         // Minimal variant
-        'bg-transparent border-transparent border-b-2 border-b-gray-200 rounded-none': variant === 'minimal' && !error,
-        'placeholder:text-gray-500 dark:placeholder:text-gray-400': variant === 'minimal' && !error,
-        'focus:border-b-blue-500 focus:ring-0': variant === 'minimal' && !error,
+        'bg-transparent border-transparent border-b-2 border-b-border rounded-none': variant === 'minimal' && !error,
+        'placeholder:text-muted-foreground': variant === 'minimal' && !error,
+        'focus:border-b-primary focus:ring-0': variant === 'minimal' && !error,
       },
       
       // Error styles - red text for better visibility
@@ -140,14 +140,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       'absolute transition-all duration-300 ease-out pointer-events-none z-10',
       {
         // Floating label behavior - when field is empty and not focused
-        'left-4 top-1/2 -translate-y-1/2 text-base text-gray-500 dark:text-gray-400': floating && !isFocused && !hasValue && !error,
+        'left-4 top-1/2 -translate-y-1/2 text-base text-muted-foreground': floating && !isFocused && !hasValue && !error,
         // Floating label behavior - when field has value or is focused  
         'left-4 top-0 -translate-y-1/2 text-xs font-medium px-1': floating && (isFocused || hasValue),
         
         // Focused/filled label colors - different for light/dark mode
-        'text-gray-700 dark:text-gray-300': floating && (isFocused || hasValue) && !error,
-        'bg-white dark:bg-gray-900': floating && (isFocused || hasValue) && variant === 'glass',
-        'bg-white dark:bg-gray-800': floating && (isFocused || hasValue) && variant === 'default',
+        'text-foreground': floating && (isFocused || hasValue) && !error,
+        'bg-background': floating && (isFocused || hasValue) && variant === 'glass',
+        'bg-background': floating && (isFocused || hasValue) && variant === 'default',
         
         // Error states
         'text-red-500 dark:text-red-400': error,
@@ -170,7 +170,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         >
           {/* Left icon */}
           {leftIcon && (
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
               {leftIcon}
             </div>
           )}
@@ -199,7 +199,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {/* Right icon */}
           {rightIcon && (
             <div 
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground z-10"
               onClick={(e) => {
                 // If the rightIcon contains interactive elements (like buttons), 
                 // don't interfere with them. Otherwise, focus the input.
@@ -216,7 +216,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         
         {/* Non-floating label */}
         {!floating && label && (
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor={props.id}>
+          <label className="block text-sm font-medium text-foreground mb-2" htmlFor={props.id}>
             {label}
           </label>
         )}
