@@ -50,7 +50,6 @@ yarn-error.log*
 *.md
 
 !README.md
-!CLAUDE.md
 
 # vercel
 .vercel
