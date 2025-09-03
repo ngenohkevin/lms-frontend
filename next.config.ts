@@ -11,25 +11,25 @@ const withBundleAnalyzer = process.env['ANALYZE'] === 'true' || process.env['NOD
 const nextConfig: NextConfig = {
   // Enhanced compilation and bundling
   experimental: {
-    // Enable Turbopack for faster builds (default in dev with --turbopack flag)
-    turbo: {
-      // Turbopack configuration
-      resolveAlias: {
-        // Custom resolve aliases for faster resolution
-        '@': './src',
-        '@/components': './src/components',
-        '@/lib': './src/lib',
-        '@/app': './src/app',
-        '@/styles': './src/styles',
-      },
-    },
-    
     // Optimize compilation
     optimizeCss: true,
     optimizeServerReact: true,
     
     // Enable PPR (Partial Prerendering) when stable
     // ppr: 'incremental',
+  },
+
+  // Turbopack configuration (moved from experimental.turbo)
+  turbopack: {
+    // Turbopack configuration
+    resolveAlias: {
+      // Custom resolve aliases for faster resolution
+      '@': './src',
+      '@/components': './src/components',
+      '@/lib': './src/lib',
+      '@/app': './src/app',
+      '@/styles': './src/styles',
+    },
   },
 
   // Compiler optimizations

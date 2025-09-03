@@ -104,6 +104,7 @@ export default tseslint.config(
   // Stricter rules for source files (not config files)
   {
     files: ['src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', '**/__tests__/**'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/explicit-function-return-type': [
@@ -113,6 +114,22 @@ export default tseslint.config(
           allowTypedFunctionExpressions: true,
         },
       ],
+    },
+  },
+
+  // Relaxed rules for test files
+  {
+    files: ['**/*.test.{ts,tsx}', '**/__tests__/**/*.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/prefer-promise-reject-errors': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      'import/no-anonymous-default-export': 'off',
     },
   },
 

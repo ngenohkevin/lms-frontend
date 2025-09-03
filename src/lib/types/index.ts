@@ -118,8 +118,28 @@ export interface AuditLog {
 
 // Form types
 export interface LoginForm {
-  email: string;
+  username: string;
   password: string;
+  remember_me?: boolean;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+  remember_me?: boolean;
+}
+
+export interface AuthResponse {
+  user: User;
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
+}
+
+export interface AuthTokens {
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
 }
 
 export interface BookForm {

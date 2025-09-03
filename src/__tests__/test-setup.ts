@@ -23,18 +23,30 @@ Object.defineProperty(window, 'sessionStorage', {
   writable: true,
 });
 
-// Mock location - check if it already exists and delete it first
-delete (window as unknown as Record<string, unknown>)['location'];
-(window as unknown as Record<string, unknown>)['location'] = {
-  href: 'http://localhost:3000/',
-  origin: 'http://localhost:3000',
-  pathname: '/',
-  search: '',
-  hash: '',
-  assign: jest.fn(),
-  replace: jest.fn(),
-  reload: jest.fn(),
-} as unknown as Location;
+// Mock location for jsdom
+if (typeof window !== 'undefined') {
+  // Check if location is already defined and can be modified
+  try {
+    if (window.location && typeof window.location.assign !== 'function') {
+      // Location exists but needs mocking
+      Object.defineProperty(window.location, 'assign', {
+        value: jest.fn(),
+        writable: true,
+      });
+      Object.defineProperty(window.location, 'replace', {
+        value: jest.fn(),
+        writable: true,
+      });
+      Object.defineProperty(window.location, 'reload', {
+        value: jest.fn(),
+        writable: true,
+      });
+    }
+  } catch {
+    // If we can't modify location, it's probably already properly set up
+    // Location mock setup skipped - no console output needed in tests
+  }
+}
 
 // Clean up after each test
 afterEach(() => {

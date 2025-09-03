@@ -1,17 +1,61 @@
-import axios from 'axios';
-
-import { ApiClient, TokenStorage, JWTUtils, ApiClientError } from '../../../lib/api/client';
-
-// Mock axios
-jest.mock('axios');
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
-// Mock environment
+// Mock environment before importing client
 jest.mock('../../../lib/config/env', () => ({
   env: {
     NEXT_PUBLIC_API_URL: 'http://localhost:8080/api/v1',
   },
 }));
+
+// Mock axios before importing client
+jest.mock('axios', () => {
+  const mockAxiosInstance = {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+    patch: jest.fn(),
+    interceptors: {
+      request: {
+        use: jest.fn(),
+      },
+      response: {
+        use: jest.fn(),
+      },
+    },
+  };
+
+  const axiosModule = {
+    create: jest.fn(() => mockAxiosInstance),
+    isAxiosError: jest.fn(),
+    ...mockAxiosInstance,
+  };
+
+  return axiosModule;
+});
+
+import axios, { AxiosInstance } from 'axios';
+
+import { ApiClient, TokenStorage, JWTUtils, ApiClientError } from '../../../lib/api/client';
+
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+// Create a mock axios instance
+const mockAxiosInstance = {
+  get: jest.fn(),
+  post: jest.fn(),
+  put: jest.fn(),
+  delete: jest.fn(),
+  patch: jest.fn(),
+  interceptors: {
+    request: {
+      use: jest.fn(),
+    },
+    response: {
+      use: jest.fn(),
+    },
+  },
+} as unknown as jest.Mocked<AxiosInstance>;
+
+mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
 // Mock localStorage
 const localStorageMock = {
@@ -207,7 +251,6 @@ describe('ApiClient', () => {
   let mockAxiosInstance: MockAxiosInstance;
 
   beforeAll(() => {
-    // Mock axios.create before any imports
     // Create a function that also has properties
     const axiosInstanceFunc = jest.fn();
     mockAxiosInstance = Object.assign(axiosInstanceFunc, {

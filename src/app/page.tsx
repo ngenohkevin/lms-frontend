@@ -4,10 +4,16 @@ import React from 'react';
 import { BundleDebug } from '@/components/dev/bundle-debug';
 import { EnvDebug } from '@/components/dev/env-debug';
 import { PerformanceDebug } from '@/components/dev/performance-debug';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function Home(): React.JSX.Element {
   return (
-    <div className='from-accent/5 via-background to-muted/10 min-h-screen bg-gradient-to-br'>
+    <div className='from-accent/5 via-background to-muted/10 min-h-screen bg-gradient-to-br relative'>
+      {/* Theme Toggle - Fixed Position */}
+      <div className='fixed top-6 right-6 z-50'>
+        <ThemeToggle variant="button" size="default" />
+      </div>
+      
       <main className='container mx-auto px-4 py-16'>
         <div className='mb-16 text-center'>
           <div className='bg-accent/10 border-accent/20 mb-8 inline-flex h-20 w-20 items-center justify-center rounded-2xl border backdrop-blur-sm'>
@@ -16,7 +22,7 @@ export default function Home(): React.JSX.Element {
           <h1 className='from-foreground to-muted-foreground mb-6 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent'>
             Library Management System
           </h1>
-          <p className='text-muted-foreground mx-auto max-w-2xl text-xl leading-relaxed'>
+          <p className='text-muted-foreground mx-auto max-w-2xl text-xl leading-relaxed pb-2'>
             A premium, modern library management solution with macOS-inspired
             design and advanced features for students, librarians, and
             administrators.
@@ -29,7 +35,7 @@ export default function Home(): React.JSX.Element {
               <BookOpen className='h-6 w-6 text-blue-500' />
             </div>
             <h3 className='mb-3 text-xl font-semibold'>Book Management</h3>
-            <p className='text-muted-foreground'>
+            <p className='text-muted-foreground pb-1'>
               Advanced cataloging system with cover uploads, ISBN lookup, and
               smart search capabilities.
             </p>
@@ -40,7 +46,7 @@ export default function Home(): React.JSX.Element {
               <Users className='h-6 w-6 text-green-500' />
             </div>
             <h3 className='mb-3 text-xl font-semibold'>Student Portal</h3>
-            <p className='text-muted-foreground'>
+            <p className='text-muted-foreground pb-1'>
               Comprehensive student management with borrowing history,
               reservations, and fine tracking.
             </p>
@@ -51,7 +57,7 @@ export default function Home(): React.JSX.Element {
               <BarChart3 className='h-6 w-6 text-purple-500' />
             </div>
             <h3 className='mb-3 text-xl font-semibold'>Analytics & Reports</h3>
-            <p className='text-muted-foreground'>
+            <p className='text-muted-foreground pb-1'>
               Detailed insights with year-based reporting, popular books
               analysis, and activity tracking.
             </p>
