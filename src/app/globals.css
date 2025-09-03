@@ -45,9 +45,9 @@
   --color-sidebar-active: #e8e8ed;
 
   /* === BORDERS & DIVIDERS === */
-  --color-border: rgba(0, 0, 0, 0.08);
-  --color-border-strong: rgba(0, 0, 0, 0.12);
-  --color-divider: rgba(0, 0, 0, 0.06);
+  --color-border: rgba(0, 0, 0, 0.12);
+  --color-border-strong: rgba(0, 0, 0, 0.18);
+  --color-divider: rgba(0, 0, 0, 0.08);
 
   /* === TEXT HIERARCHY === */
   --color-text-primary: #1d1d1f;
@@ -175,6 +175,20 @@
   --screen-xl: 1280px;
   --screen-2xl: 1536px;
   --screen-3xl: 1920px;
+  
+  /* === MOBILE-FIRST RESPONSIVE SYSTEM === */
+  /* Viewport-based spacing that scales smoothly */
+  --space-dynamic: clamp(1rem, 2vw + 1rem, 3rem);
+  --container-padding: clamp(1rem, 5vw, 3rem);
+  
+  /* Responsive typography that adapts to screen size */
+  --text-responsive-xs: clamp(0.75rem, 1.5vw, 0.875rem);
+  --text-responsive-sm: clamp(0.875rem, 2vw, 1rem);
+  --text-responsive-base: clamp(1rem, 2.5vw, 1.125rem);
+  --text-responsive-lg: clamp(1.125rem, 3vw, 1.25rem);
+  --text-responsive-xl: clamp(1.25rem, 3.5vw, 1.5rem);
+  --text-responsive-2xl: clamp(1.5rem, 4vw, 2rem);
+  --text-responsive-3xl: clamp(2rem, 5vw, 3rem);
 }
 
 /* Dark Mode Theme */
@@ -190,9 +204,9 @@
     --color-sidebar-active: #2c2c2e;
 
     /* === DARK BORDERS & DIVIDERS === */
-    --color-border: rgba(255, 255, 255, 0.08);
-    --color-border-strong: rgba(255, 255, 255, 0.12);
-    --color-divider: rgba(255, 255, 255, 0.06);
+    --color-border: rgba(255, 255, 255, 0.12);
+    --color-border-strong: rgba(255, 255, 255, 0.18);
+    --color-divider: rgba(255, 255, 255, 0.08);
 
     /* === DARK TEXT HIERARCHY === */
     --color-text-primary: #ffffff;
@@ -535,6 +549,82 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* === MOBILE-FIRST RESPONSIVE LAYOUT RULES === */
+/* Mobile Layout (< 768px) */
+@media (max-width: 767px) {
+  .sidebar {
+    position: fixed;
+    left: -100%;
+    width: 85%;
+    max-width: 320px;
+    height: 100vh;
+    transition: left 300ms var(--ease-out-expo);
+    z-index: 1000;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .main-content {
+    width: 100%;
+    padding: var(--spacing-4);
+  }
+  
+  .card-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-4);
+  }
+  
+  /* Stack navigation items vertically on mobile */
+  .nav-horizontal {
+    flex-direction: column;
+    gap: var(--spacing-2);
+  }
+  
+  /* Full-width buttons on mobile */
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  /* Touch-friendly spacing */
+  .touch-spacing {
+    padding: var(--spacing-4);
+    margin: var(--spacing-2);
+  }
+  
+  /* Mobile typography adjustments */
+  .text-mobile-lg {
+    font-size: var(--text-responsive-lg);
+    line-height: var(--leading-tight);
+  }
+}
+
+/* Tablet Layout (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sidebar {
+    width: 200px;
+  }
+  
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-5);
+  }
+}
+
+/* Desktop Layout (≥ 1024px) */
+@media (min-width: 1024px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--spacing-6);
+  }
+  
+  .sidebar {
+    width: var(--sidebar-width-expanded);
+  }
 }
 
 @layer base {

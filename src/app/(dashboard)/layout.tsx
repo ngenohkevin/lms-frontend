@@ -1,37 +1,42 @@
+'use client';
+
 import React, { ReactNode } from 'react';
 
+import { DesktopSidebar } from '@/components/layout/desktop-sidebar';
+import { HamburgerMenu } from '@/components/layout/hamburger-menu';
+import { MobileSidebar } from '@/components/layout/mobile-sidebar';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useMobileNav } from '@/lib/hooks/use-mobile-nav';
 
 export default function DashboardLayout({ children }: { children: ReactNode }): React.JSX.Element {
+  const { isMobileNavOpen, toggleMobileNav, closeMobileNav } = useMobileNav();
+
   return (
-    <div className='from-accent/5 via-background to-muted/10 min-h-screen bg-gradient-to-br relative'>
-      {/* Theme Toggle - Fixed Position */}
-      <div className='fixed top-6 right-6 z-50'>
-        <ThemeToggle variant="button" size="default" />
-      </div>
+    <div className='min-h-screen bg-gradient-to-br from-accent/5 via-background to-muted/10'>
+      {/* Mobile Navigation */}
+      <MobileSidebar isOpen={isMobileNavOpen} onClose={closeMobileNav} />
       
       <div className='flex h-screen'>
-        {/* Sidebar placeholder */}
-        <aside className='bg-card w-64 border-r border-border shadow-sm p-6'>
-          <div className='mb-8 text-lg font-semibold text-foreground'>LMS Dashboard</div>
-          <nav className='space-y-2'>
-            <div className='hover:bg-accent/10 cursor-pointer rounded-lg px-3 py-2 text-foreground'>
-              Dashboard
-            </div>
-            <div className='hover:bg-accent/10 cursor-pointer rounded-lg px-3 py-2 text-foreground'>
-              Books
-            </div>
-            <div className='hover:bg-accent/10 cursor-pointer rounded-lg px-3 py-2 text-foreground'>
-              Students
-            </div>
-            <div className='hover:bg-accent/10 cursor-pointer rounded-lg px-3 py-2 text-foreground'>
-              Transactions
-            </div>
-          </nav>
-        </aside>
+        {/* Desktop Sidebar */}
+        <DesktopSidebar />
 
-        {/* Main content */}
-        <main className='flex-1 overflow-auto'>{children}</main>
+        {/* Main Content */}
+        <div className='flex flex-1 flex-col overflow-hidden'>
+          {/* Top Bar - Mobile Only */}
+          <header className='flex items-center justify-between border-b border-border bg-card/50 backdrop-blur-sm p-4 lg:hidden'>
+            <div className='flex items-center gap-3'>
+              <HamburgerMenu onClick={toggleMobileNav} isOpen={isMobileNavOpen} />
+              <div className='text-lg font-semibold text-foreground'>LMS</div>
+            </div>
+            <ThemeToggle variant="button" size="sm" />
+          </header>
+
+          
+          {/* Main Content Area */}
+          <main className='flex-1 overflow-auto'>
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
