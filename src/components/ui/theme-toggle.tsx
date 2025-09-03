@@ -21,7 +21,7 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
 
   if (!mounted) {
     return (
-      <Button variant="outline" size={size} disabled>
+      <Button variant="ghost" size={size} disabled className="bg-transparent text-foreground p-2 border-none focus:ring-0 focus:outline-none focus-visible:ring-0">
         <Monitor className="h-[1.2rem] w-[1.2rem]" />
       </Button>
     );
@@ -59,7 +59,7 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
         variant="ghost"
         size={size}
         onClick={toggleTheme}
-        className="bg-transparent hover:bg-transparent text-foreground p-2"
+        className="bg-transparent hover:bg-transparent text-foreground p-2 border-none focus:ring-0 focus:outline-none focus-visible:ring-0"
         title={`Current theme: ${getLabel()}. Click to toggle.`}
       >
         {getIcon()}
@@ -73,7 +73,7 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
       variant="ghost" 
       size="icon" 
       onClick={toggleTheme}
-      className="bg-transparent hover:bg-transparent text-foreground p-2"
+      className="bg-transparent hover:bg-transparent text-foreground p-2 border-none focus:ring-0 focus:outline-none focus-visible:ring-0"
       title={`Current theme: ${getLabel()}. Click to toggle.`}
     >
       {getIcon()}
