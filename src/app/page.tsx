@@ -19,7 +19,7 @@ export default function Home(): React.JSX.Element {
           <div className='bg-accent/10 border-accent/20 mb-8 inline-flex h-20 w-20 items-center justify-center rounded-2xl border backdrop-blur-sm'>
             <BookOpen className='text-accent h-10 w-10' />
           </div>
-          <h1 className='from-foreground to-muted-foreground mb-6 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent'>
+          <h1 className='from-foreground to-muted-foreground mb-6 bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent leading-tight pb-2'>
             Library Management System
           </h1>
           <p className='text-muted-foreground mx-auto max-w-2xl text-xl leading-relaxed pb-2'>

@@ -123,7 +123,7 @@ export default function LoginPage(): React.JSX.Element {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-4 relative overflow-hidden">
       {/* Theme Toggle - Fixed Position */}
       <div className='fixed top-6 right-6 z-50'>
         <ThemeToggle variant="button" size="default" />
@@ -160,29 +160,29 @@ export default function LoginPage(): React.JSX.Element {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-sm relative z-10"
+        className="w-full max-w-sm sm:max-w-sm md:max-w-md relative z-10"
       >
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="text-center mb-8"
+          className="text-center mb-6 sm:mb-8"
         >
           {/* Logo */}
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center w-16 h-16 mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg"
+            className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mb-4 sm:mb-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl shadow-lg"
           >
-            <BookOpen className="w-8 h-8 text-white" />
+            <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </motion.div>
 
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Welcome Back
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400">
             Sign in to your Library Management account
           </p>
         </motion.div>
@@ -192,7 +192,7 @@ export default function LoginPage(): React.JSX.Element {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
-          className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-2xl p-6"
+          className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl p-4 sm:p-6"
         >
           {/* Error Message */}
           <AnimatePresence>
@@ -201,7 +201,7 @@ export default function LoginPage(): React.JSX.Element {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl"
+                className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 rounded-xl"
               >
                 <div className="flex items-center gap-3">
                   <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
@@ -272,7 +272,7 @@ export default function LoginPage(): React.JSX.Element {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700"
+                    className="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg"
                   >
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">
@@ -343,7 +343,7 @@ export default function LoginPage(): React.JSX.Element {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
-            className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800"
+            className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl"
           >
             <div className="flex items-start gap-3">
               <Shield className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
