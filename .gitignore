@@ -24,6 +24,20 @@
 .DS_Store
 *.pem
 
+# IDE files
+.idea/
+.vscode/
+
+# MCP configuration
+.mcp.json
+
+# backup files
+backup/
+*.backup
+*.bak
+*~
+*.orig
+
 # debug
 npm-debug.log*
 yarn-debug.log*
