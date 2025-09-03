@@ -146,8 +146,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         
         // Focused/filled label colors - different for light/dark mode
         'text-foreground': floating && (isFocused || hasValue) && !error,
-        'bg-background': floating && (isFocused || hasValue) && variant === 'glass',
-        'bg-background': floating && (isFocused || hasValue) && variant === 'default',
+        'bg-background': floating && (isFocused || hasValue) && (variant === 'glass' || variant === 'default'),
         
         // Error states
         'text-red-500 dark:text-red-400': error,
