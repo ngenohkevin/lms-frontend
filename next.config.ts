@@ -51,18 +51,22 @@ const nextConfig: NextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
 
   // Development optimizations
   ...(process.env.NODE_ENV === 'development' && {
     // Development-specific optimizations
     devIndicators: {
-      buildActivity: true,
-      buildActivityPosition: 'bottom-left',
+      position: 'bottom-left',
     },
-    
-    // Faster refresh
-    fastRefresh: true,
     
     // Optimize webpack in development
     webpack: (config, { dev, isServer }) => {

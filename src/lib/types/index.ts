@@ -324,3 +324,113 @@ export interface UploadResponse {
   size: number;
   type: string;
 }
+
+// Enhanced Book Management Types
+export interface BookSearchParams extends BooksParams {
+  isbn?: string;
+  genre?: string;
+  author?: string;
+  publisher?: string;
+  published_year?: number;
+  available_only?: boolean;
+  in_stock?: boolean;
+  shelf_location?: string;
+}
+
+export interface BookSearchFilters {
+  genres: string[];
+  authors: string[];
+  publishers: string[];
+  years: number[];
+  availability: 'all' | 'available' | 'unavailable';
+  sort_by: 'title' | 'author' | 'created_at' | 'available_copies';
+  sort_order: 'asc' | 'desc';
+}
+
+export interface BookWithStats extends Book {
+  total_borrows: number;
+  current_borrows: number;
+  waiting_list: number;
+  popularity_rank: number | null;
+  last_borrowed: string | null;
+}
+
+export interface BookCatalogViewMode {
+  view: 'grid' | 'list' | 'table';
+  density: 'comfortable' | 'compact' | 'spacious';
+  show_covers: boolean;
+  cards_per_row: number;
+}
+
+export interface BookCoverUpload {
+  file: File;
+  preview: string;
+  book_id: number;
+}
+
+export interface BookImportRow {
+  book_id: string;
+  isbn?: string;
+  title: string;
+  author: string;
+  publisher?: string;
+  published_year?: number;
+  genre?: string;
+  description?: string;
+  total_copies: number;
+  shelf_location?: string;
+  errors?: string[];
+  status: 'pending' | 'valid' | 'error' | 'imported';
+}
+
+export interface BookBulkAction {
+  action: 'delete' | 'update_genre' | 'update_location' | 'export' | 'activate' | 'deactivate';
+  book_ids: number[];
+  params?: Record<string, unknown>;
+}
+
+export interface BookValidationError {
+  field: keyof Book;
+  message: string;
+  code: string;
+}
+
+// Enhanced Pagination with Metadata
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    current_page: number;
+    per_page: number;
+    total: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
+  filters?: Record<string, unknown>;
+  sort?: {
+    field: string;
+    order: 'asc' | 'desc';
+  };
+}
+
+// Component State Types
+export interface BookListState {
+  books: BookWithStats[];
+  loading: boolean;
+  error: string | null;
+  searchQuery: string;
+  filters: BookSearchFilters;
+  pagination: PaginatedResponse<BookWithStats>['pagination'];
+  viewMode: BookCatalogViewMode;
+  selectedBooks: number[];
+}
+
+export interface BookFormState {
+  data: BookForm;
+  errors: Record<string, string>;
+  isSubmitting: boolean;
+  isValid: boolean;
+  isDirty: boolean;
+  coverFile: File | null;
+  coverPreview: string | null;
+}
