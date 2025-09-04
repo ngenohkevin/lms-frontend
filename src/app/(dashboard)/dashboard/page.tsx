@@ -106,10 +106,10 @@ const popularBooks = [
 
 export default function DashboardPage(): React.JSX.Element {
   return (
-    <div className='flex-1 space-y-6 p-4 sm:p-6 lg:p-8 main-content'>
+    <div className='flex-1 space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8 animate-in fade-in duration-500'>
       {/* Header */}
-      <div className='space-y-2'>
-        <h1 className='text-2xl sm:text-3xl font-bold text-foreground'>
+      <div className='space-y-2 animate-in slide-in-from-top duration-500'>
+        <h1 className='text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground tracking-tight'>
           Dashboard
         </h1>
         <p className='text-sm sm:text-base text-muted-foreground'>
@@ -118,47 +118,51 @@ export default function DashboardPage(): React.JSX.Element {
       </div>
 
       {/* Stats Grid - Mobile First Responsive */}
-      <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 card-grid'>
+      <div className='grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-in slide-in-from-bottom duration-500 delay-100'>
         {stats.map((stat) => {
           const Icon = stat.icon;
           return (
             <div
               key={stat.title}
               className={cn(
-                'group relative overflow-hidden rounded-md bg-card shadow-sm',
+                'group relative overflow-hidden rounded-xl',
+                'bg-white dark:bg-card/50',
+                'border border-gray-200 dark:border-white/10',
                 'p-3 sm:p-4',
-                'transition-all duration-200 ease-out',
-                'hover:shadow-md'
+                'shadow-sm',
+                'transition-all duration-300 ease-out',
+                'hover:shadow-lg hover:scale-[1.02] hover:border-gray-300 dark:hover:border-white/20',
+                'dark:shadow-md dark:shadow-black/10 dark:hover:shadow-xl'
               )}
             >
-              <div className='flex items-center gap-3'>
-                <div className={cn(
-                  'flex items-center justify-center rounded-md shrink-0',
-                  'h-8 w-8 sm:h-10 sm:w-10',
-                  stat.bgColor
-                )}>
-                  <Icon className={cn('h-4 w-4 sm:h-5 sm:w-5', stat.iconColor)} />
-                </div>
-                <div className='flex-1 min-w-0'>
-                  <p className='text-xs sm:text-sm font-medium text-muted-foreground'>
-                    {stat.title}
-                  </p>
-                  <div className='flex items-baseline gap-2 mt-1'>
-                    <p className='text-lg sm:text-xl font-bold text-foreground'>
+              <div className='flex items-center justify-between'>
+                <div className='flex items-center gap-3'>
+                  <div className={cn(
+                    'flex items-center justify-center rounded-md shrink-0',
+                    'h-8 w-8 sm:h-9 sm:w-9',
+                    stat.bgColor
+                  )}>
+                    <Icon className={cn('h-4 w-4 sm:h-5 sm:w-5', stat.iconColor)} />
+                  </div>
+                  <div className='flex flex-col space-y-0.5'>
+                    <p className='text-xs text-gray-500 dark:text-muted-foreground font-medium'>
+                      {stat.title}
+                    </p>
+                    <p className='text-lg sm:text-xl font-bold text-gray-900 dark:text-foreground'>
                       {stat.value}
                     </p>
-                    <span
-                      className={cn(
-                        'text-xs font-semibold px-1.5 py-0.5 rounded-md',
-                        stat.changeType === 'positive'
-                          ? 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/30'
-                          : 'text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/30'
-                      )}
-                    >
-                      {stat.changeType === 'positive' ? '↗' : '↘'} {stat.change}
-                    </span>
                   </div>
                 </div>
+                <span
+                  className={cn(
+                    'inline-flex items-center text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded-md',
+                    stat.changeType === 'positive'
+                      ? 'text-green-700 bg-green-50 dark:text-green-400 dark:bg-green-900/20'
+                      : 'text-red-700 bg-red-50 dark:text-red-400 dark:bg-red-900/20'
+                  )}
+                >
+                  {stat.changeType === 'positive' ? '↗' : '↘'} {stat.change}
+                </span>
               </div>
             </div>
           );
@@ -166,11 +170,11 @@ export default function DashboardPage(): React.JSX.Element {
       </div>
 
       {/* Content Grid - Mobile First Responsive */}
-      <div className='grid grid-cols-1 gap-6 xl:grid-cols-3'>
+      <div className='grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-3 animate-in slide-in-from-bottom duration-500 delay-200'>
         {/* Recent Activity - Takes full width on mobile, 2/3 on xl */}
         <div className='xl:col-span-2'>
-          <div className='rounded-md bg-card shadow-sm'>
-            <div className='flex items-center justify-between border-b border-border/30 p-3 sm:p-4'>
+          <div className='rounded-xl bg-white dark:bg-card/50 backdrop-blur-sm border border-gray-200 dark:border-white/10 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-white/20 dark:shadow-lg dark:shadow-black/20'>
+            <div className='flex items-center justify-between border-b border-gray-100 dark:border-white/10 p-4 sm:p-5'>
               <div>
                 <h3 className='text-base sm:text-lg font-semibold text-foreground'>Recent Activity</h3>
                 <p className='text-xs sm:text-sm text-muted-foreground mt-1'>Latest library transactions</p>
@@ -184,7 +188,7 @@ export default function DashboardPage(): React.JSX.Element {
                 {recentActivities.map((activity) => (
                   <div
                     key={activity.id}
-                    className='group flex items-start gap-3 rounded-sm p-2 transition-colors hover:bg-muted/20'
+                    className='group flex items-start gap-3 rounded-md p-2.5 transition-all duration-200 hover:bg-muted/30 hover:pl-3'
                   >
                     <div className={cn('h-2 w-2 mt-1.5 rounded-full', activity.color)} />
                     <div className='min-w-0 flex-1 space-y-1'>
@@ -205,8 +209,8 @@ export default function DashboardPage(): React.JSX.Element {
 
         {/* Popular Books - Takes full width on mobile, 1/3 on xl */}
         <div className='xl:col-span-1'>
-          <div className='rounded-md bg-card shadow-sm'>
-            <div className='border-b border-border/30 p-3 sm:p-4'>
+          <div className='rounded-xl bg-white dark:bg-card/50 backdrop-blur-sm border border-gray-200 dark:border-white/10 shadow-sm transition-all duration-300 hover:shadow-lg hover:border-gray-300 dark:hover:border-white/20 dark:shadow-lg dark:shadow-black/20'>
+            <div className='border-b border-border/20 p-4 sm:p-5'>
               <h3 className='text-base sm:text-lg font-semibold text-foreground'>Popular Books</h3>
               <p className='text-xs sm:text-sm text-muted-foreground mt-1'>Most borrowed this month</p>
             </div>
@@ -215,7 +219,7 @@ export default function DashboardPage(): React.JSX.Element {
                 {popularBooks.map((book, index) => (
                   <div
                     key={book.id}
-                    className='group flex items-center gap-3 rounded-sm p-2 transition-colors hover:bg-muted/20'
+                    className='group flex items-center gap-3 rounded-md p-2.5 transition-all duration-200 hover:bg-muted/30 hover:pl-3'
                   >
                     <div className={cn(
                       'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold text-white',
@@ -246,7 +250,7 @@ export default function DashboardPage(): React.JSX.Element {
       </div>
 
       {/* Quick Actions - Mobile First Responsive */}
-      <div className='grid grid-cols-2 gap-4 sm:grid-cols-4 card-grid'>
+      <div className='grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-4 animate-in slide-in-from-bottom duration-500 delay-300'>
         {[
           { 
             title: 'Add Book', 
@@ -278,10 +282,14 @@ export default function DashboardPage(): React.JSX.Element {
             <button
               key={action.title}
               className={cn(
-                'group relative overflow-hidden rounded-md bg-card text-center',
-                'p-3 sm:p-4',
-                'shadow-sm hover:shadow-md',
-                'transition-all duration-200 ease-out',
+                'group relative overflow-hidden rounded-xl text-center',
+                'bg-white dark:bg-card/50',
+                'border border-gray-200 dark:border-white/10',
+                'p-4 sm:p-5',
+                'shadow-sm',
+                'transition-all duration-300 ease-out',
+                'hover:shadow-lg hover:scale-[1.02] hover:border-gray-300 dark:hover:border-white/20',
+                'dark:shadow-lg dark:shadow-black/20 dark:hover:shadow-2xl',
                 'active:scale-[0.98]'
               )}
             >

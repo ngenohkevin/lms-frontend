@@ -204,9 +204,9 @@
     --color-sidebar-active: #2c2c2e;
 
     /* === DARK BORDERS & DIVIDERS === */
-    --color-border: rgba(255, 255, 255, 0.12);
-    --color-border-strong: rgba(255, 255, 255, 0.18);
-    --color-divider: rgba(255, 255, 255, 0.08);
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-border-strong: rgba(255, 255, 255, 0.1);
+    --color-divider: rgba(255, 255, 255, 0.04);
 
     /* === DARK TEXT HIERARCHY === */
     --color-text-primary: #ffffff;
@@ -355,14 +355,14 @@
 .theme-transition *::before,
 .theme-transition *::after {
   transition:
-    background-color 500ms var(--ease-out-expo),
-    border-color 500ms var(--ease-out-expo),
-    color 500ms var(--ease-out-expo),
-    fill 500ms var(--ease-out-expo),
-    stroke 500ms var(--ease-out-expo),
-    opacity 500ms var(--ease-out-expo),
-    box-shadow 500ms var(--ease-out-expo),
-    transform 200ms var(--ease-out-expo) !important;
+    background-color 300ms var(--ease-out-expo),
+    border-color 300ms var(--ease-out-expo),
+    color 300ms var(--ease-out-expo),
+    fill 300ms var(--ease-out-expo),
+    stroke 300ms var(--ease-out-expo),
+    opacity 300ms var(--ease-out-expo),
+    box-shadow 300ms var(--ease-out-expo),
+    backdrop-filter 300ms var(--ease-out-expo) !important;
 }
 
 /* Animation Keyframes */

@@ -28,6 +28,9 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
   }
 
   const toggleTheme = (): void => {
+    // Add transition class before theme change
+    document.documentElement.classList.add('theme-transition');
+    
     if (theme === 'system') {
       setTheme('light');
     } else if (theme === 'light') {
@@ -35,6 +38,11 @@ export function ThemeToggle({ variant = 'icon', size = 'icon' }: ThemeToggleProp
     } else {
       setTheme('system');
     }
+    
+    // Remove transition class after animation
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transition');
+    }, 500);
   };
 
   const getIcon = (): React.ReactElement => {
