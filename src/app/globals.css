@@ -350,19 +350,14 @@
 }
 
 /* Global Theme Transition */
-.theme-transition,
-.theme-transition *,
-.theme-transition *::before,
-.theme-transition *::after {
+html.theme-changing * {
   transition:
-    background-color 300ms var(--ease-out-expo),
-    border-color 300ms var(--ease-out-expo),
-    color 300ms var(--ease-out-expo),
-    fill 300ms var(--ease-out-expo),
-    stroke 300ms var(--ease-out-expo),
-    opacity 300ms var(--ease-out-expo),
-    box-shadow 300ms var(--ease-out-expo),
-    backdrop-filter 300ms var(--ease-out-expo) !important;
+    background-color 300ms cubic-bezier(0.19, 1, 0.22, 1),
+    border-color 300ms cubic-bezier(0.19, 1, 0.22, 1),
+    color 300ms cubic-bezier(0.19, 1, 0.22, 1),
+    fill 300ms cubic-bezier(0.19, 1, 0.22, 1),
+    stroke 300ms cubic-bezier(0.19, 1, 0.22, 1),
+    box-shadow 300ms cubic-bezier(0.19, 1, 0.22, 1) !important;
 }
 
 /* Animation Keyframes */
@@ -420,9 +415,9 @@ body {
   color: var(--color-text-primary);
   background: var(--color-background);
   font-size: var(--text-base);
-  transition-property: color, background-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition: 
+    color 300ms cubic-bezier(0.19, 1, 0.22, 1),
+    background-color 300ms cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 /* Scrollbar Styling */
