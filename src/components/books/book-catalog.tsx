@@ -1,8 +1,7 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  Search, 
   Grid3x3, 
   List, 
   Plus, 
@@ -11,19 +10,19 @@ import {
   SlidersHorizontal,
   BookOpen,
   Users,
-  TrendingUp,
-  ChevronDown
+  TrendingUp
 } from 'lucide-react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { BookWithStats, BookCatalogViewMode, BookSearchFilters } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+import { AdvancedFiltersImproved as AdvancedFilters } from './advanced-filters-improved';
 import { BookCard } from './book-card';
 import { BookCatalogSkeleton } from './book-catalog-skeleton';
+import { EnhancedSearch } from './enhanced-search';
 
 // Mock data for demonstration - replace with actual API calls
 const MOCK_BOOKS: BookWithStats[] = [
@@ -177,6 +176,8 @@ export function BookCatalog(): React.JSX.Element {
   const [isLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const [viewMode, setViewMode] = useState<BookCatalogViewMode>({
     view: 'grid',
     density: 'comfortable',
@@ -194,19 +195,112 @@ export function BookCatalog(): React.JSX.Element {
     sort_order: 'asc',
   });
 
-  // Filter and search books
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    // Cmd/Ctrl + K to focus search
+    if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      event.preventDefault();
+      searchInputRef.current?.focus();
+      return;
+    }
+
+    // Escape to clear search when focused
+    if (event.key === 'Escape' && document.activeElement === searchInputRef.current) {
+      event.preventDefault();
+      setSearchQuery('');
+      searchInputRef.current?.blur();
+      return;
+    }
+
+    // Toggle filters with F key
+    if (event.key === 'f' && !event.metaKey && !event.ctrlKey && !event.altKey && document.activeElement?.tagName !== 'INPUT') {
+      event.preventDefault();
+      setShowFilters(prev => !prev);
+      return;
+    }
+
+    // Toggle view mode with V key
+    if (event.key === 'v' && !event.metaKey && !event.ctrlKey && !event.altKey && document.activeElement?.tagName !== 'INPUT') {
+      event.preventDefault();
+      setViewMode(prev => ({ ...prev, view: prev.view === 'grid' ? 'list' : 'grid' }));
+      return;
+    }
+  }, []);
+
+  // Setup keyboard navigation
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleKeyDown]);
+
+  // Filter and search books with enhanced search
   const filteredBooks = useMemo(() => {
     let books = MOCK_BOOKS;
 
-    // Search filter
+    // Advanced search filter with relevance scoring
     if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      books = books.filter(book => 
-        book.title.toLowerCase().includes(query) ||
-        book.author.toLowerCase().includes(query) ||
-        book.genre?.toLowerCase().includes(query) ??
-        book.book_id.toLowerCase().includes(query) ??
-        book.isbn?.toLowerCase().includes(query)
+      const query = searchQuery.toLowerCase().trim();
+      const searchTerms = query.split(' ').filter(term => term.length > 0);
+
+      books = books.filter(book => {
+        const searchableText = [
+          book.title,
+          book.author,
+          book.genre ?? '',
+          book.book_id,
+          book.isbn ?? '',
+          book.publisher ?? '',
+          book.description ?? ''
+        ].join(' ').toLowerCase();
+
+        // Check if all search terms exist in the searchable text
+        return searchTerms.every(term => searchableText.includes(term));
+      }).map(book => {
+        // Calculate relevance score for ranking
+        let relevanceScore = 0;
+        const title = book.title.toLowerCase();
+        const author = book.author.toLowerCase();
+
+        searchTerms.forEach(term => {
+          // Higher score for matches in title
+          if (title.includes(term)) relevanceScore += 10;
+          // Medium score for matches in author
+          if (author.includes(term)) relevanceScore += 5;
+          // Lower score for matches in other fields
+          if (book.genre?.toLowerCase().includes(term)) relevanceScore += 2;
+          if (book.book_id.toLowerCase().includes(term)) relevanceScore += 3;
+        });
+
+        return { ...book, relevanceScore };
+      }).sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+    }
+
+    // Genre filter
+    if (filters.genres.length > 0) {
+      books = books.filter(book =>
+        book.genre && filters.genres.includes(book.genre)
+      );
+    }
+
+    // Author filter
+    if (filters.authors.length > 0) {
+      books = books.filter(book =>
+        filters.authors.includes(book.author)
+      );
+    }
+
+    // Publisher filter
+    if (filters.publishers.length > 0) {
+      books = books.filter(book =>
+        book.publisher && filters.publishers.includes(book.publisher)
+      );
+    }
+
+    // Year filter
+    if (filters.years.length > 0) {
+      books = books.filter(book =>
+        book.published_year && filters.years.includes(book.published_year)
       );
     }
 
@@ -217,37 +311,39 @@ export function BookCatalog(): React.JSX.Element {
       books = books.filter(book => book.available_copies === 0);
     }
 
-    // Sort books
-    books.sort((a, b) => {
-      let aVal: string | number | Date;
-      let bVal: string | number | Date;
-      
-      switch (filters.sort_by) {
-        case 'title':
-          aVal = a.title.toLowerCase();
-          bVal = b.title.toLowerCase();
-          break;
-        case 'author':
-          aVal = a.author.toLowerCase();
-          bVal = b.author.toLowerCase();
-          break;
-        case 'created_at':
-          aVal = new Date(a.created_at);
-          bVal = new Date(b.created_at);
-          break;
-        case 'available_copies':
-          aVal = a.available_copies;
-          bVal = b.available_copies;
-          break;
-        default:
-          aVal = a.title.toLowerCase();
-          bVal = b.title.toLowerCase();
-      }
+    // Sort books (skip if search is active and we're using relevance)
+    if (!searchQuery) {
+      books.sort((a, b) => {
+        let aVal: string | number | Date;
+        let bVal: string | number | Date;
 
-      if (aVal < bVal) return filters.sort_order === 'asc' ? -1 : 1;
-      if (aVal > bVal) return filters.sort_order === 'asc' ? 1 : -1;
-      return 0;
-    });
+        switch (filters.sort_by) {
+          case 'title':
+            aVal = a.title.toLowerCase();
+            bVal = b.title.toLowerCase();
+            break;
+          case 'author':
+            aVal = a.author.toLowerCase();
+            bVal = b.author.toLowerCase();
+            break;
+          case 'created_at':
+            aVal = new Date(a.created_at);
+            bVal = new Date(b.created_at);
+            break;
+          case 'available_copies':
+            aVal = a.available_copies;
+            bVal = b.available_copies;
+            break;
+          default:
+            aVal = a.title.toLowerCase();
+            bVal = b.title.toLowerCase();
+        }
+
+        if (aVal < bVal) return filters.sort_order === 'asc' ? -1 : 1;
+        if (aVal > bVal) return filters.sort_order === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
 
     return books;
   }, [searchQuery, filters]);
@@ -291,34 +387,39 @@ export function BookCatalog(): React.JSX.Element {
   }
 
   return (
-    <div className="space-y-6">
+    <main className="space-y-6">
       {/* Header Controls */}
       <div className="space-y-4">
-        {/* Search and View Toggle Row */}
+        {/* Enhanced Search and View Toggle Row */}
         <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors" />
-            <Input
-              placeholder="Search books, authors, or ISBN..."
+          {/* Enhanced Search */}
+          <div className="flex-1">
+            <EnhancedSearch
+              ref={searchInputRef}
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-background border-border text-foreground placeholder:text-muted-foreground transition-colors focus:ring-2 focus:ring-primary focus:border-primary"
+              onChange={setSearchQuery}
+              placeholder="Search books, authors, or ISBN... (⌘K)"
+              suggestions={[
+                { id: '1', type: 'suggestion', text: 'Computer Science', category: 'Genre', count: 45 },
+                { id: '2', type: 'suggestion', text: 'John Doe', category: 'Author', count: 5 },
+                { id: '3', type: 'suggestion', text: '2024', category: 'Year', count: 25 },
+              ]}
+              recentSearches={['JavaScript', 'Python Programming', 'Data Science']}
             />
           </div>
 
           {/* View Toggle */}
-          <div className="flex rounded-lg border border-border/30 bg-card p-0.5 shadow-sm w-fit">
+          <div className="flex rounded-md border border-border/30 bg-card p-0.5 shadow-sm w-fit">
             <Button
               variant={viewMode.view === 'grid' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode(prev => ({ ...prev, view: 'grid' }))}
               className={cn(
-                "h-8 px-2.5 transition-colors rounded-md",
+                "h-7 px-2 transition-colors rounded-sm text-xs",
                 viewMode.view !== 'grid' && "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
               )}
             >
-              <Grid3x3 className="h-4 w-4" />
+              <Grid3x3 className="h-3.5 w-3.5" />
               <span className="ml-1 hidden sm:inline">Grid</span>
             </Button>
             <Button
@@ -326,11 +427,11 @@ export function BookCatalog(): React.JSX.Element {
               size="sm"
               onClick={() => setViewMode(prev => ({ ...prev, view: 'list' }))}
               className={cn(
-                "h-8 px-2.5 transition-colors rounded-md",
+                "h-7 px-2 transition-colors rounded-sm text-xs",
                 viewMode.view !== 'list' && "hover:bg-accent/50 text-muted-foreground hover:text-foreground"
               )}
             >
-              <List className="h-4 w-4" />
+              <List className="h-3.5 w-3.5" />
               <span className="ml-1 hidden sm:inline">List</span>
             </Button>
           </div>
@@ -341,31 +442,37 @@ export function BookCatalog(): React.JSX.Element {
           {/* Filters Toggle */}
           <Button
             variant={showFilters ? 'default' : 'secondary'}
+            size="sm"
             onClick={() => setShowFilters(!showFilters)}
-            className="gap-2 transition-colors font-medium shadow-sm border border-border/20"
+            className="gap-1.5 transition-colors font-medium shadow-sm border border-border/20 h-8"
           >
-            <SlidersHorizontal className="h-4 w-4" />
-            Filters
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            <span className="text-xs">Filters</span>
           </Button>
 
           {/* Action Buttons - Hide text on mobile */}
           <Button 
             variant="secondary" 
-            className="gap-2 transition-colors font-medium shadow-sm border border-border/20"
+            size="sm"
+            className="gap-1.5 transition-colors font-medium shadow-sm border border-border/20 h-8"
           >
-            <Upload className="h-4 w-4" />
-            <span className="hidden sm:inline">Import</span>
+            <Upload className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-xs">Import</span>
           </Button>
           <Button 
             variant="secondary" 
-            className="gap-2 transition-colors font-medium shadow-sm border border-border/20"
+            size="sm"
+            className="gap-1.5 transition-colors font-medium shadow-sm border border-border/20 h-8"
           >
-            <Download className="h-4 w-4" />
-            <span className="hidden sm:inline">Export</span>
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-xs">Export</span>
           </Button>
-          <Button className="gap-2 transition-colors font-medium shadow-sm">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Book</span>
+          <Button 
+            size="sm"
+            className="gap-1.5 transition-colors font-medium shadow-sm h-8"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-xs">Add Book</span>
           </Button>
         </div>
       </div>
@@ -400,243 +507,13 @@ export function BookCatalog(): React.JSX.Element {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Mobile Filters - Full width on mobile */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.19, 1, 0.22, 1] }}
-              className="block lg:hidden overflow-hidden"
-            >
-              <div className="w-full space-y-4 rounded-lg border border-border/10 bg-card/95 backdrop-blur-sm p-4 shadow-lg mb-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Filters</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFilters({
-                      genres: [],
-                      authors: [],
-                      publishers: [],
-                      years: [],
-                      availability: 'all',
-                      sort_by: 'title',
-                      sort_order: 'asc',
-                    })}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </Button>
-                </div>
-
-                {/* Availability Filter */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Availability</h4>
-                  <div className="space-y-1">
-                    {[
-                      { value: 'all', label: 'All Books' },
-                      { value: 'available', label: 'Available' },
-                      { value: 'unavailable', label: 'Unavailable' },
-                    ].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2 cursor-pointer hover:bg-accent/10 rounded-md p-1 -m-1 transition-colors">
-                        <div className="relative flex items-center">
-                          <input
-                            type="radio"
-                            name="availability"
-                            value={option.value}
-                            checked={filters.availability === option.value}
-                            onChange={(e) => setFilters(prev => ({ 
-                              ...prev, 
-                              availability: e.target.value as 'all' | 'available' | 'unavailable'
-                            }))}
-                            className="sr-only"
-                          />
-                          <div className={cn(
-                            "h-4 w-4 rounded-full border flex items-center justify-center transition-all",
-                            filters.availability === option.value
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground/40 bg-background hover:border-primary"
-                          )}>
-                            {filters.availability === option.value && (
-                              <div className="h-2 w-2 rounded-full bg-primary-foreground" />
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-sm text-foreground">{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort Options */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Sort by</h4>
-                  <div className="relative">
-                    <select
-                      value={filters.sort_by}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        sort_by: e.target.value as 'title' | 'author' | 'created_at' | 'available_copies'
-                      }))}
-                      className="w-full rounded-md border border-border/40 bg-card text-card-foreground px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none shadow-sm hover:border-muted-foreground"
-                    >
-                      <option value="title">Title</option>
-                      <option value="author">Author</option>
-                      <option value="created_at">Date Added</option>
-                      <option value="available_copies">Availability</option>
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant={filters.sort_order === 'asc' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, sort_order: 'asc' }))}
-                      className={cn(
-                        "flex-1 transition-all font-medium",
-                        filters.sort_order !== 'asc' && "border-muted-foreground/50 text-foreground hover:border-primary hover:bg-accent/50"
-                      )}
-                    >
-                      A-Z
-                    </Button>
-                    <Button
-                      variant={filters.sort_order === 'desc' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, sort_order: 'desc' }))}
-                      className={cn(
-                        "flex-1 transition-all font-medium",
-                        filters.sort_order !== 'desc' && "border-muted-foreground/50 text-foreground hover:border-primary hover:bg-accent/50"
-                      )}
-                    >
-                      Z-A
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Desktop Filters - Sidebar on desktop */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: 256, opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.19, 1, 0.22, 1] }}
-              className="hidden lg:block overflow-hidden"
-            >
-              <div className="w-64 space-y-4 rounded-lg border border-border/10 bg-card/95 backdrop-blur-sm p-4 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-foreground">Filters</h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setFilters({
-                      genres: [],
-                      authors: [],
-                      publishers: [],
-                      years: [],
-                      availability: 'all',
-                      sort_by: 'title',
-                      sort_order: 'asc',
-                    })}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Clear
-                  </Button>
-                </div>
-
-                {/* Availability Filter */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Availability</h4>
-                  <div className="space-y-1">
-                    {[
-                      { value: 'all', label: 'All Books' },
-                      { value: 'available', label: 'Available' },
-                      { value: 'unavailable', label: 'Unavailable' },
-                    ].map((option) => (
-                      <label key={option.value} className="flex items-center gap-2 cursor-pointer hover:bg-accent/10 rounded-md p-1 -m-1 transition-colors">
-                        <div className="relative flex items-center">
-                          <input
-                            type="radio"
-                            name="availability"
-                            value={option.value}
-                            checked={filters.availability === option.value}
-                            onChange={(e) => setFilters(prev => ({ 
-                              ...prev, 
-                              availability: e.target.value as 'all' | 'available' | 'unavailable'
-                            }))}
-                            className="sr-only"
-                          />
-                          <div className={cn(
-                            "h-4 w-4 rounded-full border flex items-center justify-center transition-all",
-                            filters.availability === option.value
-                              ? "border-primary bg-primary"
-                              : "border-muted-foreground/40 bg-background hover:border-primary"
-                          )}>
-                            {filters.availability === option.value && (
-                              <div className="h-2 w-2 rounded-full bg-primary-foreground" />
-                            )}
-                          </div>
-                        </div>
-                        <span className="text-sm text-foreground">{option.label}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Sort Options */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Sort by</h4>
-                  <div className="relative">
-                    <select
-                      value={filters.sort_by}
-                      onChange={(e) => setFilters(prev => ({ 
-                        ...prev, 
-                        sort_by: e.target.value as 'title' | 'author' | 'created_at' | 'available_copies'
-                      }))}
-                      className="w-full rounded-md border border-border/40 bg-card text-card-foreground px-3 py-2 pr-8 text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-all appearance-none shadow-sm hover:border-muted-foreground"
-                    >
-                      <option value="title">Title</option>
-                      <option value="author">Author</option>
-                      <option value="created_at">Date Added</option>
-                      <option value="available_copies">Availability</option>
-                    </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-                  </div>
-                  <div className="flex gap-1">
-                    <Button
-                      variant={filters.sort_order === 'asc' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, sort_order: 'asc' }))}
-                      className={cn(
-                        "flex-1 transition-all font-medium",
-                        filters.sort_order !== 'asc' && "border-muted-foreground/50 text-foreground hover:border-primary hover:bg-accent/50"
-                      )}
-                    >
-                      A-Z
-                    </Button>
-                    <Button
-                      variant={filters.sort_order === 'desc' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setFilters(prev => ({ ...prev, sort_order: 'desc' }))}
-                      className={cn(
-                        "flex-1 transition-all font-medium",
-                        filters.sort_order !== 'desc' && "border-muted-foreground/50 text-foreground hover:border-primary hover:bg-accent/50"
-                      )}
-                    >
-                      Z-A
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Advanced Filters Sidebar */}
+        <AdvancedFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          isVisible={showFilters}
+          onClose={() => setShowFilters(false)}
+        />
 
         {/* Books Content */}
         <div className="flex-1">
@@ -679,6 +556,7 @@ export function BookCatalog(): React.JSX.Element {
                     view="grid"
                     density={viewMode.density}
                     showCovers={viewMode.show_covers}
+                    searchQuery={searchQuery}
                     onView={handleBookView}
                     onEdit={handleBookEdit}
                     onDelete={handleBookDelete}
@@ -707,6 +585,7 @@ export function BookCatalog(): React.JSX.Element {
                     view="list"
                     density={viewMode.density}
                     showCovers={viewMode.show_covers}
+                    searchQuery={searchQuery}
                     onView={handleBookView}
                     onEdit={handleBookEdit}
                     onDelete={handleBookDelete}
@@ -719,6 +598,6 @@ export function BookCatalog(): React.JSX.Element {
           )}
         </div>
       </div>
-    </div>
+    </main>
   );
 }

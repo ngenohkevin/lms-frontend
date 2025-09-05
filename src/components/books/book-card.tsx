@@ -10,11 +10,14 @@ import { Button } from '@/components/ui/button';
 import { BookWithStats } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
+import { SearchHighlight } from './search-highlight';
+
 interface BookCardProps {
   book: BookWithStats;
   view: 'grid' | 'list';
   density: 'comfortable' | 'compact' | 'spacious';
   showCovers?: boolean;
+  searchQuery?: string;
   onView?: (book: BookWithStats) => void;
   onEdit?: (book: BookWithStats) => void;
   onDelete?: (book: BookWithStats) => void;
@@ -28,6 +31,7 @@ export function BookCard({
   view = 'grid',
   density = 'comfortable',
   showCovers = true,
+  searchQuery = '',
   onView,
   onEdit,
   onDelete,
@@ -68,8 +72,8 @@ export function BookCard({
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
         className={cn(
-          'group relative overflow-hidden rounded-xl border border-border/20 bg-card',
-          'transition-all duration-200 ease-out-expo hover:border-border/40',
+          'group relative overflow-hidden rounded-xl border border-border bg-card',
+          'transition-all duration-200 ease-out-expo hover:border-primary/30 hover:shadow-sm',
           className
         )}
       >
@@ -116,7 +120,7 @@ export function BookCard({
                 density === 'compact' ? 'text-sm' : 'text-sm',
                 density === 'spacious' && 'text-base'
               )}>
-                {book.title}
+                <SearchHighlight text={book.title} searchQuery={searchQuery} />
               </h3>
               <div className="flex gap-1 flex-shrink-0">
                 {popularityBadge && (
@@ -137,7 +141,7 @@ export function BookCard({
               "text-muted-foreground line-clamp-1 mb-1",
               density === 'compact' ? 'text-xs' : 'text-xs'
             )}>
-              by {book.author}
+              by <SearchHighlight text={book.author} searchQuery={searchQuery} />
             </p>
             
             <div className={cn(
@@ -236,8 +240,8 @@ export function BookCard({
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
       className={cn(
-        'group relative cursor-pointer overflow-hidden rounded-xl border border-border/20',
-        'bg-card backdrop-blur-sm transition-all duration-200 ease-out-expo hover:border-border/40',
+        'group relative cursor-pointer overflow-hidden rounded-xl border border-border',
+        'bg-card transition-all duration-200 ease-out-expo hover:border-primary/30 hover:shadow-md',
         className
       )}
       onClick={() => onView?.(book)}
@@ -352,13 +356,13 @@ export function BookCard({
             density === 'compact' ? 'text-sm' : 'text-sm',
             density === 'spacious' && 'text-base'
           )}>
-            {book.title}
+            <SearchHighlight text={book.title} searchQuery={searchQuery} />
           </h3>
           <p className={cn(
             "text-muted-foreground line-clamp-1",
             density === 'compact' ? 'text-xs' : 'text-xs'
           )}>
-            by {book.author}
+            by <SearchHighlight text={book.author} searchQuery={searchQuery} />
           </p>
         </div>
 
