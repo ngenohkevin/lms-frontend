@@ -86,14 +86,18 @@ function FilterSection({
   count 
 }: FilterSectionProps): React.JSX.Element {
   return (
-    <div className="space-y-2">
+    <div className={cn(
+      "space-y-2 rounded-lg transition-all duration-200",
+      isExpanded && "bg-muted/20 border border-border/40 p-2"
+    )}>
       <button
         onClick={onToggle}
         className={cn(
           "flex items-center justify-between w-full p-2.5 rounded-lg",
           "transition-all duration-200",
           "hover:bg-muted/30 active:scale-[0.99]",
-          "group focus:outline-none focus:ring-1 focus:ring-primary/30"
+          "group focus:outline-none focus:ring-1 focus:ring-primary/30",
+          isExpanded && "bg-background/60"
         )}
       >
         <div className="flex items-center gap-3">

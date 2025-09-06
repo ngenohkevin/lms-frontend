@@ -115,11 +115,14 @@ export function BookCard({
           {/* Book Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2 mb-1">
-              <h3 className={cn(
-                'font-semibold text-foreground line-clamp-1',
-                density === 'compact' ? 'text-sm' : 'text-sm',
-                density === 'spacious' && 'text-base'
-              )}>
+              <h3 
+                className={cn(
+                  'font-semibold text-foreground line-clamp-1',
+                  density === 'compact' ? 'text-sm' : 'text-sm',
+                  density === 'spacious' && 'text-base'
+                )}
+                title={book.title}
+              >
                 <SearchHighlight text={book.title} searchQuery={searchQuery} />
               </h3>
               <div className="flex gap-1 flex-shrink-0">
@@ -137,10 +140,13 @@ export function BookCard({
               </div>
             </div>
             
-            <p className={cn(
-              "text-muted-foreground line-clamp-1 mb-1",
-              density === 'compact' ? 'text-xs' : 'text-xs'
-            )}>
+            <p 
+              className={cn(
+                "text-muted-foreground line-clamp-1 mb-1",
+                density === 'compact' ? 'text-xs' : 'text-xs'
+              )}
+              title={`by ${book.author}`}
+            >
               by <SearchHighlight text={book.author} searchQuery={searchQuery} />
             </p>
             
@@ -149,7 +155,7 @@ export function BookCard({
               density === 'compact' ? 'text-xs gap-2' : 'text-xs'
             )}>
               {book.genre && (
-                <span className="flex items-center gap-1 flex-shrink-0">
+                <span className="flex items-center gap-1 flex-shrink-0" title={book.genre}>
                   <BookOpen className="h-3 w-3" />
                   {book.genre}
                 </span>
@@ -351,17 +357,23 @@ export function BookCard({
         density === 'spacious' && 'p-4 space-y-2'
       )}>
         <div className="space-y-0.5">
-          <h3 className={cn(
-            'font-semibold text-foreground line-clamp-1',
-            density === 'compact' ? 'text-sm' : 'text-sm',
-            density === 'spacious' && 'text-base'
-          )}>
+          <h3 
+            className={cn(
+              'font-semibold text-foreground line-clamp-1',
+              density === 'compact' ? 'text-sm' : 'text-sm',
+              density === 'spacious' && 'text-base'
+            )}
+            title={book.title}
+          >
             <SearchHighlight text={book.title} searchQuery={searchQuery} />
           </h3>
-          <p className={cn(
-            "text-muted-foreground line-clamp-1",
-            density === 'compact' ? 'text-xs' : 'text-xs'
-          )}>
+          <p 
+            className={cn(
+              "text-muted-foreground line-clamp-1",
+              density === 'compact' ? 'text-xs' : 'text-xs'
+            )}
+            title={`by ${book.author}`}
+          >
             by <SearchHighlight text={book.author} searchQuery={searchQuery} />
           </p>
         </div>
@@ -372,25 +384,30 @@ export function BookCard({
           </p>
         )}
 
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5 truncate">
+        <div className="space-y-1.5">
+          {/* Genre and Year Row */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {book.genre && (
-              <span className="flex items-center gap-1 truncate">
+              <span className="flex items-center gap-1 min-w-0 flex-1" title={book.genre}>
                 <BookOpen className="h-3 w-3 flex-shrink-0" />
                 <span className="truncate">{book.genre}</span>
               </span>
             )}
             {book.published_year && density !== 'compact' && (
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1 flex-shrink-0">
                 <Calendar className="h-3 w-3" />
                 {book.published_year}
               </span>
             )}
           </div>
-          <span className="flex items-center gap-1 flex-shrink-0">
-            <Users className="h-3 w-3" />
-            {book.available_copies}/{book.total_copies}
-          </span>
+          
+          {/* Availability Row */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              <span>{book.available_copies} of {book.total_copies} available</span>
+            </span>
+          </div>
         </div>
 
         {density === 'spacious' && book.shelf_location && (
