@@ -23,6 +23,7 @@ interface SearchSuggestion {
 interface EnhancedSearchProps {
   value: string;
   onChange: (value: string) => void;
+  onSubmit?: () => void;
   onFocus?: () => void;
   onBlur?: () => void;
   placeholder?: string;
@@ -35,6 +36,7 @@ interface EnhancedSearchProps {
 export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(({
   value,
   onChange,
+  onSubmit,
   onFocus,
   onBlur,
   placeholder = "Search books, authors, or ISBN... (⌘K)",
@@ -86,12 +88,20 @@ export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(
         break;
         
       case 'Enter':
+        event.preventDefault();
         if (selectedSuggestion >= 0) {
-          event.preventDefault();
           const allItems = [...recentSearches, ...suggestions.map(s => s.text)];
           onChange(allItems[selectedSuggestion] ?? value);
           setShowSuggestions(false);
           setSelectedSuggestion(-1);
+        } else if (value && onSubmit) {
+          // If there's a search value and no suggestion selected, trigger submit
+          onSubmit();
+          setShowSuggestions(false);
+          // Blur the input to exit search mode after submitting
+          if ('current' in searchRef && searchRef.current) {
+            searchRef.current.blur();
+          }
         }
         break;
         
@@ -154,7 +164,7 @@ export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(
         "transition-all duration-300 ease-out",
         focused && "scale-[1.02] z-50"
       )}>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-primary/20 rounded-lg blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-primary/0 to-primary/20 rounded-lg blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         
         <div className={cn(
           "relative",
@@ -192,16 +202,23 @@ export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(
           
           {/* Right side controls */}
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            {/* Clear button */}
-            <AnimatePresence>
-              {value && (
+            {/* Clear/Exit button */}
+            <AnimatePresence mode="wait">
+              {(value || focused) && (
                 <motion.button
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.2 }}
-                  onClick={clearSearch}
-                  aria-label="Clear search"
+                  onClick={() => {
+                    if (value) {
+                      clearSearch();
+                    } else if ('current' in searchRef && searchRef.current) {
+                      searchRef.current.blur();
+                      setShowSuggestions(false);
+                    }
+                  }}
+                  aria-label={value ? "Clear search" : "Exit search"}
                   className={cn(
                     "p-1 rounded-md transition-colors",
                     "hover:bg-accent text-muted-foreground hover:text-foreground",
@@ -213,8 +230,26 @@ export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(
               )}
             </AnimatePresence>
             
+            {/* Escape hint when focused */}
+            <AnimatePresence mode="wait">
+              {focused && !value && (
+                <motion.div
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className={cn(
+                    "hidden sm:flex items-center gap-1 px-2 py-1 rounded-md",
+                    "bg-slate-100 dark:bg-slate-700 text-xs text-slate-600 dark:text-slate-400 font-mono"
+                  )}
+                >
+                  <span>ESC</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
             {/* Keyboard shortcut hint */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {!focused && !value && (
                 <motion.div
                   initial={{ opacity: 0, x: 10 }}
@@ -248,7 +283,7 @@ export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(
             }}
             className={cn(
               "absolute top-full mt-1 w-full z-50",
-              "bg-card backdrop-blur-xl border border-border rounded-lg shadow-lg",
+              "bg-white dark:bg-slate-800 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg",
               "p-2 max-h-32 overflow-y-auto"
             )}
           >
@@ -261,8 +296,9 @@ export const EnhancedSearch = forwardRef<HTMLInputElement, EnhancedSearchProps>(
                     onClick={() => handleSuggestionClick(suggestion.text)}
                     className={cn(
                       "w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded text-left text-sm",
+                      "text-slate-700 dark:text-slate-300",
                       "transition-colors duration-150",
-                      "hover:bg-accent/50 hover:text-foreground",
+                      "hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100",
                       selectedSuggestion === index && "bg-primary/10 text-primary"
                     )}
                   >

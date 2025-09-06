@@ -31,42 +31,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     React.useImperativeHandle(ref, () => inputRef.current!);
 
     React.useEffect(() => {
-      if (inputRef.current) {
+      // Check value on mount and when props change
+      if (props.value !== undefined) {
+        setHasValue(!!props.value);
+      } else if (props.defaultValue !== undefined) {
+        setHasValue(!!props.defaultValue);
+      } else if (inputRef.current) {
         setHasValue(!!inputRef.current.value);
       }
     }, [props.value, props.defaultValue]);
-
-    // Additional effect to check for value changes more frequently
-    React.useEffect(() => {
-      const checkValue = (): void => {
-        if (inputRef.current) {
-          const currentValue = inputRef.current.value;
-          // Only check the actual DOM value, not props which can cause issues
-          const hasCurrentValue = !!currentValue;
-          setHasValue(hasCurrentValue);
-        }
-      };
-      
-      checkValue();
-      
-      // Set up a small interval to check for value changes
-      const interval = setInterval(checkValue, 50);
-      return () => clearInterval(interval);
-    }, [props.value, props.defaultValue]);
-
-    // Additional effect to handle input events that might not trigger change events
-    React.useEffect(() => {
-      const inputElement = inputRef.current;
-      if (inputElement) {
-        const handleInput = (): void => {
-          setHasValue(!!inputElement.value);
-        };
-        
-        inputElement.addEventListener('input', handleInput);
-        return () => inputElement.removeEventListener('input', handleInput);
-      }
-      return undefined;
-    }, []);
 
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>): void => {
       setIsFocused(true);
@@ -115,7 +88,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         'dark:bg-background dark:border-border': variant === 'default' && !error,
         
         // Minimal variant
-        'bg-transparent border-transparent border-b-2 border-b-border rounded-none': variant === 'minimal' && !error,
+        'bg-transparent border-0 border-b-2 border-b-border rounded-none': variant === 'minimal' && !error,
         'placeholder:text-muted-foreground': variant === 'minimal' && !error,
         'focus:border-b-primary focus:ring-0': variant === 'minimal' && !error,
       },

@@ -150,7 +150,6 @@ export function AdvancedFiltersImproved({
     sort: true,
   });
 
-  const [showMoreGenres, setShowMoreGenres] = useState(false);
   const [genreSearch, setGenreSearch] = useState('');
   const [authorSearch, setAuthorSearch] = useState('');
   const [publisherSearch, setPublisherSearch] = useState('');
@@ -246,54 +245,52 @@ export function AdvancedFiltersImproved({
         }}
         className={cn(
           "fixed right-4 top-4 bottom-4 w-80 bg-card backdrop-blur-xl",
-          "rounded-xl border border-border/30 shadow-lg z-50",
+          "rounded-xl border border-border/50 shadow-lg z-50",
           "flex flex-col overflow-hidden",
           className
         )}
       >
         {/* Enhanced Header */}
-        <div className="relative p-4 border-b border-border/20">
+        <div className="relative p-4 border-b border-border/40 space-y-3">
+          {/* Title Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                 <Filter className="w-4 h-4 text-primary" />
               </div>
-              <div>
-                <h3 className="text-base font-semibold text-foreground">
-                  Advanced Filters
-                </h3>
-                {activeFiltersCount > 0 && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="secondary" className="text-xs px-2 py-0.5">
-                      {activeFiltersCount} active
-                    </Badge>
-                  </div>
-                )}
-              </div>
+              <h3 className="text-base font-semibold text-foreground">
+                Advanced Filters
+              </h3>
             </div>
             
-            <div className="flex items-center gap-2">
-              {activeFiltersCount > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearAllFilters}
-                  className="text-xs px-3 py-1.5 h-auto rounded-lg hover:bg-destructive/10 hover:text-destructive transition-all"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Clear All
-                </Button>
-              )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="rounded-xl w-9 h-9 hover:bg-muted/80 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          {/* Active Filters Row */}
+          {activeFiltersCount > 0 && (
+            <div className="flex items-center justify-between">
+              <Badge variant="default" className="text-xs px-2 py-0.5 bg-primary text-primary-foreground">
+                {activeFiltersCount} active {activeFiltersCount === 1 ? 'filter' : 'filters'}
+              </Badge>
+              
               <Button
                 variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="rounded-xl w-9 h-9 hover:bg-muted/80 transition-colors"
+                size="sm"
+                onClick={clearAllFilters}
+                className="text-xs px-3 py-1.5 h-auto rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-destructive/10 hover:text-destructive transition-all"
               >
-                <X className="w-4 h-4" />
+                <Sparkles className="w-3 h-3 mr-1" />
+                Clear All
               </Button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Scrollable Content */}
@@ -372,15 +369,16 @@ export function AdvancedFiltersImproved({
                   placeholder="Search genres..."
                   value={genreSearch}
                   onChange={(e) => setGenreSearch(e.target.value)}
-                  className="pl-8 h-8 text-xs rounded-md text-left bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground focus:bg-white dark:focus:bg-slate-900 focus:border-primary/50"
+                  floating={false}
+                  variant="default"
+                  className="pl-8 h-8 text-xs rounded-md"
                 />
               </div>
 
               {/* Genre Options */}
-              <div className="space-y-1">
+              <div className="space-y-1 max-h-40 overflow-y-auto">
                 {GENRE_OPTIONS
                   .filter(genre => genre.label.toLowerCase().includes(genreSearch.toLowerCase()))
-                  .slice(0, showMoreGenres ? undefined : 5)
                   .map((genre) => (
                   <label 
                     key={genre.value}
@@ -412,17 +410,6 @@ export function AdvancedFiltersImproved({
                     </Badge>
                   </label>
                 ))}
-                
-                {GENRE_OPTIONS.length > 5 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setShowMoreGenres(!showMoreGenres)}
-                    className="w-full mt-2 text-xs h-8"
-                  >
-                    {showMoreGenres ? 'Show Less' : `Show ${GENRE_OPTIONS.length - 5} More...`}
-                  </Button>
-                )}
               </div>
             </div>
           </FilterSection>
@@ -462,7 +449,9 @@ export function AdvancedFiltersImproved({
                   placeholder="Search authors..."
                   value={authorSearch}
                   onChange={(e) => setAuthorSearch(e.target.value)}
-                  className="pl-8 h-8 text-xs rounded-md text-left bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground focus:bg-white dark:focus:bg-slate-900 focus:border-primary/50"
+                  floating={false}
+                  variant="default"
+                  className="pl-8 h-8 text-xs rounded-md"
                 />
               </div>
               
@@ -545,7 +534,9 @@ export function AdvancedFiltersImproved({
                   placeholder="Search publishers..."
                   value={publisherSearch}
                   onChange={(e) => setPublisherSearch(e.target.value)}
-                  className="pl-8 h-8 text-xs rounded-md text-left bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-600 text-foreground placeholder:text-muted-foreground focus:bg-white dark:focus:bg-slate-900 focus:border-primary/50"
+                  floating={false}
+                  variant="default"
+                  className="pl-8 h-8 text-xs rounded-md"
                 />
               </div>
               

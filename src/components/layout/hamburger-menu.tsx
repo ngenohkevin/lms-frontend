@@ -14,7 +14,7 @@ export function HamburgerMenu({ onClick, isOpen = false, className }: HamburgerM
       onClick={onClick}
       className={cn(
         "relative flex h-8 w-8 items-center justify-center rounded-md",
-        "bg-transparent transition-all duration-300",
+        "transition-all duration-300",
         "hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-accent/50",
         "active:scale-95 lg:hidden",
         className

@@ -357,9 +357,10 @@ export function BookCatalog(): React.JSX.Element {
     };
   }, []);
 
-  const handleBookView = (book: BookWithStats): void => {
-    // TODO: Implement book detail view
-    void book;
+  const handleBookView = (_book: BookWithStats): void => {
+    // Clear search when user clicks on a book
+    setSearchQuery('');
+    // TODO: Implement book detail view navigation
   };
 
   const handleBookEdit = (book: BookWithStats): void => {
@@ -398,6 +399,9 @@ export function BookCatalog(): React.JSX.Element {
               ref={searchInputRef}
               value={searchQuery}
               onChange={setSearchQuery}
+              onSubmit={() => {
+                // Keep search active to show results, user can press ESC or click X to clear
+              }}
               placeholder="Search books, authors, or ISBN... (⌘K)"
               suggestions={[
                 { id: '1', type: 'suggestion', text: 'Computer Science', category: 'Genre', count: 45 },
