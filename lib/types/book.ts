@@ -14,6 +14,10 @@ export interface Book {
   shelf_location?: string;
   is_active?: boolean;
   status?: string;
+  average_rating?: number;
+  total_ratings?: number;
+  language?: string;
+  pages?: number;
   created_at: string;
   updated_at: string;
   // Frontend convenience aliases (mapped from backend fields)
