@@ -35,6 +35,10 @@ export const authApi = {
 
     if (response.data?.access_token) {
       apiClient.setAccessToken(response.data.access_token);
+      // Store token in cookie for middleware auth check
+      if (typeof document !== "undefined") {
+        document.cookie = `access_token=${response.data.access_token}; path=/; max-age=${response.data.expires_in}; SameSite=Lax`;
+      }
     }
 
     // Transform to expected LoginResponse format
@@ -51,6 +55,10 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await apiClient.post(`${AUTH_PREFIX}/logout`);
     apiClient.setAccessToken(null);
+    // Clear token cookie
+    if (typeof document !== "undefined") {
+      document.cookie = "access_token=; path=/; max-age=0";
+    }
   },
 
   refresh: async (): Promise<{ access_token: string }> => {
