@@ -88,7 +88,22 @@ export const studentsApi = {
 
   // Create a new student
   create: async (data: StudentFormData): Promise<Student> => {
-    const response = await apiClient.post<ApiResponse<Student>>(STUDENTS_PREFIX, data);
+    // Transform frontend field names to backend field names
+    // Split full name into first and last name
+    const nameParts = data.name.trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ") || nameParts[0] || ""; // Use first name as last if no last name
+
+    const backendData = {
+      student_id: data.student_id,
+      first_name: firstName,
+      last_name: lastName,
+      email: data.email || undefined,
+      phone: data.phone || undefined,
+      year_of_study: data.year_of_study || 1,
+      department: data.department || undefined,
+    };
+    const response = await apiClient.post<ApiResponse<Student>>(STUDENTS_PREFIX, backendData);
     return response.data;
   },
 
@@ -97,7 +112,21 @@ export const studentsApi = {
     id: string,
     data: Partial<StudentFormData>
   ): Promise<Student> => {
-    const response = await apiClient.put<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}`, data);
+    // Transform frontend field names to backend field names
+    const backendData: Record<string, unknown> = {};
+
+    if (data.name !== undefined) {
+      // Split full name into first and last name
+      const nameParts = data.name.trim().split(/\s+/);
+      backendData.first_name = nameParts[0] || "";
+      backendData.last_name = nameParts.slice(1).join(" ") || nameParts[0] || "";
+    }
+    if (data.email !== undefined) backendData.email = data.email || undefined;
+    if (data.phone !== undefined) backendData.phone = data.phone || undefined;
+    if (data.year_of_study !== undefined) backendData.year_of_study = data.year_of_study;
+    if (data.department !== undefined) backendData.department = data.department || undefined;
+
+    const response = await apiClient.put<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}`, backendData);
     return response.data;
   },
 
