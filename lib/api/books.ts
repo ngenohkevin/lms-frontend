@@ -50,6 +50,8 @@ function transformPagination(bp?: BackendPagination): PaginatedResponse<Book>["p
 function transformBook(book: Book): Book {
   return {
     ...book,
+    // Ensure id is always a string for consistent frontend usage
+    id: String(book.id),
     // Add convenience aliases for frontend components
     publication_year: book.published_year,
     category: book.genre,
