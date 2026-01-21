@@ -10,41 +10,86 @@ import type {
 
 const STUDENTS_PREFIX = "/api/v1/students";
 
+// Backend response wrapper
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+// Backend pagination structure
+interface BackendPagination {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+// Backend paginated response structure
+interface BackendPaginatedStudents {
+  students: Student[];
+  pagination: BackendPagination;
+}
+
+// Transform backend pagination to frontend format
+function transformPagination(bp?: BackendPagination): PaginatedResponse<Student>["pagination"] | undefined {
+  if (!bp) return undefined;
+  return {
+    page: bp.page,
+    per_page: bp.limit,
+    total: bp.total,
+    total_pages: bp.total_pages,
+    has_next: bp.page < bp.total_pages,
+    has_prev: bp.page > 1,
+  };
+}
+
 export const studentsApi = {
   // List all students with pagination
   list: async (
     params?: StudentSearchParams
   ): Promise<PaginatedResponse<Student>> => {
-    return apiClient.get<PaginatedResponse<Student>>(STUDENTS_PREFIX, {
+    const response = await apiClient.get<ApiResponse<BackendPaginatedStudents>>(STUDENTS_PREFIX, {
       params,
     });
+    return {
+      data: response.data?.students || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Search students
   search: async (
     params: StudentSearchParams
   ): Promise<PaginatedResponse<Student>> => {
-    return apiClient.get<PaginatedResponse<Student>>(
+    const response = await apiClient.get<ApiResponse<BackendPaginatedStudents>>(
       `${STUDENTS_PREFIX}/search`,
       { params }
     );
+    return {
+      data: response.data?.students || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Get single student by ID
   get: async (id: string): Promise<Student> => {
-    return apiClient.get<Student>(`${STUDENTS_PREFIX}/${id}`);
+    const response = await apiClient.get<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}`);
+    return response.data;
   },
 
   // Get student by student_id (registration number)
   getByStudentId: async (studentId: string): Promise<Student> => {
-    return apiClient.get<Student>(`${STUDENTS_PREFIX}/by-student-id`, {
+    const response = await apiClient.get<ApiResponse<Student>>(`${STUDENTS_PREFIX}/by-student-id`, {
       params: { student_id: studentId },
     });
+    return response.data;
   },
 
   // Create a new student
   create: async (data: StudentFormData): Promise<Student> => {
-    return apiClient.post<Student>(STUDENTS_PREFIX, data);
+    const response = await apiClient.post<ApiResponse<Student>>(STUDENTS_PREFIX, data);
+    return response.data;
   },
 
   // Update a student
@@ -52,7 +97,8 @@ export const studentsApi = {
     id: string,
     data: Partial<StudentFormData>
   ): Promise<Student> => {
-    return apiClient.put<Student>(`${STUDENTS_PREFIX}/${id}`, data);
+    const response = await apiClient.put<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}`, data);
+    return response.data;
   },
 
   // Delete a student
@@ -62,26 +108,30 @@ export const studentsApi = {
 
   // Suspend a student
   suspend: async (id: string, reason?: string): Promise<Student> => {
-    return apiClient.post<Student>(`${STUDENTS_PREFIX}/${id}/suspend`, {
+    const response = await apiClient.post<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}/suspend`, {
       reason,
     });
+    return response.data;
   },
 
   // Activate a student
   activate: async (id: string): Promise<Student> => {
-    return apiClient.post<Student>(`${STUDENTS_PREFIX}/${id}/activate`);
+    const response = await apiClient.post<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}/activate`);
+    return response.data;
   },
 
   // Get student analytics
   getAnalytics: async (id: string): Promise<StudentAnalytics> => {
-    return apiClient.get<StudentAnalytics>(
+    const response = await apiClient.get<ApiResponse<StudentAnalytics>>(
       `${STUDENTS_PREFIX}/${id}/analytics`
     );
+    return response.data;
   },
 
   // Get student's current books
   getCurrentBooks: async (id: string): Promise<unknown[]> => {
-    return apiClient.get<unknown[]>(`${STUDENTS_PREFIX}/${id}/books`);
+    const response = await apiClient.get<ApiResponse<unknown[]>>(`${STUDENTS_PREFIX}/${id}/books`);
+    return response.data || [];
   },
 
   // Get student's borrowing history
@@ -89,20 +139,25 @@ export const studentsApi = {
     id: string,
     params?: { page?: number; per_page?: number }
   ): Promise<PaginatedResponse<unknown>> => {
-    return apiClient.get<PaginatedResponse<unknown>>(
+    const response = await apiClient.get<ApiResponse<{ history: unknown[]; pagination: BackendPagination }>>(
       `${STUDENTS_PREFIX}/${id}/history`,
       { params }
     );
+    return {
+      data: response.data?.history || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Bulk import students
   import: async (file: File): Promise<StudentImportResult> => {
     const formData = new FormData();
     formData.append("file", file);
-    return apiClient.upload<StudentImportResult>(
+    const response = await apiClient.upload<ApiResponse<StudentImportResult>>(
       `${STUDENTS_PREFIX}/import`,
       formData
     );
+    return response.data;
   },
 
   // Export students to CSV
@@ -123,7 +178,8 @@ export const studentsApi = {
 
   // Get departments
   getDepartments: async (): Promise<string[]> => {
-    return apiClient.get<string[]>(`${STUDENTS_PREFIX}/departments`);
+    const response = await apiClient.get<ApiResponse<string[]>>(`${STUDENTS_PREFIX}/departments`);
+    return response.data || [];
   },
 
   // Reset student password (admin only)
@@ -131,10 +187,11 @@ export const studentsApi = {
     id: string,
     newPassword: string
   ): Promise<{ message: string }> => {
-    return apiClient.post<{ message: string }>(
+    const response = await apiClient.post<ApiResponse<{ message: string }>>(
       `${STUDENTS_PREFIX}/${id}/reset-password`,
       { password: newPassword }
     );
+    return response.data;
   },
 };
 

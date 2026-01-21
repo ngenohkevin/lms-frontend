@@ -12,11 +12,12 @@ export function useBooks(params?: BookSearchParams) {
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Book>>(
     key,
-    () => booksApi.list(params)
+    () => booksApi.list(params),
+    { onError: () => {} }
   );
 
   return {
-    books: data?.data,
+    books: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,
@@ -31,11 +32,12 @@ export function useBookSearch(params: BookSearchParams) {
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Book>>(
     key,
-    () => booksApi.search(params)
+    () => booksApi.search(params),
+    { onError: () => {} }
   );
 
   return {
-    books: data?.data,
+    books: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,
@@ -46,7 +48,8 @@ export function useBookSearch(params: BookSearchParams) {
 export function useBook(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<Book>(
     id ? `/api/v1/books/${id}` : null,
-    () => (id ? booksApi.get(id) : Promise.resolve(null as unknown as Book))
+    () => (id ? booksApi.get(id) : Promise.resolve(null as unknown as Book)),
+    { onError: () => {} }
   );
 
   return {
@@ -67,11 +70,12 @@ export function useBookRatings(
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<BookRating>>(
     key,
-    () => (bookId ? booksApi.getRatings(bookId, params) : Promise.resolve({ data: [], pagination: {} as never }))
+    () => (bookId ? booksApi.getRatings(bookId, params) : Promise.resolve({ data: [], pagination: {} as never })),
+    { onError: () => {} }
   );
 
   return {
-    ratings: data?.data,
+    ratings: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,
@@ -82,11 +86,12 @@ export function useBookRatings(
 export function useBookCategories() {
   const { data, error, isLoading } = useSWR<string[]>(
     "/api/v1/books/categories",
-    () => booksApi.getCategories()
+    () => booksApi.getCategories(),
+    { onError: () => {} }
   );
 
   return {
-    categories: data,
+    categories: data || [],
     isLoading,
     error,
   };

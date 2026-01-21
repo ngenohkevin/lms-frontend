@@ -16,10 +16,10 @@ export function useTransactions(params?: TransactionSearchParams) {
 
   const { data, error, isLoading, mutate } = useSWR<
     PaginatedResponse<Transaction>
-  >(key, () => transactionsApi.list(params));
+  >(key, () => transactionsApi.list(params), { onError: () => {} });
 
   return {
-    transactions: data?.data,
+    transactions: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,
@@ -33,7 +33,8 @@ export function useTransaction(id: string | null) {
     () =>
       id
         ? transactionsApi.get(id)
-        : Promise.resolve(null as unknown as Transaction)
+        : Promise.resolve(null as unknown as Transaction),
+    { onError: () => {} }
   );
 
   return {
@@ -49,7 +50,8 @@ export function useTransactionStats() {
     "/api/v1/transactions/stats",
     () => transactionsApi.getStats(),
     {
-      refreshInterval: 60000, // Refresh every minute
+      refreshInterval: 60000,
+      onError: () => {},
     }
   );
 
@@ -72,10 +74,10 @@ export function useOverdueTransactions(params?: {
 
   const { data, error, isLoading, mutate } = useSWR<
     PaginatedResponse<OverdueTransaction>
-  >(key, () => transactionsApi.getOverdue(params));
+  >(key, () => transactionsApi.getOverdue(params), { onError: () => {} });
 
   return {
-    overdueTransactions: data?.data,
+    overdueTransactions: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,
@@ -89,11 +91,12 @@ export function useStudentActiveTransactions(studentId: string | null) {
     () =>
       studentId
         ? transactionsApi.getStudentActive(studentId)
-        : Promise.resolve([])
+        : Promise.resolve([]),
+    { onError: () => {} }
   );
 
   return {
-    transactions: data,
+    transactions: data || [],
     isLoading,
     error,
     refresh: mutate,
@@ -112,11 +115,12 @@ export function useFines(params?: {
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Fine>>(
     key,
-    () => transactionsApi.fines.list(params)
+    () => transactionsApi.fines.list(params),
+    { onError: () => {} }
   );
 
   return {
-    fines: data?.data,
+    fines: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,

@@ -8,41 +8,85 @@ import type {
   ISBNLookupResult,
   BookImportResult,
   PaginatedResponse,
-  ApiResponse,
 } from "@/lib/types";
 
 const BOOKS_PREFIX = "/api/v1/books";
+
+// Backend response wrapper
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+// Backend pagination structure
+interface BackendPagination {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+// Backend paginated response structure
+interface BackendPaginatedBooks {
+  books: Book[];
+  pagination: BackendPagination;
+}
+
+// Transform backend pagination to frontend format
+function transformPagination(bp?: BackendPagination): PaginatedResponse<Book>["pagination"] | undefined {
+  if (!bp) return undefined;
+  return {
+    page: bp.page,
+    per_page: bp.limit,
+    total: bp.total,
+    total_pages: bp.total_pages,
+    has_next: bp.page < bp.total_pages,
+    has_prev: bp.page > 1,
+  };
+}
 
 export const booksApi = {
   // List all books with pagination
   list: async (
     params?: BookSearchParams
   ): Promise<PaginatedResponse<Book>> => {
-    return apiClient.get<PaginatedResponse<Book>>(BOOKS_PREFIX, { params });
+    const response = await apiClient.get<ApiResponse<BackendPaginatedBooks>>(BOOKS_PREFIX, { params });
+    return {
+      data: response.data?.books || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Search books
   search: async (
     params: BookSearchParams
   ): Promise<PaginatedResponse<Book>> => {
-    return apiClient.get<PaginatedResponse<Book>>(`${BOOKS_PREFIX}/search`, {
+    const response = await apiClient.get<ApiResponse<BackendPaginatedBooks>>(`${BOOKS_PREFIX}/search`, {
       params,
     });
+    return {
+      data: response.data?.books || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Get single book by ID
   get: async (id: string): Promise<Book> => {
-    return apiClient.get<Book>(`${BOOKS_PREFIX}/${id}`);
+    const response = await apiClient.get<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`);
+    return response.data;
   },
 
   // Create a new book
   create: async (data: BookFormData): Promise<Book> => {
-    return apiClient.post<Book>(BOOKS_PREFIX, data);
+    const response = await apiClient.post<ApiResponse<Book>>(BOOKS_PREFIX, data);
+    return response.data;
   },
 
   // Update a book
   update: async (id: string, data: Partial<BookFormData>): Promise<Book> => {
-    return apiClient.put<Book>(`${BOOKS_PREFIX}/${id}`, data);
+    const response = await apiClient.put<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`, data);
+    return response.data;
   },
 
   // Delete a book
@@ -52,16 +96,18 @@ export const booksApi = {
 
   // Lookup book by ISBN
   lookupISBN: async (isbn: string): Promise<ISBNLookupResult> => {
-    return apiClient.post<ISBNLookupResult>(`${BOOKS_PREFIX}/isbn/fetch`, {
+    const response = await apiClient.post<ApiResponse<ISBNLookupResult>>(`${BOOKS_PREFIX}/isbn/fetch`, {
       isbn,
     });
+    return response.data;
   },
 
   // Upload book cover
   uploadCover: async (id: string, file: File): Promise<Book> => {
     const formData = new FormData();
     formData.append("cover", file);
-    return apiClient.upload<Book>(`${BOOKS_PREFIX}/${id}/cover`, formData);
+    const response = await apiClient.upload<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}/cover`, formData);
+    return response.data;
   },
 
   // Delete book cover
@@ -74,10 +120,14 @@ export const booksApi = {
     bookId: string,
     params?: { page?: number; per_page?: number }
   ): Promise<PaginatedResponse<BookRating>> => {
-    return apiClient.get<PaginatedResponse<BookRating>>(
+    const response = await apiClient.get<ApiResponse<{ ratings: BookRating[]; pagination: BackendPagination }>>(
       `${BOOKS_PREFIX}/${bookId}/ratings`,
       { params }
     );
+    return {
+      data: response.data?.ratings || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Add a rating
@@ -85,10 +135,11 @@ export const booksApi = {
     bookId: string,
     data: BookRatingFormData
   ): Promise<BookRating> => {
-    return apiClient.post<BookRating>(
+    const response = await apiClient.post<ApiResponse<BookRating>>(
       `${BOOKS_PREFIX}/${bookId}/ratings`,
       data
     );
+    return response.data;
   },
 
   // Update a rating
@@ -97,10 +148,11 @@ export const booksApi = {
     ratingId: string,
     data: BookRatingFormData
   ): Promise<BookRating> => {
-    return apiClient.put<BookRating>(
+    const response = await apiClient.put<ApiResponse<BookRating>>(
       `${BOOKS_PREFIX}/${bookId}/ratings/${ratingId}`,
       data
     );
+    return response.data;
   },
 
   // Delete a rating
@@ -112,10 +164,11 @@ export const booksApi = {
   import: async (file: File): Promise<BookImportResult> => {
     const formData = new FormData();
     formData.append("file", file);
-    return apiClient.upload<BookImportResult>(
+    const response = await apiClient.upload<ApiResponse<BookImportResult>>(
       `${BOOKS_PREFIX}/import`,
       formData
     );
+    return response.data;
   },
 
   // Export books to CSV
@@ -136,7 +189,8 @@ export const booksApi = {
 
   // Get categories
   getCategories: async (): Promise<string[]> => {
-    return apiClient.get<string[]>(`${BOOKS_PREFIX}/categories`);
+    const response = await apiClient.get<ApiResponse<string[]>>(`${BOOKS_PREFIX}/categories`);
+    return response.data || [];
   },
 };
 

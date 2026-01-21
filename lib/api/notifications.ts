@@ -16,16 +16,46 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+// Backend pagination structure
+interface BackendPagination {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+// Backend paginated response structure
+interface BackendPaginatedNotifications {
+  notifications: Notification[];
+  pagination: BackendPagination;
+}
+
+// Transform backend pagination to frontend format
+function transformPagination(bp?: BackendPagination): PaginatedResponse<Notification>["pagination"] | undefined {
+  if (!bp) return undefined;
+  return {
+    page: bp.page,
+    per_page: bp.limit,
+    total: bp.total,
+    total_pages: bp.total_pages,
+    has_next: bp.page < bp.total_pages,
+    has_prev: bp.page > 1,
+  };
+}
+
 export const notificationsApi = {
   // List user's notifications with pagination
   list: async (
     params?: NotificationSearchParams
   ): Promise<PaginatedResponse<Notification>> => {
-    const response = await apiClient.get<ApiResponse<PaginatedResponse<Notification>>>(
+    const response = await apiClient.get<ApiResponse<BackendPaginatedNotifications>>(
       NOTIFICATIONS_PREFIX,
       { params }
     );
-    return response.data;
+    return {
+      data: response.data?.notifications || [],
+      pagination: transformPagination(response.data?.pagination),
+    };
   },
 
   // Get single notification by ID

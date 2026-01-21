@@ -12,11 +12,12 @@ export function useStudents(params?: StudentSearchParams) {
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Student>>(
     key,
-    () => studentsApi.list(params)
+    () => studentsApi.list(params),
+    { onError: () => {} }
   );
 
   return {
-    students: data?.data,
+    students: data?.data || [],
     pagination: data?.pagination,
     isLoading,
     error,
@@ -27,7 +28,8 @@ export function useStudents(params?: StudentSearchParams) {
 export function useStudent(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<Student>(
     id ? `/api/v1/students/${id}` : null,
-    () => (id ? studentsApi.get(id) : Promise.resolve(null as unknown as Student))
+    () => (id ? studentsApi.get(id) : Promise.resolve(null as unknown as Student)),
+    { onError: () => {} }
   );
 
   return {
@@ -41,7 +43,8 @@ export function useStudent(id: string | null) {
 export function useStudentAnalytics(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<StudentAnalytics>(
     id ? `/api/v1/students/${id}/analytics` : null,
-    () => (id ? studentsApi.getAnalytics(id) : Promise.resolve(null as unknown as StudentAnalytics))
+    () => (id ? studentsApi.getAnalytics(id) : Promise.resolve(null as unknown as StudentAnalytics)),
+    { onError: () => {} }
   );
 
   return {
@@ -55,11 +58,12 @@ export function useStudentAnalytics(id: string | null) {
 export function useStudentDepartments() {
   const { data, error, isLoading } = useSWR<string[]>(
     "/api/v1/students/departments",
-    () => studentsApi.getDepartments()
+    () => studentsApi.getDepartments(),
+    { onError: () => {} }
   );
 
   return {
-    departments: data,
+    departments: data || [],
     isLoading,
     error,
   };
