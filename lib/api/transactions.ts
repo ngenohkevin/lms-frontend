@@ -63,8 +63,13 @@ export const transactionsApi = {
   list: async (
     params?: TransactionSearchParams
   ): Promise<PaginatedResponse<Transaction>> => {
+    // Map frontend params to backend params
+    const backendParams: Record<string, string | number | boolean | undefined> = {
+      page: params?.page,
+      limit: params?.per_page,
+    };
     const response = await apiClient.get<ApiResponse<BackendPaginatedTransactions>>(TRANSACTIONS_PREFIX, {
-      params,
+      params: backendParams,
     });
     return {
       data: response.data?.transactions || [],
@@ -115,7 +120,13 @@ export const transactionsApi = {
   // Get transaction stats
   getStats: async (): Promise<TransactionStats> => {
     const response = await apiClient.get<ApiResponse<TransactionStats>>(`${TRANSACTIONS_PREFIX}/stats`);
-    return response.data;
+    return response.data || {
+      total_active: 0,
+      total_overdue: 0,
+      total_borrowed_today: 0,
+      total_unpaid_fines: 0,
+      total_transactions: 0,
+    };
   },
 
   // Get active transactions for a student
