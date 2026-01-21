@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -69,6 +69,29 @@ function BorrowContent() {
       due_days: 14,
     },
   });
+
+  // Auto-load book if book_id is provided in URL
+  useEffect(() => {
+    if (initialBookId && !selectedBook) {
+      const loadBook = async () => {
+        setIsSearchingBook(true);
+        try {
+          const book = await booksApi.get(initialBookId);
+          if (book.available_copies >= 1) {
+            setSelectedBook(book);
+            setBookSearch(book.book_id || initialBookId);
+          } else {
+            setError("This book is not available for borrowing");
+          }
+        } catch {
+          setError("Book not found");
+        } finally {
+          setIsSearchingBook(false);
+        }
+      };
+      loadBook();
+    }
+  }, [initialBookId]);
 
   // Search for book by ISBN or ID
   const handleBookSearch = async () => {

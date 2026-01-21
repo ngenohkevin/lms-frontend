@@ -60,7 +60,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     resolver: zodResolver(bookSchema),
     defaultValues: book
       ? {
-          book_id: book.id,
+          book_id: book.book_id,
           isbn: book.isbn,
           title: book.title,
           author: book.author,

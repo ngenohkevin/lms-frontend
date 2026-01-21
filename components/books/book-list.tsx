@@ -22,11 +22,10 @@ interface BookListProps {
 function BookCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
-      <Skeleton className="aspect-[2/3] w-full" />
-      <div className="p-4 space-y-2">
-        <Skeleton className="h-5 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-4 w-1/3" />
+      <Skeleton className="aspect-[4/5] w-full" />
+      <div className="p-3 space-y-1.5">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-1/2" />
       </div>
     </div>
   );
