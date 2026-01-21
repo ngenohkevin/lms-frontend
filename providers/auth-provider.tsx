@@ -44,9 +44,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
-        // Try to refresh the token and get user data
-        await authApi.refresh();
-        await refreshUser();
+        // Check if we have an access token (in cookie)
+        const hasToken = typeof document !== "undefined" &&
+          document.cookie.includes("access_token=");
+
+        if (hasToken) {
+          // Try to get user data with existing token
+          try {
+            await refreshUser();
+            return; // Success, we have the user
+          } catch {
+            // Token might be expired, try to refresh
+            try {
+              await authApi.refresh();
+              await refreshUser();
+              return;
+            } catch {
+              // Refresh failed, clear user
+              setUser(null);
+            }
+          }
+        } else {
+          setUser(null);
+        }
       } catch {
         setUser(null);
       } finally {
