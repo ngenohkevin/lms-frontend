@@ -1,8 +1,5 @@
 import type { ApiResponse } from "@/lib/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
 type ParamValue = string | number | boolean | undefined | null;
 
 interface RequestOptions extends RequestInit {
@@ -10,11 +7,16 @@ interface RequestOptions extends RequestInit {
 }
 
 class ApiClient {
-  private baseUrl: string;
   private accessToken: string | null = null;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
+  // Get base URL dynamically - empty on client (uses proxy), full URL on server
+  private getBaseUrl(): string {
+    if (typeof window !== "undefined") {
+      // Client-side: use relative URL to proxy through Next.js
+      return "";
+    }
+    // Server-side: use direct API URL
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
   }
 
   setAccessToken(token: string | null) {
@@ -29,7 +31,26 @@ class ApiClient {
     endpoint: string,
     params?: Record<string, ParamValue> | object
   ): string {
-    const url = new URL(`${this.baseUrl}${endpoint}`);
+    const baseUrl = this.getBaseUrl();
+    // For relative URLs (client-side), we can't use new URL() directly
+    const fullPath = `${baseUrl}${endpoint}`;
+
+    if (!baseUrl) {
+      // Client-side: build URL manually
+      const searchParams = new URLSearchParams();
+      if (params) {
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== "") {
+            searchParams.append(key, String(value));
+          }
+        });
+      }
+      const queryString = searchParams.toString();
+      return queryString ? `${fullPath}?${queryString}` : fullPath;
+    }
+
+    // Server-side: use URL constructor
+    const url = new URL(fullPath);
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
@@ -72,7 +93,7 @@ class ApiClient {
 
   private async refreshToken(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v1/auth/refresh`, {
+      const response = await fetch(`${this.getBaseUrl()}/api/v1/auth/refresh`, {
         method: "POST",
         credentials: "include",
       });
@@ -197,5 +218,5 @@ class ApiClient {
   }
 }
 
-export const apiClient = new ApiClient(API_BASE_URL);
+export const apiClient = new ApiClient();
 export default apiClient;
