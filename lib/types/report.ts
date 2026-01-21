@@ -1,12 +1,40 @@
+// Response from /api/v1/reports/dashboard-metrics
+export interface DashboardMetricsResponse {
+  today_borrows: number;
+  today_returns: number;
+  current_overdue: number;
+  new_students: number;
+  active_users: number;
+  available_books: number;
+  pending_reservations: number;
+  system_alerts: number;
+  last_updated: string;
+}
+
+// Response from /api/v1/reports/library-overview
+export interface LibraryOverviewResponse {
+  total_books: number;
+  total_students: number;
+  total_borrows: number;
+  active_borrows: number;
+  overdue_books: number;
+  total_reservations: number;
+  available_books: number;
+  total_fines: string;
+  generated_at: string;
+}
+
+// Combined dashboard metrics for frontend display
 export interface DashboardMetrics {
   total_books: number;
   total_students: number;
-  active_transactions: number;
-  overdue_transactions: number;
-  books_borrowed_today: number;
-  books_returned_today: number;
+  active_borrows: number;
+  overdue_books: number;
+  today_borrows: number;
+  today_returns: number;
   pending_reservations: number;
-  total_unpaid_fines: number;
+  total_fines: number;
+  available_books: number;
 }
 
 export interface BorrowingStats {

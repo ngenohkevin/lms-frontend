@@ -118,17 +118,17 @@ export function DashboardMetricsCards({
       />
       <MetricCard
         title="Active Transactions"
-        value={formatNumber(metrics.active_transactions)}
+        value={formatNumber(metrics.active_borrows)}
         description="Currently borrowed"
         icon={ArrowLeftRight}
       />
       <MetricCard
         title="Overdue"
-        value={formatNumber(metrics.overdue_transactions)}
+        value={formatNumber(metrics.overdue_books)}
         description="Books past due date"
         icon={AlertTriangle}
         className={
-          metrics.overdue_transactions > 0
+          metrics.overdue_books > 0
             ? "border-destructive/50 bg-destructive/5"
             : undefined
         }
@@ -150,23 +150,23 @@ export function DashboardMetricsCards({
           />
           <MetricCard
             title="Borrowed Today"
-            value={formatNumber(metrics.books_borrowed_today)}
+            value={formatNumber(metrics.today_borrows)}
             description="Books checked out today"
             icon={BookOpen}
           />
           <MetricCard
             title="Returned Today"
-            value={formatNumber(metrics.books_returned_today)}
+            value={formatNumber(metrics.today_returns)}
             description="Books returned today"
             icon={BookOpen}
           />
           <MetricCard
             title="Unpaid Fines"
-            value={formatCurrency(metrics.total_unpaid_fines)}
+            value={formatCurrency(metrics.total_fines)}
             description="Outstanding fines"
             icon={DollarSign}
             className={
-              metrics.total_unpaid_fines > 0
+              metrics.total_fines > 0
                 ? "border-yellow-500/50 bg-yellow-500/5"
                 : undefined
             }

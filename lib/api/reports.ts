@@ -1,6 +1,8 @@
 import apiClient from "./client";
 import type {
   DashboardMetrics,
+  DashboardMetricsResponse,
+  LibraryOverviewResponse,
   BorrowingStats,
   PopularBook,
   CategoryStats,
@@ -31,18 +33,52 @@ function getDefaultDateRange() {
   };
 }
 
+// Helper to safely parse number, returning 0 for NaN/null/undefined
+function safeNumber(value: unknown): number {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === "string") {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  if (typeof value === "number") {
+    return isNaN(value) ? 0 : value;
+  }
+  return 0;
+}
+
 export const reportsApi = {
-  // Dashboard metrics - GET /api/v1/reports/dashboard-metrics
+  // Dashboard metrics - combines dashboard-metrics and library-overview
   getDashboardMetrics: async (): Promise<DashboardMetrics> => {
-    const response = await apiClient.get<ApiResponse<DashboardMetrics>>(
-      `${REPORTS_PREFIX}/dashboard-metrics`
-    );
-    return response.data;
+    // Fetch both endpoints for complete data
+    const [dashboardResponse, overviewResponse] = await Promise.all([
+      apiClient.get<ApiResponse<DashboardMetricsResponse>>(
+        `${REPORTS_PREFIX}/dashboard-metrics`
+      ),
+      apiClient.get<ApiResponse<LibraryOverviewResponse>>(
+        `${REPORTS_PREFIX}/library-overview`
+      ),
+    ]);
+
+    const dashboard = dashboardResponse.data;
+    const overview = overviewResponse.data;
+
+    // Combine and transform the data
+    return {
+      total_books: safeNumber(overview?.total_books),
+      total_students: safeNumber(overview?.total_students),
+      active_borrows: safeNumber(overview?.active_borrows),
+      overdue_books: safeNumber(overview?.overdue_books),
+      today_borrows: safeNumber(dashboard?.today_borrows),
+      today_returns: safeNumber(dashboard?.today_returns),
+      pending_reservations: safeNumber(overview?.total_reservations ?? dashboard?.pending_reservations),
+      total_fines: safeNumber(overview?.total_fines),
+      available_books: safeNumber(overview?.available_books ?? dashboard?.available_books),
+    };
   },
 
   // Library overview - GET /api/v1/reports/library-overview
-  getLibraryOverview: async (): Promise<DashboardMetrics> => {
-    const response = await apiClient.get<ApiResponse<DashboardMetrics>>(
+  getLibraryOverview: async (): Promise<LibraryOverviewResponse> => {
+    const response = await apiClient.get<ApiResponse<LibraryOverviewResponse>>(
       `${REPORTS_PREFIX}/library-overview`
     );
     return response.data;
