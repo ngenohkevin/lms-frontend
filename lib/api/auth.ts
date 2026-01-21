@@ -9,20 +9,43 @@ import type {
 
 const AUTH_PREFIX = "/api/v1/auth";
 
+// Backend response wrapper
+interface ApiLoginResponse {
+  success: boolean;
+  data: {
+    user: User;
+    access_token: string;
+    refresh_token: string;
+    token_type: string;
+    expires_in: number;
+  };
+  message: string;
+}
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
     // Backend expects 'username' field, but we use email for login
-    const response = await apiClient.post<LoginResponse>(
+    const response = await apiClient.post<ApiLoginResponse>(
       `${AUTH_PREFIX}/login`,
       {
         username: credentials.email,
         password: credentials.password,
       }
     );
-    if (response.tokens?.access_token) {
-      apiClient.setAccessToken(response.tokens.access_token);
+
+    if (response.data?.access_token) {
+      apiClient.setAccessToken(response.data.access_token);
     }
-    return response;
+
+    // Transform to expected LoginResponse format
+    return {
+      user: response.data.user as unknown as User,
+      tokens: {
+        access_token: response.data.access_token,
+        refresh_token: response.data.refresh_token,
+        expires_at: new Date(Date.now() + response.data.expires_in * 1000).toISOString(),
+      },
+    };
   },
 
   logout: async (): Promise<void> => {

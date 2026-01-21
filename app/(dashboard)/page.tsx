@@ -48,7 +48,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {user?.name?.split(" ")[0] || "User"}!
+            Welcome back, {user?.username?.split("@")[0] || "User"}!
           </h1>
           <p className="text-muted-foreground">
             Here&apos;s what&apos;s happening in the library today.

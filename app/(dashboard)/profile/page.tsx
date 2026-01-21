@@ -32,7 +32,7 @@ export default function ProfilePage() {
   const { user, isStudent } = useAuth();
 
   const { transactions, isLoading: transactionsLoading } =
-    useStudentActiveTransactions(isStudent && user?.id ? user.id : null);
+    useStudentActiveTransactions(isStudent && user?.id ? String(user.id) : null);
 
   if (!user) {
     return (
@@ -58,11 +58,11 @@ export default function ProfilePage() {
             <div className="flex justify-center mb-4">
               <Avatar className="h-24 w-24">
                 <AvatarFallback className="text-2xl">
-                  {getInitials(user.name)}
+                  {getInitials(user.username)}
                 </AvatarFallback>
               </Avatar>
             </div>
-            <CardTitle>{user.name}</CardTitle>
+            <CardTitle>{user.username}</CardTitle>
             <CardDescription>{user.email}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -77,12 +77,12 @@ export default function ProfilePage() {
                   </Badge>
                 </div>
               </div>
-              {user.student_id && (
+              {isStudent && "student_id" in user && (
                 <div className="flex items-center gap-3">
                   <User className="h-4 w-4 text-muted-foreground" />
                   <div>
                     <p className="text-sm text-muted-foreground">Student ID</p>
-                    <p className="font-medium">{user.student_id}</p>
+                    <p className="font-medium">{(user as { student_id?: string }).student_id}</p>
                   </div>
                 </div>
               )}
@@ -111,7 +111,7 @@ export default function ProfilePage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Full Name</Label>
-                  <Input value={user.name} disabled />
+                  <Input value={user.username} disabled />
                 </div>
                 <div className="space-y-2">
                   <Label>Email Address</Label>

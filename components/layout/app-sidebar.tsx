@@ -178,11 +178,11 @@ export function AppSidebar() {
             <button className="flex w-full items-center gap-3 rounded-lg p-2 hover:bg-muted">
               <Avatar className="h-9 w-9">
                 <AvatarFallback>
-                  {user?.name ? getInitials(user.name) : "U"}
+                  {user?.username ? getInitials(user.username) : "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm">
-                <span className="font-medium">{user?.name || "User"}</span>
+                <span className="font-medium">{user?.username || "User"}</span>
                 <span className="text-xs text-muted-foreground capitalize">
                   {user?.role || "Unknown"}
                 </span>

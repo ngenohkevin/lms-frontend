@@ -29,12 +29,12 @@ const statusColors: Record<TransactionStatus, string> = {
 };
 
 export default function TransactionsPage() {
-  const { isLibrarian, user } = useAuth();
+  const { isLibrarian, isStudent, user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
   const [params, setParams] = useState<TransactionSearchParams>({
     page: 1,
     per_page: 20,
-    student_id: !isLibrarian ? user?.student_id : undefined,
+    student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,
   });
 
   const { stats, isLoading: statsLoading } = useTransactionStats();
@@ -45,7 +45,7 @@ export default function TransactionsPage() {
     let newParams: TransactionSearchParams = {
       page: 1,
       per_page: 20,
-      student_id: !isLibrarian ? user?.student_id : undefined,
+      student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,
     };
 
     switch (tab) {

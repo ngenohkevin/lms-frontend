@@ -1,11 +1,12 @@
-export type UserRole = "admin" | "librarian" | "student";
+export type UserRole = "admin" | "librarian" | "student" | "staff";
 
 export interface User {
-  id: string;
+  id: number;
+  username: string;
   email: string;
-  name: string;
   role: UserRole;
-  student_id?: string;
+  is_active: boolean;
+  last_login?: string | null;
   created_at: string;
   updated_at: string;
 }

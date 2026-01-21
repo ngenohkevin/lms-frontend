@@ -30,11 +30,11 @@ const statusIcons: Record<ReservationStatus, React.ComponentType<{ className?: s
 };
 
 export default function ReservationsPage() {
-  const { isLibrarian, user } = useAuth();
+  const { isLibrarian, isStudent, user } = useAuth();
   const [params, setParams] = useState<ReservationSearchParams>({
     page: 1,
     per_page: 20,
-    student_id: !isLibrarian ? user?.student_id : undefined,
+    student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,
   });
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Reservation>>(
