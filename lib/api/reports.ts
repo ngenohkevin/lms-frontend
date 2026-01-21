@@ -13,64 +13,100 @@ import type {
 
 const REPORTS_PREFIX = "/api/v1/reports";
 
+// Backend response wrapper
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
 export const reportsApi = {
-  // Dashboard metrics
+  // Dashboard metrics - GET /api/v1/reports/dashboard-metrics
   getDashboardMetrics: async (): Promise<DashboardMetrics> => {
-    return apiClient.get<DashboardMetrics>(`${REPORTS_PREFIX}/dashboard`);
+    const response = await apiClient.get<ApiResponse<DashboardMetrics>>(
+      `${REPORTS_PREFIX}/dashboard-metrics`
+    );
+    return response.data;
   },
 
-  // Borrowing statistics
+  // Library overview - GET /api/v1/reports/library-overview
+  getLibraryOverview: async (): Promise<DashboardMetrics> => {
+    const response = await apiClient.get<ApiResponse<DashboardMetrics>>(
+      `${REPORTS_PREFIX}/library-overview`
+    );
+    return response.data;
+  },
+
+  // Borrowing statistics - POST /api/v1/reports/borrowing-statistics
   getBorrowingStats: async (params?: ReportParams): Promise<BorrowingStats[]> => {
-    return apiClient.get<BorrowingStats[]>(`${REPORTS_PREFIX}/borrowing-stats`, {
-      params,
-    });
+    const response = await apiClient.post<ApiResponse<BorrowingStats[]>>(
+      `${REPORTS_PREFIX}/borrowing-statistics`,
+      params || {}
+    );
+    return response.data || [];
   },
 
-  // Borrowing trends over time
+  // Borrowing trends over time - POST /api/v1/reports/borrowing-trends
   getBorrowingTrends: async (params?: ReportParams): Promise<BorrowingTrend[]> => {
-    return apiClient.get<BorrowingTrend[]>(`${REPORTS_PREFIX}/borrowing-trends`, {
-      params,
-    });
+    const response = await apiClient.post<ApiResponse<BorrowingTrend[]>>(
+      `${REPORTS_PREFIX}/borrowing-trends`,
+      params || {}
+    );
+    return response.data || [];
   },
 
-  // Popular books
+  // Popular books - POST /api/v1/reports/popular-books
   getPopularBooks: async (params?: {
     limit?: number;
     from_date?: string;
     to_date?: string;
     category?: string;
   }): Promise<PopularBook[]> => {
-    return apiClient.get<PopularBook[]>(`${REPORTS_PREFIX}/popular-books`, {
-      params,
-    });
+    const response = await apiClient.post<ApiResponse<PopularBook[]>>(
+      `${REPORTS_PREFIX}/popular-books`,
+      params || {}
+    );
+    return response.data || [];
   },
 
-  // Category statistics
+  // Category statistics (using library overview)
   getCategoryStats: async (): Promise<CategoryStats[]> => {
-    return apiClient.get<CategoryStats[]>(`${REPORTS_PREFIX}/category-stats`);
+    const response = await apiClient.get<ApiResponse<CategoryStats[]>>(
+      `${REPORTS_PREFIX}/library-overview`
+    );
+    return response.data || [];
   },
 
-  // Student activity report
+  // Student activity report - POST /api/v1/reports/student-activity
   getStudentActivity: async (params?: {
     limit?: number;
     department?: string;
     order_by?: string;
   }): Promise<StudentActivity[]> => {
-    return apiClient.get<StudentActivity[]>(`${REPORTS_PREFIX}/student-activity`, {
-      params,
-    });
+    const response = await apiClient.post<ApiResponse<StudentActivity[]>>(
+      `${REPORTS_PREFIX}/student-activity`,
+      params || {}
+    );
+    return response.data || [];
   },
 
-  // Inventory report
+  // Inventory report - GET /api/v1/reports/inventory-status
   getInventoryReport: async (): Promise<InventoryReport> => {
-    return apiClient.get<InventoryReport>(`${REPORTS_PREFIX}/inventory`);
+    const response = await apiClient.get<ApiResponse<InventoryReport>>(
+      `${REPORTS_PREFIX}/inventory-status`
+    );
+    return response.data;
   },
 
-  // Overdue report
+  // Overdue report - POST /api/v1/reports/overdue-books
   getOverdueReport: async (params?: {
     department?: string;
   }): Promise<OverdueReport> => {
-    return apiClient.get<OverdueReport>(`${REPORTS_PREFIX}/overdue`, { params });
+    const response = await apiClient.post<ApiResponse<OverdueReport>>(
+      `${REPORTS_PREFIX}/overdue-books`,
+      params || {}
+    );
+    return response.data;
   },
 
   // Fine collection report
@@ -84,25 +120,35 @@ export const reportsApi = {
       collected: number;
     }>;
   }> => {
-    return apiClient.get(`${REPORTS_PREFIX}/fines`, { params });
+    const response = await apiClient.post<ApiResponse<{
+      total_fines: number;
+      total_collected: number;
+      total_pending: number;
+      by_period: Array<{
+        period: string;
+        fines: number;
+        collected: number;
+      }>;
+    }>>(`${REPORTS_PREFIX}/borrowing-statistics`, params || {});
+    return response.data;
   },
 
-  // Generate and download report as PDF/CSV
+  // Export report - POST /api/v1/reports/export
   downloadReport: async (
     type: "borrowing" | "inventory" | "overdue" | "fines" | "students",
     format: "pdf" | "csv",
     params?: ReportParams
   ): Promise<Blob> => {
-    const url = new URL(`${REPORTS_PREFIX}/${type}/download`);
-    url.searchParams.append("format", format);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
-    const response = await fetch(url.toString(), {
+    const response = await fetch(`${REPORTS_PREFIX}/export`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        report_type: type,
+        format,
+        ...params,
+      }),
       credentials: "include",
     });
     return response.blob();
