@@ -111,8 +111,29 @@ class ApiClient {
 
   private async refreshToken(): Promise<boolean> {
     try {
+      // Get refresh token from cookie
+      let refreshTokenValue = "";
+      if (typeof document !== "undefined") {
+        const cookies = document.cookie.split(";");
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split("=");
+          if (name === "refresh_token") {
+            refreshTokenValue = value;
+            break;
+          }
+        }
+      }
+
+      if (!refreshTokenValue) {
+        return false;
+      }
+
       const response = await fetch(`${this.getBaseUrl()}/api/v1/auth/refresh`, {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refresh_token: refreshTokenValue }),
         credentials: "include",
       });
 
@@ -121,8 +142,16 @@ class ApiClient {
       }
 
       const data = await response.json();
-      if (data.access_token) {
-        this.accessToken = data.access_token;
+      // Response is wrapped: {success, data: {access_token, refresh_token, expires_in}}
+      if (data.data?.access_token) {
+        this.accessToken = data.data.access_token;
+        // Update cookies
+        if (typeof document !== "undefined") {
+          document.cookie = `access_token=${data.data.access_token}; path=/; max-age=${data.data.expires_in || 3600}; SameSite=Lax`;
+          if (data.data.refresh_token) {
+            document.cookie = `refresh_token=${data.data.refresh_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+          }
+        }
         return true;
       }
 

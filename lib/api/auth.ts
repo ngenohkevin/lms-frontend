@@ -35,9 +35,13 @@ export const authApi = {
 
     if (response.data?.access_token) {
       apiClient.setAccessToken(response.data.access_token);
-      // Store token in cookie for middleware auth check
+      // Store tokens in cookies for middleware auth check and token refresh
       if (typeof document !== "undefined") {
         document.cookie = `access_token=${response.data.access_token}; path=/; max-age=${response.data.expires_in}; SameSite=Lax`;
+        if (response.data.refresh_token) {
+          // Refresh token lasts 7 days
+          document.cookie = `refresh_token=${response.data.refresh_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+        }
       }
     }
 
@@ -55,20 +59,51 @@ export const authApi = {
   logout: async (): Promise<void> => {
     await apiClient.post(`${AUTH_PREFIX}/logout`);
     apiClient.setAccessToken(null);
-    // Clear token cookie
+    // Clear token cookies
     if (typeof document !== "undefined") {
       document.cookie = "access_token=; path=/; max-age=0";
+      document.cookie = "refresh_token=; path=/; max-age=0";
     }
   },
 
   refresh: async (): Promise<{ access_token: string }> => {
-    const response = await apiClient.post<{ access_token: string }>(
-      `${AUTH_PREFIX}/refresh`
-    );
-    if (response.access_token) {
-      apiClient.setAccessToken(response.access_token);
+    // Get refresh token from cookie
+    let refreshToken = "";
+    if (typeof document !== "undefined") {
+      const cookies = document.cookie.split(";");
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "refresh_token") {
+          refreshToken = value;
+          break;
+        }
+      }
     }
-    return response;
+
+    if (!refreshToken) {
+      throw new Error("No refresh token available");
+    }
+
+    const response = await apiClient.post<{
+      success: boolean;
+      data: {
+        access_token: string;
+        refresh_token: string;
+        expires_in: number;
+      };
+    }>(`${AUTH_PREFIX}/refresh`, { refresh_token: refreshToken });
+
+    if (response.data?.access_token) {
+      apiClient.setAccessToken(response.data.access_token);
+      // Update tokens in cookies
+      if (typeof document !== "undefined") {
+        document.cookie = `access_token=${response.data.access_token}; path=/; max-age=${response.data.expires_in}; SameSite=Lax`;
+        if (response.data.refresh_token) {
+          document.cookie = `refresh_token=${response.data.refresh_token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax`;
+        }
+      }
+    }
+    return { access_token: response.data.access_token };
   },
 
   forgotPassword: async (data: ForgotPasswordRequest): Promise<void> => {
