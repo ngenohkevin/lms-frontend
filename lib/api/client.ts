@@ -9,6 +9,24 @@ interface RequestOptions extends RequestInit {
 class ApiClient {
   private accessToken: string | null = null;
 
+  // Read access token from cookie (for persistence across page refreshes)
+  private getAccessTokenFromCookie(): string | null {
+    if (typeof document === "undefined") return null;
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split("=");
+      if (name === "access_token") {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  // Get the current access token (from memory or cookie)
+  private getCurrentToken(): string | null {
+    return this.accessToken || this.getAccessTokenFromCookie();
+  }
+
   // Get base URL dynamically - empty on client (uses proxy), full URL on server
   private getBaseUrl(): string {
     if (typeof window !== "undefined") {
@@ -119,8 +137,9 @@ class ApiClient {
       "Content-Type": "application/json",
     };
 
-    if (this.accessToken) {
-      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    const token = this.getCurrentToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
 
     return headers;
@@ -203,8 +222,9 @@ class ApiClient {
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
     const headers: HeadersInit = {};
-    if (this.accessToken) {
-      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    const token = this.getCurrentToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
     }
     // Don't set Content-Type for FormData, browser will set it with boundary
     const response = await fetch(url, {
