@@ -2,6 +2,14 @@ import type { ApiResponse } from "@/lib/types";
 
 type ParamValue = string | number | boolean | undefined | null;
 
+// Helper to clear auth cookies
+function clearAuthCookies() {
+  if (typeof document !== "undefined") {
+    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "refresh_token=; path=/; max-age=0; SameSite=Lax";
+  }
+}
+
 interface RequestOptions extends RequestInit {
   params?: Record<string, ParamValue> | object;
 }
@@ -84,7 +92,9 @@ class ApiClient {
       // Try to refresh the token
       const refreshed = await this.refreshToken();
       if (!refreshed) {
-        // Redirect to login
+        // Clear invalid tokens and redirect to login
+        clearAuthCookies();
+        this.accessToken = null;
         if (typeof window !== "undefined") {
           window.location.href = "/login";
         }

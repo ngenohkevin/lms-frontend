@@ -8,9 +8,17 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { authApi } from "@/lib/api";
 import type { User, LoginCredentials, UserRole } from "@/lib/types";
+
+// Helper to clear auth cookies
+function clearAuthCookies() {
+  if (typeof document !== "undefined") {
+    document.cookie = "access_token=; path=/; max-age=0; SameSite=Lax";
+    document.cookie = "refresh_token=; path=/; max-age=0; SameSite=Lax";
+  }
+}
 
 interface AuthContextType {
   user: User | null;
@@ -31,15 +39,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Helper to handle auth failure - clears cookies and redirects
+  const handleAuthFailure = useCallback(() => {
+    clearAuthCookies();
+    setUser(null);
+    // Only redirect if not already on a public page
+    const publicPaths = ["/login", "/forgot-password", "/reset-password"];
+    if (!publicPaths.includes(pathname)) {
+      router.push("/login");
+    }
+  }, [pathname, router]);
 
   const refreshUser = useCallback(async () => {
     try {
       const userData = await authApi.me();
       setUser(userData);
     } catch {
-      setUser(null);
+      handleAuthFailure();
     }
-  }, []);
+  }, [handleAuthFailure]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -60,22 +80,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await refreshUser();
               return;
             } catch {
-              // Refresh failed, clear user
-              setUser(null);
+              // Refresh failed, clear cookies and redirect
+              handleAuthFailure();
             }
           }
         } else {
           setUser(null);
         }
       } catch {
-        setUser(null);
+        handleAuthFailure();
       } finally {
         setIsLoading(false);
       }
     };
 
     initAuth();
-  }, [refreshUser]);
+  }, [refreshUser, handleAuthFailure]);
 
   const login = async (credentials: LoginCredentials) => {
     const response = await authApi.login(credentials);
@@ -89,6 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch {
       // Ignore logout errors
     } finally {
+      clearAuthCookies();
       setUser(null);
       router.push("/login");
     }
