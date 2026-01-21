@@ -20,6 +20,17 @@ interface ApiResponse<T> {
   message?: string;
 }
 
+// Helper to get default date range (last 30 days)
+function getDefaultDateRange() {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - 30);
+  return {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  };
+}
+
 export const reportsApi = {
   // Dashboard metrics - GET /api/v1/reports/dashboard-metrics
   getDashboardMetrics: async (): Promise<DashboardMetrics> => {
@@ -38,15 +49,22 @@ export const reportsApi = {
   },
 
   // Borrowing trends - POST /api/v1/reports/borrowing-trends
+  // Requires: start_date, end_date, interval
   getBorrowingTrends: async (params?: ReportParams): Promise<BorrowingTrend[]> => {
+    const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<BorrowingTrend[]>>(
       `${REPORTS_PREFIX}/borrowing-trends`,
-      params || {}
+      {
+        start_date: params?.from_date || defaultDates.start_date,
+        end_date: params?.to_date || defaultDates.end_date,
+        interval: params?.group_by || "day",
+      }
     );
     return response.data || [];
   },
 
   // Popular books - POST /api/v1/reports/popular-books
+  // Requires: start_date, end_date
   getPopularBooks: async (params?: {
     limit?: number;
     from_date?: string;
@@ -56,18 +74,30 @@ export const reportsApi = {
     department?: string;
     period?: string;
   }): Promise<PopularBook[]> => {
+    const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<PopularBook[]>>(
       `${REPORTS_PREFIX}/popular-books`,
-      params || {}
+      {
+        start_date: params?.from_date || defaultDates.start_date,
+        end_date: params?.to_date || defaultDates.end_date,
+        limit: params?.limit || 10,
+        year_of_study: params?.year,
+      }
     );
     return response.data || [];
   },
 
   // Borrowing statistics - POST /api/v1/reports/borrowing-statistics
-  getBorrowingStats: async (params?: ReportParams): Promise<BorrowingStats[]> => {
+  // Requires: start_date, end_date
+  getBorrowingStats: async (params?: ReportParams & { year?: number }): Promise<BorrowingStats[]> => {
+    const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<BorrowingStats[]>>(
       `${REPORTS_PREFIX}/borrowing-statistics`,
-      params || {}
+      {
+        start_date: params?.from_date || defaultDates.start_date,
+        end_date: params?.to_date || defaultDates.end_date,
+        year_of_study: params?.year,
+      }
     );
     return response.data || [];
   },
@@ -81,6 +111,7 @@ export const reportsApi = {
   },
 
   // Student activity report - POST /api/v1/reports/student-activity
+  // Requires: start_date, end_date
   getStudentActivity: async (params?: {
     limit?: number;
     department?: string;
@@ -88,9 +119,15 @@ export const reportsApi = {
     active_only?: boolean;
     period?: string;
   }): Promise<StudentActivity[]> => {
+    const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<StudentActivity[]>>(
       `${REPORTS_PREFIX}/student-activity`,
-      params || {}
+      {
+        start_date: defaultDates.start_date,
+        end_date: defaultDates.end_date,
+        department: params?.department,
+        year_of_study: params?.year,
+      }
     );
     return response.data || [];
   },
@@ -111,6 +148,7 @@ export const reportsApi = {
   },
 
   // Overdue report - POST /api/v1/reports/overdue-books
+  // No required fields
   getOverdueReport: async (params?: {
     department?: string;
     year?: number;
@@ -118,7 +156,10 @@ export const reportsApi = {
   }): Promise<OverdueReport> => {
     const response = await apiClient.post<ApiResponse<OverdueReport>>(
       `${REPORTS_PREFIX}/overdue-books`,
-      params || {}
+      {
+        department: params?.department,
+        year_of_study: params?.year,
+      }
     );
     return response.data;
   },
@@ -134,6 +175,7 @@ export const reportsApi = {
       collected: number;
     }>;
   }> => {
+    const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<{
       total_fines: number;
       total_collected: number;
@@ -143,7 +185,10 @@ export const reportsApi = {
         fines: number;
         collected: number;
       }>;
-    }>>(`${REPORTS_PREFIX}/borrowing-statistics`, params || {});
+    }>>(`${REPORTS_PREFIX}/borrowing-statistics`, {
+      start_date: params?.from_date || defaultDates.start_date,
+      end_date: params?.to_date || defaultDates.end_date,
+    });
     return response.data;
   },
 
