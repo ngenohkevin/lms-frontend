@@ -11,9 +11,13 @@ const AUTH_PREFIX = "/api/v1/auth";
 
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
+    // Backend expects 'username' field, but we use email for login
     const response = await apiClient.post<LoginResponse>(
       `${AUTH_PREFIX}/login`,
-      credentials
+      {
+        username: credentials.email,
+        password: credentials.password,
+      }
     );
     if (response.tokens?.access_token) {
       apiClient.setAccessToken(response.tokens.access_token);
