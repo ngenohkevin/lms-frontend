@@ -165,7 +165,7 @@ export const booksApi = {
     params?: { page?: number; per_page?: number }
   ): Promise<PaginatedResponse<BookRating>> => {
     const response = await apiClient.get<ApiResponse<{ ratings: BookRating[]; pagination: BackendPagination }>>(
-      `${BOOKS_PREFIX}/${bookId}/ratings`,
+      `/api/v1/ratings/book/${bookId}`,
       { params }
     );
     return {
@@ -180,8 +180,8 @@ export const booksApi = {
     data: BookRatingFormData
   ): Promise<BookRating> => {
     const response = await apiClient.post<ApiResponse<BookRating>>(
-      `${BOOKS_PREFIX}/${bookId}/ratings`,
-      data
+      `/api/v1/ratings`,
+      { ...data, book_id: bookId }
     );
     return response.data;
   },
@@ -193,7 +193,7 @@ export const booksApi = {
     data: BookRatingFormData
   ): Promise<BookRating> => {
     const response = await apiClient.put<ApiResponse<BookRating>>(
-      `${BOOKS_PREFIX}/${bookId}/ratings/${ratingId}`,
+      `/api/v1/ratings/${ratingId}`,
       data
     );
     return response.data;
@@ -201,7 +201,7 @@ export const booksApi = {
 
   // Delete a rating
   deleteRating: async (bookId: string, ratingId: string): Promise<void> => {
-    await apiClient.delete(`${BOOKS_PREFIX}/${bookId}/ratings/${ratingId}`);
+    await apiClient.delete(`/api/v1/ratings/${ratingId}`);
   },
 
   // Bulk import books
