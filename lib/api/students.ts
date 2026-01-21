@@ -25,10 +25,44 @@ interface BackendPagination {
   total_pages: number;
 }
 
+// Backend student structure (what the API actually returns)
+interface BackendStudent {
+  id: string;
+  student_id: string;
+  user_id?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  department?: string;
+  year_of_study?: number;
+  max_books: number;
+  current_books: number;
+  total_borrowed: number;
+  total_fines: number;
+  unpaid_fines: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Backend paginated response structure
 interface BackendPaginatedStudents {
-  students: Student[];
+  students: BackendStudent[];
   pagination: BackendPagination;
+}
+
+// Transform backend student to frontend format (combine first_name + last_name into name)
+function transformStudent(student: BackendStudent): Student {
+  return {
+    ...student,
+    name: `${student.first_name} ${student.last_name}`.trim(),
+    status: student.status as Student["status"],
+  };
+}
+
+function transformStudents(students: BackendStudent[]): Student[] {
+  return students.map(transformStudent);
 }
 
 // Transform backend pagination to frontend format
@@ -53,7 +87,7 @@ export const studentsApi = {
       params,
     });
     return {
-      data: response.data?.students || [],
+      data: transformStudents(response.data?.students || []),
       pagination: transformPagination(response.data?.pagination),
     };
   },
@@ -67,23 +101,23 @@ export const studentsApi = {
       { params }
     );
     return {
-      data: response.data?.students || [],
+      data: transformStudents(response.data?.students || []),
       pagination: transformPagination(response.data?.pagination),
     };
   },
 
   // Get single student by ID
   get: async (id: string): Promise<Student> => {
-    const response = await apiClient.get<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}`);
-    return response.data;
+    const response = await apiClient.get<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}`);
+    return transformStudent(response.data);
   },
 
   // Get student by student_id (registration number)
   getByStudentId: async (studentId: string): Promise<Student> => {
-    const response = await apiClient.get<ApiResponse<Student>>(`${STUDENTS_PREFIX}/by-student-id`, {
+    const response = await apiClient.get<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/by-student-id`, {
       params: { student_id: studentId },
     });
-    return response.data;
+    return transformStudent(response.data);
   },
 
   // Create a new student
@@ -103,8 +137,8 @@ export const studentsApi = {
       year_of_study: data.year_of_study || 1,
       department: data.department || undefined,
     };
-    const response = await apiClient.post<ApiResponse<Student>>(STUDENTS_PREFIX, backendData);
-    return response.data;
+    const response = await apiClient.post<ApiResponse<BackendStudent>>(STUDENTS_PREFIX, backendData);
+    return transformStudent(response.data);
   },
 
   // Update a student
@@ -126,8 +160,8 @@ export const studentsApi = {
     if (data.year_of_study !== undefined) backendData.year_of_study = data.year_of_study;
     if (data.department !== undefined) backendData.department = data.department || undefined;
 
-    const response = await apiClient.put<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}`, backendData);
-    return response.data;
+    const response = await apiClient.put<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}`, backendData);
+    return transformStudent(response.data);
   },
 
   // Delete a student
@@ -137,16 +171,16 @@ export const studentsApi = {
 
   // Suspend a student
   suspend: async (id: string, reason?: string): Promise<Student> => {
-    const response = await apiClient.post<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}/suspend`, {
+    const response = await apiClient.post<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/suspend`, {
       reason,
     });
-    return response.data;
+    return transformStudent(response.data);
   },
 
   // Activate a student
   activate: async (id: string): Promise<Student> => {
-    const response = await apiClient.post<ApiResponse<Student>>(`${STUDENTS_PREFIX}/${id}/activate`);
-    return response.data;
+    const response = await apiClient.post<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/activate`);
+    return transformStudent(response.data);
   },
 
   // Get student analytics
