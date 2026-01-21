@@ -71,9 +71,9 @@ export default function BookDetailPage() {
           <Skeleton className="h-10 w-10" />
           <Skeleton className="h-8 w-48" />
         </div>
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Skeleton className="aspect-[2/3] rounded-lg" />
-          <div className="lg:col-span-2 space-y-4">
+        <div className="grid gap-6 lg:grid-cols-4">
+          <Skeleton className="aspect-[3/4] rounded-lg max-w-[200px] lg:max-w-none" />
+          <div className="lg:col-span-3 space-y-4">
             <Skeleton className="h-10 w-3/4" />
             <Skeleton className="h-6 w-1/2" />
             <Skeleton className="h-24 w-full" />
@@ -134,10 +134,10 @@ export default function BookDetailPage() {
       </div>
 
       {/* Book Details */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
         {/* Cover Image */}
-        <Card className="overflow-hidden">
-          <div className="relative aspect-[2/3] bg-muted">
+        <Card className="overflow-hidden lg:col-span-1 max-w-[200px] lg:max-w-none">
+          <div className="relative aspect-[3/4] bg-muted">
             {book.cover_url ? (
               <Image
                 src={book.cover_url}
@@ -148,14 +148,14 @@ export default function BookDetailPage() {
               />
             ) : (
               <div className="flex h-full items-center justify-center">
-                <BookOpen className="h-20 w-20 text-muted-foreground/50" />
+                <BookOpen className="h-12 w-12 text-muted-foreground/50" />
               </div>
             )}
           </div>
         </Card>
 
         {/* Book Info */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-3 space-y-6">
           <div>
             <div className="flex items-start justify-between gap-4">
               <div>
