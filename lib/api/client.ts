@@ -1,0 +1,201 @@
+import type { ApiResponse } from "@/lib/types";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+
+type ParamValue = string | number | boolean | undefined | null;
+
+interface RequestOptions extends RequestInit {
+  params?: Record<string, ParamValue> | object;
+}
+
+class ApiClient {
+  private baseUrl: string;
+  private accessToken: string | null = null;
+
+  constructor(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
+  setAccessToken(token: string | null) {
+    this.accessToken = token;
+  }
+
+  getAccessToken(): string | null {
+    return this.accessToken;
+  }
+
+  private buildUrl(
+    endpoint: string,
+    params?: Record<string, ParamValue> | object
+  ): string {
+    const url = new URL(`${this.baseUrl}${endpoint}`);
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          url.searchParams.append(key, String(value));
+        }
+      });
+    }
+    return url.toString();
+  }
+
+  private async handleResponse<T>(response: Response): Promise<T> {
+    if (response.status === 401) {
+      // Try to refresh the token
+      const refreshed = await this.refreshToken();
+      if (!refreshed) {
+        // Redirect to login
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        throw new Error("Unauthorized");
+      }
+      throw new Error("Token refreshed, retry request");
+    }
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: response.statusText,
+      }));
+      throw new Error(error.message || error.error || "Request failed");
+    }
+
+    // Handle empty responses
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    return JSON.parse(text);
+  }
+
+  private async refreshToken(): Promise<boolean> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/v1/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const data = await response.json();
+      if (data.access_token) {
+        this.accessToken = data.access_token;
+        return true;
+      }
+
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
+  private getHeaders(): HeadersInit {
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+    };
+
+    if (this.accessToken) {
+      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    }
+
+    return headers;
+  }
+
+  async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const response = await fetch(url, {
+      ...options,
+      method: "GET",
+      headers: this.getHeaders(),
+      credentials: "include",
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async post<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const response = await fetch(url, {
+      ...options,
+      method: "POST",
+      headers: this.getHeaders(),
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async put<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const response = await fetch(url, {
+      ...options,
+      method: "PUT",
+      headers: this.getHeaders(),
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async patch<T>(
+    endpoint: string,
+    data?: unknown,
+    options?: RequestOptions
+  ): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const response = await fetch(url, {
+      ...options,
+      method: "PATCH",
+      headers: this.getHeaders(),
+      body: data ? JSON.stringify(data) : undefined,
+      credentials: "include",
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const response = await fetch(url, {
+      ...options,
+      method: "DELETE",
+      headers: this.getHeaders(),
+      credentials: "include",
+    });
+    return this.handleResponse<T>(response);
+  }
+
+  async upload<T>(
+    endpoint: string,
+    formData: FormData,
+    options?: RequestOptions
+  ): Promise<T> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const headers: HeadersInit = {};
+    if (this.accessToken) {
+      headers["Authorization"] = `Bearer ${this.accessToken}`;
+    }
+    // Don't set Content-Type for FormData, browser will set it with boundary
+    const response = await fetch(url, {
+      ...options,
+      method: "POST",
+      headers,
+      body: formData,
+      credentials: "include",
+    });
+    return this.handleResponse<T>(response);
+  }
+}
+
+export const apiClient = new ApiClient(API_BASE_URL);
+export default apiClient;
