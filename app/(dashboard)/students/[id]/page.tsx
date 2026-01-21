@@ -269,7 +269,7 @@ export default function StudentDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Current Books</p>
                       <p className="text-2xl font-bold">
-                        {student.current_books} / {student.max_books}
+                        {student.current_books ?? 0} / {student.max_books ?? 5}
                       </p>
                     </div>
                   </div>
@@ -284,7 +284,7 @@ export default function StudentDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Total Borrowed</p>
-                      <p className="text-2xl font-bold">{student.total_borrowed}</p>
+                      <p className="text-2xl font-bold">{student.total_borrowed ?? 0}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -298,7 +298,7 @@ export default function StudentDetailPage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Total Fines</p>
-                      <p className="text-2xl font-bold">{formatCurrency(student.total_fines)}</p>
+                      <p className="text-2xl font-bold">{formatCurrency(student.total_fines ?? 0)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -308,18 +308,18 @@ export default function StudentDetailPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
                     <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
-                      student.unpaid_fines > 0 ? "bg-red-500/10" : "bg-gray-500/10"
+                      (student.unpaid_fines ?? 0) > 0 ? "bg-red-500/10" : "bg-gray-500/10"
                     }`}>
                       <AlertTriangle className={`h-5 w-5 ${
-                        student.unpaid_fines > 0 ? "text-red-600" : "text-gray-600"
+                        (student.unpaid_fines ?? 0) > 0 ? "text-red-600" : "text-gray-600"
                       }`} />
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">Unpaid Fines</p>
                       <p className={`text-2xl font-bold ${
-                        student.unpaid_fines > 0 ? "text-red-600" : ""
+                        (student.unpaid_fines ?? 0) > 0 ? "text-red-600" : ""
                       }`}>
-                        {formatCurrency(student.unpaid_fines)}
+                        {formatCurrency(student.unpaid_fines ?? 0)}
                       </p>
                     </div>
                   </div>

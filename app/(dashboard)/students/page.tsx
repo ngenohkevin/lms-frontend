@@ -88,7 +88,7 @@ export default function StudentsPage() {
       header: "Books",
       render: (student: Student) => (
         <span className="text-sm">
-          {student.current_books} / {student.max_books}
+          {student.current_books ?? 0} / {student.max_books ?? 5}
         </span>
       ),
     },
@@ -98,10 +98,10 @@ export default function StudentsPage() {
       render: (student: Student) => (
         <span
           className={`text-sm ${
-            student.unpaid_fines > 0 ? "text-destructive font-medium" : ""
+            (student.unpaid_fines ?? 0) > 0 ? "text-destructive font-medium" : ""
           }`}
         >
-          {formatCurrency(student.unpaid_fines)}
+          {formatCurrency(student.unpaid_fines ?? 0)}
         </span>
       ),
     },
