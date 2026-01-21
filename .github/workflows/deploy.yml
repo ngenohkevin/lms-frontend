@@ -51,8 +51,26 @@ jobs:
           build-args: |
             NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
 
-      - name: Deploy to Dokploy
+      - name: Deploy to Dokploy via API
         run: |
-          curl -X POST "${{ secrets.DOKPLOY_WEBHOOK_URL }}" \
+          echo "Triggering Dokploy deployment via API..."
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://dokploy.iopulse.cloud/api/trpc/application.deploy" \
+            -H "accept: application/json" \
+            -H "x-api-key: ${{ secrets.DOKPLOY_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d '{"applicationId": "${{ secrets.DOKPLOY_APP_ID }}"}'
+            -d '{"json":{"applicationId":"${{ secrets.DOKPLOY_APP_ID }}"}}')
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "Response: $BODY"
+          echo "HTTP Code: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            echo "Deployment triggered successfully!"
+            echo "Image: ghcr.io/${{ github.repository }}:latest"
+          else
+            echo "Deployment failed with HTTP $HTTP_CODE"
+            exit 1
+          fi
