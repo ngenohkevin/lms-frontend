@@ -1,25 +1,30 @@
 export interface Book {
   id: string;
-  isbn: string;
+  book_id: string;
+  isbn?: string;
   title: string;
   author: string;
   publisher?: string;
-  publication_year?: number;
-  category: string;
+  published_year?: number;
+  genre?: string;
   description?: string;
-  cover_url?: string;
+  cover_image_url?: string;
   total_copies: number;
   available_copies: number;
-  location?: string;
-  language?: string;
-  pages?: number;
-  average_rating?: number;
-  total_ratings?: number;
+  shelf_location?: string;
+  is_active?: boolean;
+  status?: string;
   created_at: string;
   updated_at: string;
+  // Frontend convenience aliases (mapped from backend fields)
+  publication_year?: number;
+  category?: string;
+  cover_url?: string;
+  location?: string;
 }
 
 export interface BookFormData {
+  book_id: string;
   isbn: string;
   title: string;
   author: string;

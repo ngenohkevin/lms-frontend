@@ -46,6 +46,22 @@ function transformPagination(bp?: BackendPagination): PaginatedResponse<Book>["p
   };
 }
 
+// Transform backend book response to add frontend convenience aliases
+function transformBook(book: Book): Book {
+  return {
+    ...book,
+    // Add convenience aliases for frontend components
+    publication_year: book.published_year,
+    category: book.genre,
+    cover_url: book.cover_image_url,
+    location: book.shelf_location,
+  };
+}
+
+function transformBooks(books: Book[]): Book[] {
+  return books.map(transformBook);
+}
+
 export const booksApi = {
   // List all books with pagination
   list: async (
@@ -53,7 +69,7 @@ export const booksApi = {
   ): Promise<PaginatedResponse<Book>> => {
     const response = await apiClient.get<ApiResponse<BackendPaginatedBooks>>(BOOKS_PREFIX, { params });
     return {
-      data: response.data?.books || [],
+      data: transformBooks(response.data?.books || []),
       pagination: transformPagination(response.data?.pagination),
     };
   },
@@ -66,7 +82,7 @@ export const booksApi = {
       params,
     });
     return {
-      data: response.data?.books || [],
+      data: transformBooks(response.data?.books || []),
       pagination: transformPagination(response.data?.pagination),
     };
   },
@@ -74,19 +90,45 @@ export const booksApi = {
   // Get single book by ID
   get: async (id: string): Promise<Book> => {
     const response = await apiClient.get<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`);
-    return response.data;
+    return transformBook(response.data);
   },
 
   // Create a new book
   create: async (data: BookFormData): Promise<Book> => {
-    const response = await apiClient.post<ApiResponse<Book>>(BOOKS_PREFIX, data);
-    return response.data;
+    // Transform frontend field names to backend field names
+    const backendData = {
+      book_id: data.book_id,
+      isbn: data.isbn || undefined,
+      title: data.title,
+      author: data.author,
+      publisher: data.publisher || undefined,
+      published_year: data.publication_year,
+      genre: data.category || undefined,
+      description: data.description || undefined,
+      total_copies: data.total_copies,
+      shelf_location: data.location || undefined,
+    };
+    const response = await apiClient.post<ApiResponse<Book>>(BOOKS_PREFIX, backendData);
+    return transformBook(response.data);
   },
 
   // Update a book
   update: async (id: string, data: Partial<BookFormData>): Promise<Book> => {
-    const response = await apiClient.put<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`, data);
-    return response.data;
+    // Transform frontend field names to backend field names
+    const backendData: Record<string, unknown> = {};
+    if (data.book_id !== undefined) backendData.book_id = data.book_id;
+    if (data.isbn !== undefined) backendData.isbn = data.isbn || undefined;
+    if (data.title !== undefined) backendData.title = data.title;
+    if (data.author !== undefined) backendData.author = data.author;
+    if (data.publisher !== undefined) backendData.publisher = data.publisher || undefined;
+    if (data.publication_year !== undefined) backendData.published_year = data.publication_year;
+    if (data.category !== undefined) backendData.genre = data.category || undefined;
+    if (data.description !== undefined) backendData.description = data.description || undefined;
+    if (data.total_copies !== undefined) backendData.total_copies = data.total_copies;
+    if (data.location !== undefined) backendData.shelf_location = data.location || undefined;
+
+    const response = await apiClient.put<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`, backendData);
+    return transformBook(response.data);
   },
 
   // Delete a book
@@ -107,7 +149,7 @@ export const booksApi = {
     const formData = new FormData();
     formData.append("cover", file);
     const response = await apiClient.upload<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}/cover`, formData);
-    return response.data;
+    return transformBook(response.data);
   },
 
   // Delete book cover

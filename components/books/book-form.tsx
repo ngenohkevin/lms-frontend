@@ -23,6 +23,7 @@ import type { Book, BookFormData, ISBNLookupResult } from "@/lib/types";
 import { toast } from "sonner";
 
 const bookSchema = z.object({
+  book_id: z.string().min(1, "Book ID is required").max(50, "Book ID must be at most 50 characters"),
   isbn: z.string().min(10, "ISBN must be at least 10 characters"),
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
@@ -59,6 +60,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     resolver: zodResolver(bookSchema),
     defaultValues: book
       ? {
+          book_id: book.id,
           isbn: book.isbn,
           title: book.title,
           author: book.author,
@@ -72,6 +74,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           pages: book.pages,
         }
       : {
+          book_id: "",
           total_copies: 1,
           category: "",
         },
@@ -147,6 +150,22 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="book_id">Book ID *</Label>
+          <Input
+            id="book_id"
+            placeholder="BK-001"
+            {...register("book_id")}
+            disabled={isEditing}
+          />
+          {errors.book_id && (
+            <p className="text-sm text-destructive">{errors.book_id.message}</p>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Unique identifier for this book (e.g., BK-001)
+          </p>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="isbn">ISBN *</Label>
           <div className="flex gap-2">
