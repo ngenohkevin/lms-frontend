@@ -13,10 +13,11 @@ import type {
 
 export function useDashboardMetrics() {
   const { data, error, isLoading, mutate } = useSWR<DashboardMetrics>(
-    "/api/v1/reports/dashboard",
+    "/api/v1/reports/dashboard-metrics",
     () => reportsApi.getDashboardMetrics(),
     {
       refreshInterval: 60000, // Refresh every minute
+      onError: () => {}, // Silently handle errors
     }
   );
 
@@ -30,16 +31,17 @@ export function useDashboardMetrics() {
 
 export function useBorrowingStats(params?: ReportParams) {
   const key = params
-    ? ["/api/v1/reports/borrowing-stats", params]
-    : "/api/v1/reports/borrowing-stats";
+    ? ["/api/v1/reports/borrowing-statistics", params]
+    : "/api/v1/reports/borrowing-statistics";
 
   const { data, error, isLoading, mutate } = useSWR<BorrowingStats[]>(
     key,
-    () => reportsApi.getBorrowingStats(params)
+    () => reportsApi.getBorrowingStats(params),
+    { onError: () => {} }
   );
 
   return {
-    stats: data,
+    stats: data || [],
     isLoading,
     error,
     refresh: mutate,
@@ -53,11 +55,12 @@ export function useBorrowingTrends(params?: ReportParams) {
 
   const { data, error, isLoading, mutate } = useSWR<BorrowingTrend[]>(
     key,
-    () => reportsApi.getBorrowingTrends(params)
+    () => reportsApi.getBorrowingTrends(params),
+    { onError: () => {} }
   );
 
   return {
-    trends: data,
+    trends: data || [],
     isLoading,
     error,
     refresh: mutate,
@@ -74,12 +77,14 @@ export function usePopularBooks(params?: {
     ? ["/api/v1/reports/popular-books", params]
     : "/api/v1/reports/popular-books";
 
-  const { data, error, isLoading, mutate } = useSWR<PopularBook[]>(key, () =>
-    reportsApi.getPopularBooks(params)
+  const { data, error, isLoading, mutate } = useSWR<PopularBook[]>(
+    key,
+    () => reportsApi.getPopularBooks(params),
+    { onError: () => {} }
   );
 
   return {
-    books: data,
+    books: data || [],
     isLoading,
     error,
     refresh: mutate,
@@ -88,12 +93,13 @@ export function usePopularBooks(params?: {
 
 export function useCategoryStats() {
   const { data, error, isLoading, mutate } = useSWR<CategoryStats[]>(
-    "/api/v1/reports/category-stats",
-    () => reportsApi.getCategoryStats()
+    "/api/v1/reports/library-overview",
+    () => reportsApi.getCategoryStats(),
+    { onError: () => {} }
   );
 
   return {
-    stats: data,
+    stats: data || [],
     isLoading,
     error,
     refresh: mutate,
@@ -102,8 +108,9 @@ export function useCategoryStats() {
 
 export function useInventoryReport() {
   const { data, error, isLoading, mutate } = useSWR<InventoryReport>(
-    "/api/v1/reports/inventory",
-    () => reportsApi.getInventoryReport()
+    "/api/v1/reports/inventory-status",
+    () => reportsApi.getInventoryReport(),
+    { onError: () => {} }
   );
 
   return {
@@ -116,11 +123,13 @@ export function useInventoryReport() {
 
 export function useOverdueReport(params?: { department?: string }) {
   const key = params
-    ? ["/api/v1/reports/overdue", params]
-    : "/api/v1/reports/overdue";
+    ? ["/api/v1/reports/overdue-books", params]
+    : "/api/v1/reports/overdue-books";
 
-  const { data, error, isLoading, mutate } = useSWR<OverdueReport>(key, () =>
-    reportsApi.getOverdueReport(params)
+  const { data, error, isLoading, mutate } = useSWR<OverdueReport>(
+    key,
+    () => reportsApi.getOverdueReport(params),
+    { onError: () => {} }
   );
 
   return {
