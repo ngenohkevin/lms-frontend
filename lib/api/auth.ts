@@ -80,7 +80,9 @@ export const authApi = {
   },
 
   me: async (): Promise<User> => {
-    return apiClient.get<User>(`${AUTH_PREFIX}/me`);
+    // API uses /profile endpoint, not /auth/me
+    const response = await apiClient.get<{ success: boolean; data: User }>("/api/v1/profile");
+    return response.data;
   },
 };
 
