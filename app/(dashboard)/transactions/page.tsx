@@ -42,7 +42,7 @@ export default function TransactionsPage() {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    let newParams: TransactionSearchParams = {
+    const newParams: TransactionSearchParams = {
       page: 1,
       per_page: 20,
       student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,

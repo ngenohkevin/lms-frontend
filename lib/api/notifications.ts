@@ -16,30 +16,32 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-// Backend pagination structure
-interface BackendPagination {
+// Backend uses ListResponse with Meta structure
+interface BackendListMeta {
   page: number;
   limit: number;
   total: number;
-  total_pages: number;
 }
 
-// Backend paginated response structure
-interface BackendPaginatedNotifications {
-  notifications: Notification[];
-  pagination: BackendPagination;
+// Backend list response structure
+interface BackendListResponse {
+  success: boolean;
+  data: Notification[];
+  meta?: BackendListMeta;
 }
 
-// Transform backend pagination to frontend format
-function transformPagination(bp?: BackendPagination): PaginatedResponse<Notification>["pagination"] | undefined {
-  if (!bp) return undefined;
+// Transform backend meta to frontend pagination format
+function transformMeta(meta?: BackendListMeta, dataLength?: number): PaginatedResponse<Notification>["pagination"] | undefined {
+  if (!meta) return undefined;
+  const total = meta.total || dataLength || 0;
+  const totalPages = Math.ceil(total / meta.limit);
   return {
-    page: bp.page,
-    per_page: bp.limit,
-    total: bp.total,
-    total_pages: bp.total_pages,
-    has_next: bp.page < bp.total_pages,
-    has_prev: bp.page > 1,
+    page: meta.page,
+    per_page: meta.limit,
+    total: total,
+    total_pages: totalPages,
+    has_next: meta.page < totalPages,
+    has_prev: meta.page > 1,
   };
 }
 
@@ -48,13 +50,14 @@ export const notificationsApi = {
   list: async (
     params?: NotificationSearchParams
   ): Promise<PaginatedResponse<Notification>> => {
-    const response = await apiClient.get<ApiResponse<BackendPaginatedNotifications>>(
+    const response = await apiClient.get<BackendListResponse>(
       NOTIFICATIONS_PREFIX,
       { params }
     );
+    const notifications = response.data || [];
     return {
-      data: response.data?.notifications || [],
-      pagination: transformPagination(response.data?.pagination),
+      data: notifications,
+      pagination: transformMeta(response.meta, notifications.length),
     };
   },
 

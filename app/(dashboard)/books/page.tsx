@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
@@ -16,33 +16,27 @@ function BooksContent() {
   const searchParams = useSearchParams();
   const { isLibrarian } = useAuth();
 
-  const [params, setParams] = useState<BookSearchParams>({
+  // Derive params from URL search params
+  const urlParams = useMemo<BookSearchParams>(() => ({
     page: Number(searchParams.get("page")) || 1,
     per_page: 20,
     query: searchParams.get("search") || undefined,
     category: searchParams.get("category") || undefined,
     available: searchParams.get("available") === "true" || undefined,
     sort_by: searchParams.get("sort_by") || "title",
-  });
+  }), [searchParams]);
 
-  const { books, pagination, isLoading, refresh } = useBooks(params);
+  const [localParams, setLocalParams] = useState<Partial<BookSearchParams>>({});
 
-  useEffect(() => {
-    const newParams: BookSearchParams = {
-      page: Number(searchParams.get("page")) || 1,
-      per_page: 20,
-      query: searchParams.get("search") || undefined,
-      category: searchParams.get("category") || undefined,
-      available: searchParams.get("available") === "true" || undefined,
-      sort_by: searchParams.get("sort_by") || "title",
-    };
-    setParams(newParams);
-  }, [searchParams]);
+  // Merge URL params with local overrides
+  const params = useMemo(() => ({ ...urlParams, ...localParams }), [urlParams, localParams]);
 
-  const handleSearch = (searchParams: Record<string, string | undefined>) => {
-    setParams((prev) => ({
+  const { books, pagination, isLoading } = useBooks(params);
+
+  const handleSearch = (newSearchParams: Record<string, string | undefined>) => {
+    setLocalParams((prev) => ({
       ...prev,
-      ...searchParams,
+      ...newSearchParams,
       page: 1, // Reset to first page on new search
     }));
   };
@@ -51,7 +45,7 @@ function BooksContent() {
     const newParams = new URLSearchParams(searchParams.toString());
     newParams.set("page", String(page));
     router.push(`/books?${newParams.toString()}`);
-    setParams((prev) => ({ ...prev, page }));
+    setLocalParams((prev) => ({ ...prev, page }));
   };
 
   const handleBorrow = (book: Book) => {

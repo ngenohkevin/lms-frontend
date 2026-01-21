@@ -87,11 +87,13 @@ export function useOverdueTransactions(params?: {
 
 export function useStudentActiveTransactions(studentId: string | null) {
   const { data, error, isLoading, mutate } = useSWR<Transaction[]>(
-    studentId ? `/api/v1/transactions/student/${studentId}/active` : null,
-    () =>
-      studentId
-        ? transactionsApi.getStudentActive(studentId)
-        : Promise.resolve([]),
+    studentId ? `/api/v1/transactions/history/${studentId}` : null,
+    async () => {
+      if (!studentId) return [];
+      const transactions = await transactionsApi.getHistory(studentId);
+      // Filter for active transactions (not returned)
+      return transactions.filter(t => t.status === "active" || t.status === "overdue");
+    },
     { onError: () => {} }
   );
 
