@@ -177,7 +177,14 @@ export const transactionsApi = {
 
   // Borrow a book
   borrow: async (data: BorrowRequest): Promise<Transaction> => {
-    const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/borrow`, data);
+    // Convert string IDs to numbers for backend
+    const backendData = {
+      book_id: parseInt(data.book_id, 10),
+      student_id: parseInt(data.student_id, 10),
+      librarian_id: data.librarian_id,
+      notes: data.notes || "",
+    };
+    const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/borrow`, backendData);
     return response.data;
   },
 

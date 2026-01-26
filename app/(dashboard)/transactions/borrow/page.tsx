@@ -8,6 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { transactionsApi, booksApi, studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +62,7 @@ type BorrowFormData = z.infer<typeof borrowSchema>;
 function BorrowContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const initialBookId = searchParams.get("book_id");
 
   const [isLoading, setIsLoading] = useState(false);
@@ -243,7 +245,7 @@ function BorrowContent() {
       await transactionsApi.borrow({
         book_id: selectedBook.id,
         student_id: selectedStudent.id,
-        due_days: data.due_days,
+        librarian_id: user?.id || 0,
         notes: data.notes,
       });
 

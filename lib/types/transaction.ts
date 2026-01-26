@@ -35,6 +35,7 @@ export type TransactionStatus = "active" | "returned" | "overdue" | "lost";
 export interface BorrowRequest {
   book_id: string;
   student_id: string;
+  librarian_id: number;
   due_days?: number;
   notes?: string;
 }
