@@ -65,7 +65,7 @@ export function useBookRatings(
   params?: { page?: number; per_page?: number }
 ) {
   const key = bookId
-    ? [`/api/v1/ratings/book/${bookId}`, params]
+    ? [`/api/v1/books/${bookId}/ratings`, params]
     : null;
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<BookRating>>(

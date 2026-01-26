@@ -245,12 +245,12 @@ export function BookSearch({
                 {/* Category filter */}
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold">Category</Label>
-                  <Select value={category} onValueChange={setCategory}>
+                  <Select value={category || "all"} onValueChange={(val) => setCategory(val === "all" ? "" : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="All categories" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All categories</SelectItem>
+                      <SelectItem value="all">All categories</SelectItem>
                       {BOOK_CATEGORIES.map((cat) => (
                         <SelectItem key={cat} value={cat}>
                           {cat}

@@ -165,7 +165,7 @@ export const booksApi = {
     params?: { page?: number; per_page?: number }
   ): Promise<PaginatedResponse<BookRating>> => {
     const response = await apiClient.get<ApiResponse<{ ratings: BookRating[]; pagination: BackendPagination }>>(
-      `/api/v1/ratings/book/${bookId}`,
+      `/api/v1/books/${bookId}/ratings`,
       { params }
     );
     return {
