@@ -41,7 +41,7 @@ import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { BOOK_CATEGORIES } from "@/lib/types/book";
+import { useCategories } from "@/lib/hooks";
 
 interface BookSearchProps {
   onSearch?: (params: Record<string, string | undefined>) => void;
@@ -67,6 +67,7 @@ export function BookSearch({
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [showQuickFilters, setShowQuickFilters] = useState(true);
+  const { categories, isLoading: categoriesLoading } = useCategories();
 
   const [query, setQuery] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
@@ -251,9 +252,9 @@ export function BookSearch({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All categories</SelectItem>
-                      {BOOK_CATEGORIES.map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
+                      {categories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.name}>
+                          {cat.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

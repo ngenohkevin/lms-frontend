@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Search } from "lucide-react";
-import { BOOK_CATEGORIES } from "@/lib/types/book";
+import { useCategories } from "@/lib/hooks";
 import type { Book, BookFormData, ISBNLookupResult } from "@/lib/types";
 import { toast } from "sonner";
 
@@ -47,6 +47,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { categories } = useCategories();
 
   const isEditing = !!book;
 
@@ -230,9 +231,9 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {BOOK_CATEGORIES.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
+              {categories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.name}>
+                  {cat.name}
                 </SelectItem>
               ))}
             </SelectContent>
