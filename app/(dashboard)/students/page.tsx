@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStudents } from "@/lib/hooks/use-students";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { StudentSearch } from "@/components/students";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import type { Student, StudentSearchParams, StudentStatus } from "@/lib/types";
 import { formatCurrency, getInitials } from "@/lib/utils/format";
 
@@ -29,8 +30,17 @@ export default function StudentsPage() {
 
   const { students, pagination, isLoading, refresh } = useStudents(params);
 
-  const handleSearch = (query: string) => {
-    setParams((prev) => ({ ...prev, query, page: 1 }));
+  const handleSearch = (searchParams: Record<string, string | boolean | number | undefined>) => {
+    setParams((prev) => ({
+      ...prev,
+      query: searchParams.query as string | undefined,
+      department: searchParams.department as string | undefined,
+      year_of_study: searchParams.year_of_study as number | undefined,
+      status: searchParams.status as StudentStatus | undefined,
+      has_overdue: searchParams.has_overdue as boolean | undefined,
+      has_fines: searchParams.has_fines as boolean | undefined,
+      page: 1,
+    }));
   };
 
   const handlePageChange = (page: number) => {
@@ -118,6 +128,12 @@ export default function StudentsPage() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/students/import">
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </Link>
+            </Button>
             <Button asChild>
               <Link href="/students/new">
                 <Plus className="mr-2 h-4 w-4" />
@@ -127,13 +143,13 @@ export default function StudentsPage() {
           </div>
         </div>
 
+        <StudentSearch onSearch={handleSearch} />
+
         <DataTable
           data={students || []}
           columns={columns}
           pagination={pagination}
           onPageChange={handlePageChange}
-          onSearch={handleSearch}
-          searchPlaceholder="Search by name, email, or student ID..."
           isLoading={isLoading}
           emptyMessage="No students found."
           onRowClick={handleRowClick}
