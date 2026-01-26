@@ -189,22 +189,20 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           </Select>
         </div>
 
-        {!isEditing && (
-          <div className="space-y-2">
-            <Label htmlFor="max_books">Max Books Allowed</Label>
-            <Input
-              id="max_books"
-              type="number"
-              min={1}
-              max={20}
-              defaultValue={5}
-              {...register("max_books", { valueAsNumber: true })}
-            />
-            {errors.max_books && (
-              <p className="text-sm text-destructive">{errors.max_books.message}</p>
-            )}
-          </div>
-        )}
+        <div className="space-y-2">
+          <Label htmlFor="max_books">Max Books Allowed</Label>
+          <Input
+            id="max_books"
+            type="number"
+            min={1}
+            max={20}
+            defaultValue={5}
+            {...register("max_books", { valueAsNumber: true })}
+          />
+          {errors.max_books && (
+            <p className="text-sm text-destructive">{errors.max_books.message}</p>
+          )}
+        </div>
 
         {!isEditing && (
           <div className="space-y-2">

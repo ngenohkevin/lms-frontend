@@ -136,6 +136,7 @@ export const studentsApi = {
       phone: data.phone || undefined,
       year_of_study: data.year_of_study || 1,
       department: data.department || undefined,
+      max_books: data.max_books || 5,
     };
     const response = await apiClient.post<ApiResponse<BackendStudent>>(STUDENTS_PREFIX, backendData);
     return transformStudent(response.data);
@@ -159,6 +160,7 @@ export const studentsApi = {
     if (data.phone !== undefined) backendData.phone = data.phone || undefined;
     if (data.year_of_study !== undefined) backendData.year_of_study = data.year_of_study;
     if (data.department !== undefined) backendData.department = data.department || undefined;
+    if (data.max_books !== undefined) backendData.max_books = data.max_books;
 
     const response = await apiClient.put<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}`, backendData);
     return transformStudent(response.data);
