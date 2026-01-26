@@ -197,70 +197,77 @@ export default function DashboardPage() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="hover:bg-muted/50 transition-colors">
-          <Link href="/transactions/borrow" className="block p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-primary/10 p-3">
-                <ArrowLeftRight className="h-6 w-6 text-primary" />
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="group hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <Link href="/transactions/borrow" className="block p-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-4">
+                <div className="rounded-xl bg-primary/10 p-3 group-hover:bg-primary/15 transition-colors">
+                  <ArrowLeftRight className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold group-hover:text-primary transition-colors">Borrow Book</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Check out a book
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">Borrow Book</h3>
-                <p className="text-sm text-muted-foreground">
-                  Check out a book
-                </p>
-              </div>
-            </div>
-          </Link>
-        </Card>
+            </Link>
+          </Card>
 
-        <Card className="hover:bg-muted/50 transition-colors">
-          <Link href="/transactions" className="block p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-green-500/10 p-3">
-                <ArrowLeftRight className="h-6 w-6 text-green-500" />
+          <Card className="group hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <Link href="/transactions" className="block p-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-4">
+                <div className="rounded-xl bg-emerald-500/10 p-3 group-hover:bg-emerald-500/15 transition-colors">
+                  <ArrowLeftRight className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Return Book</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Process a return
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">Return Book</h3>
-                <p className="text-sm text-muted-foreground">
-                  Process a return
-                </p>
-              </div>
-            </div>
-          </Link>
-        </Card>
+            </Link>
+          </Card>
 
-        <Card className="hover:bg-muted/50 transition-colors">
-          <Link href="/reservations" className="block p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-blue-500/10 p-3">
-                <Clock className="h-6 w-6 text-blue-500" />
+          <Card className="group hover:shadow-lg hover:shadow-blue-500/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <Link href="/reservations" className="block p-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-4">
+                <div className="rounded-xl bg-blue-500/10 p-3 group-hover:bg-blue-500/15 transition-colors">
+                  <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Reservations</h3>
+                  <p className="text-sm text-muted-foreground">
+                    View reservations
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">Reservations</h3>
-                <p className="text-sm text-muted-foreground">
-                  View reservations
-                </p>
-              </div>
-            </div>
-          </Link>
-        </Card>
+            </Link>
+          </Card>
 
-        <Card className="hover:bg-muted/50 transition-colors">
-          <Link href="/books" className="block p-6">
-            <div className="flex items-center gap-4">
-              <div className="rounded-lg bg-purple-500/10 p-3">
-                <BookPlus className="h-6 w-6 text-purple-500" />
+          <Card className="group hover:shadow-lg hover:shadow-violet-500/5 hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+            <Link href="/books" className="block p-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative flex items-center gap-4">
+                <div className="rounded-xl bg-violet-500/10 p-3 group-hover:bg-violet-500/15 transition-colors">
+                  <BookPlus className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+                </div>
+                <div>
+                  <h3 className="font-semibold group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">Browse Books</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Search the catalog
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">Browse Books</h3>
-                <p className="text-sm text-muted-foreground">
-                  Search the catalog
-                </p>
-              </div>
-            </div>
-          </Link>
-        </Card>
+            </Link>
+          </Card>
+        </div>
       </div>
     </div>
   );

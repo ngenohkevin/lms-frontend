@@ -1,8 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import {
+  Search,
+  SlidersHorizontal,
+  X,
+  LayoutGrid,
+  List,
+  ArrowUpDown,
+  Filter,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,199 +29,430 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Separator } from "@/components/ui/separator";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { BOOK_CATEGORIES } from "@/lib/types/book";
 
 interface BookSearchProps {
   onSearch?: (params: Record<string, string | undefined>) => void;
+  onViewChange?: (view: "grid" | "list") => void;
+  view?: "grid" | "list";
 }
 
-export function BookSearch({ onSearch }: BookSearchProps) {
+const currentYear = new Date().getFullYear();
+
+// Quick filter presets
+const quickFilters = [
+  { label: "New Arrivals", value: "new", icon: Sparkles },
+  { label: "Top Rated", value: "top_rated", icon: ArrowUpDown },
+  { label: "Available Now", value: "available", icon: Filter },
+];
+
+export function BookSearch({
+  onSearch,
+  onViewChange,
+  view = "grid",
+}: BookSearchProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
+  const [showQuickFilters, setShowQuickFilters] = useState(true);
 
   const [query, setQuery] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [available, setAvailable] = useState(
     searchParams.get("available") === "true"
   );
-  const [sortBy, setSortBy] = useState(
-    searchParams.get("sort_by") || "title"
+  const [sortBy, setSortBy] = useState(searchParams.get("sort_by") || "title");
+  const [yearRange, setYearRange] = useState<[number, number]>([1900, currentYear]);
+  const [minRating, setMinRating] = useState(0);
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
+
+  const handleSearch = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault();
+
+      const params = new URLSearchParams();
+      if (query) params.set("search", query);
+      if (category) params.set("category", category);
+      if (available) params.set("available", "true");
+      if (sortBy) params.set("sort_by", sortBy);
+      if (yearRange[0] > 1900) params.set("year_from", String(yearRange[0]));
+      if (yearRange[1] < currentYear) params.set("year_to", String(yearRange[1]));
+      if (minRating > 0) params.set("min_rating", String(minRating));
+
+      const newUrl = `/books${params.toString() ? `?${params.toString()}` : ""}`;
+      router.push(newUrl);
+
+      if (onSearch) {
+        onSearch({
+          search: query || undefined,
+          category: category || undefined,
+          available: available ? "true" : undefined,
+          sort_by: sortBy || undefined,
+          year_from: yearRange[0] > 1900 ? String(yearRange[0]) : undefined,
+          year_to: yearRange[1] < currentYear ? String(yearRange[1]) : undefined,
+          min_rating: minRating > 0 ? String(minRating) : undefined,
+        });
+      }
+    },
+    [query, category, available, sortBy, yearRange, minRating, router, onSearch]
   );
-
-  const handleSearch = (e?: React.FormEvent) => {
-    e?.preventDefault();
-
-    const params = new URLSearchParams();
-    if (query) params.set("search", query);
-    if (category) params.set("category", category);
-    if (available) params.set("available", "true");
-    if (sortBy) params.set("sort_by", sortBy);
-
-    const newUrl = `/books${params.toString() ? `?${params.toString()}` : ""}`;
-    router.push(newUrl);
-
-    if (onSearch) {
-      onSearch({
-        search: query || undefined,
-        category: category || undefined,
-        available: available ? "true" : undefined,
-        sort_by: sortBy || undefined,
-      });
-    }
-  };
 
   const clearFilters = () => {
     setQuery("");
     setCategory("");
     setAvailable(false);
     setSortBy("title");
+    setYearRange([1900, currentYear]);
+    setMinRating(0);
+    setQuickFilter(null);
     router.push("/books");
     if (onSearch) {
       onSearch({});
     }
   };
 
-  const activeFiltersCount = [category, available].filter(Boolean).length;
+  const applyQuickFilter = (filterValue: string) => {
+    if (quickFilter === filterValue) {
+      setQuickFilter(null);
+      clearFilters();
+      return;
+    }
+
+    setQuickFilter(filterValue);
+
+    switch (filterValue) {
+      case "new":
+        setSortBy("created_at");
+        setAvailable(false);
+        break;
+      case "top_rated":
+        setSortBy("average_rating");
+        setMinRating(4);
+        break;
+      case "available":
+        setAvailable(true);
+        break;
+    }
+
+    setTimeout(() => handleSearch(), 0);
+  };
+
+  const activeFiltersCount = [
+    category,
+    available,
+    yearRange[0] > 1900,
+    yearRange[1] < currentYear,
+    minRating > 0,
+  ].filter(Boolean).length;
+
+  const hasActiveFilters =
+    category || available || yearRange[0] > 1900 || yearRange[1] < currentYear || minRating > 0;
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row">
-      <form onSubmit={handleSearch} className="flex-1">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search by title, author, or ISBN..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </form>
+    <div className="space-y-4">
+      {/* Main search bar */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <form onSubmit={handleSearch} className="flex-1">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="search"
+              placeholder="Search by title, author, ISBN, or keyword..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-10 h-11 bg-background"
+            />
+          </div>
+        </form>
 
-      <div className="flex gap-2">
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="title">Title</SelectItem>
-            <SelectItem value="author">Author</SelectItem>
-            <SelectItem value="publication_year">Year</SelectItem>
-            <SelectItem value="average_rating">Rating</SelectItem>
-            <SelectItem value="created_at">Recently Added</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+          {/* Sort dropdown */}
+          <Select value={sortBy} onValueChange={(value) => { setSortBy(value); handleSearch(); }}>
+            <SelectTrigger className="w-full sm:w-[160px] h-11">
+              <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="title">Title (A-Z)</SelectItem>
+              <SelectItem value="-title">Title (Z-A)</SelectItem>
+              <SelectItem value="author">Author (A-Z)</SelectItem>
+              <SelectItem value="-publication_year">Newest First</SelectItem>
+              <SelectItem value="publication_year">Oldest First</SelectItem>
+              <SelectItem value="-average_rating">Highest Rated</SelectItem>
+              <SelectItem value="-created_at">Recently Added</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="relative">
-              <SlidersHorizontal className="mr-2 h-4 w-4" />
-              Filters
-              {activeFiltersCount > 0 && (
-                <Badge
-                  variant="secondary"
-                  className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0"
-                >
-                  {activeFiltersCount}
-                </Badge>
-              )}
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>Filter Books</SheetTitle>
-              <SheetDescription>
-                Narrow down your search with these filters.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-6 space-y-6">
-              <div className="space-y-2">
-                <Label>Category</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All categories</SelectItem>
-                    {BOOK_CATEGORIES.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="available"
-                  checked={available}
-                  onCheckedChange={(checked) => setAvailable(checked === true)}
-                />
-                <Label htmlFor="available">Available only</Label>
-              </div>
-
-              <div className="flex gap-2 pt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={clearFilters}
-                >
-                  Clear All
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={() => {
-                    handleSearch();
-                    setIsOpen(false);
-                  }}
-                >
-                  Apply Filters
-                </Button>
-              </div>
+          {/* View toggle */}
+          {onViewChange && (
+            <div className="flex border rounded-lg overflow-hidden">
+              <Button
+                variant={view === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                className="rounded-none h-11 w-11"
+                onClick={() => onViewChange("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={view === "list" ? "secondary" : "ghost"}
+                size="icon"
+                className="rounded-none h-11 w-11"
+                onClick={() => onViewChange("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
             </div>
-          </SheetContent>
-        </Sheet>
+          )}
 
-        <Button onClick={() => handleSearch()}>Search</Button>
+          {/* Filters sheet */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" className="relative h-11 gap-2">
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="hidden sm:inline">Filters</span>
+                {activeFiltersCount > 0 && (
+                  <Badge className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0 text-[10px]">
+                    {activeFiltersCount}
+                  </Badge>
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filter Books
+                </SheetTitle>
+                <SheetDescription>
+                  Refine your search with advanced filters
+                </SheetDescription>
+              </SheetHeader>
+
+              <div className="mt-6 space-y-6">
+                {/* Category filter */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Category</Label>
+                  <Select value={category} onValueChange={setCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All categories" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All categories</SelectItem>
+                      {BOOK_CATEGORIES.map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                {/* Availability filter */}
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold">Availability</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Show only books in stock
+                    </p>
+                  </div>
+                  <Checkbox
+                    id="available"
+                    checked={available}
+                    onCheckedChange={(checked) => setAvailable(checked === true)}
+                  />
+                </div>
+
+                <Separator />
+
+                {/* Publication year range */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Publication Year</Label>
+                    <span className="text-sm text-muted-foreground">
+                      {yearRange[0]} - {yearRange[1]}
+                    </span>
+                  </div>
+                  <Slider
+                    value={yearRange}
+                    onValueChange={(value) => setYearRange(value as [number, number])}
+                    min={1900}
+                    max={currentYear}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>1900</span>
+                    <span>{currentYear}</span>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Minimum rating */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-semibold">Minimum Rating</Label>
+                    <span className="text-sm text-muted-foreground">
+                      {minRating > 0 ? `${minRating}+ stars` : "Any"}
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    {[0, 3, 3.5, 4, 4.5].map((rating) => (
+                      <Button
+                        key={rating}
+                        variant={minRating === rating ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setMinRating(rating)}
+                        className="flex-1"
+                      >
+                        {rating === 0 ? "Any" : `${rating}+`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Action buttons */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={clearFilters}
+                  >
+                    Clear All
+                  </Button>
+                  <Button
+                    className="flex-1"
+                    onClick={() => {
+                      handleSearch();
+                      setIsOpen(false);
+                    }}
+                  >
+                    Apply Filters
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <Button onClick={() => handleSearch()} className="h-11">
+            Search
+          </Button>
+        </div>
       </div>
 
+      {/* Quick filters */}
+      <Collapsible open={showQuickFilters} onOpenChange={setShowQuickFilters}>
+        <CollapsibleContent>
+          <div className="flex flex-wrap gap-2">
+            {quickFilters.map((filter) => (
+              <Button
+                key={filter.value}
+                variant={quickFilter === filter.value ? "default" : "outline"}
+                size="sm"
+                className={cn(
+                  "gap-2 transition-all",
+                  quickFilter === filter.value && "shadow-sm"
+                )}
+                onClick={() => applyQuickFilter(filter.value)}
+              >
+                <filter.icon className="h-3.5 w-3.5" />
+                {filter.label}
+              </Button>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
       {/* Active filters display */}
-      {(category || available) && (
-        <div className="flex flex-wrap gap-2">
-          {category && (
-            <Badge variant="secondary" className="gap-1">
-              Category: {category}
-              <button
-                onClick={() => {
-                  setCategory("");
-                  handleSearch();
-                }}
-                className="ml-1 hover:text-destructive"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-          {available && (
-            <Badge variant="secondary" className="gap-1">
-              Available only
-              <button
-                onClick={() => {
-                  setAvailable(false);
-                  handleSearch();
-                }}
-                className="ml-1 hover:text-destructive"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          )}
-        </div>
+      {hasActiveFilters && (
+        <Card className="p-3 bg-muted/30">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground mr-2">
+              Active filters:
+            </span>
+            {category && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {category}
+                <button
+                  onClick={() => {
+                    setCategory("");
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {available && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                Available
+                <button
+                  onClick={() => {
+                    setAvailable(false);
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {(yearRange[0] > 1900 || yearRange[1] < currentYear) && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {yearRange[0]}-{yearRange[1]}
+                <button
+                  onClick={() => {
+                    setYearRange([1900, currentYear]);
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {minRating > 0 && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {minRating}+ stars
+                <button
+                  onClick={() => {
+                    setMinRating(0);
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={clearFilters}
+            >
+              Clear all
+            </Button>
+          </div>
+        </Card>
       )}
     </div>
   );

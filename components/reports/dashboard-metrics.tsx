@@ -3,8 +3,6 @@
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -16,9 +14,11 @@ import {
   BookMarked,
   DollarSign,
   TrendingUp,
+  TrendingDown,
 } from "lucide-react";
 import type { DashboardMetrics } from "@/lib/types";
 import { formatNumber, formatCurrency } from "@/lib/utils/format";
+import { cn } from "@/lib/utils";
 
 interface MetricCardProps {
   title: string;
@@ -29,8 +29,37 @@ interface MetricCardProps {
     value: number;
     isPositive: boolean;
   };
+  variant?: "default" | "primary" | "success" | "warning" | "danger";
   className?: string;
 }
+
+const variantStyles = {
+  default: {
+    card: "bg-card hover:shadow-md transition-all duration-200",
+    icon: "bg-muted text-muted-foreground",
+    iconColor: "text-muted-foreground",
+  },
+  primary: {
+    card: "bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-primary/20 hover:shadow-md hover:shadow-primary/5 transition-all duration-200",
+    icon: "bg-primary/15 text-primary",
+    iconColor: "text-primary",
+  },
+  success: {
+    card: "bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border-emerald-500/20 hover:shadow-md hover:shadow-emerald-500/5 transition-all duration-200",
+    icon: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+  },
+  warning: {
+    card: "bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent border-amber-500/20 hover:shadow-md hover:shadow-amber-500/5 transition-all duration-200",
+    icon: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+    iconColor: "text-amber-600 dark:text-amber-400",
+  },
+  danger: {
+    card: "bg-gradient-to-br from-red-500/10 via-red-500/5 to-transparent border-red-500/20 hover:shadow-md hover:shadow-red-500/5 transition-all duration-200",
+    icon: "bg-red-500/15 text-red-600 dark:text-red-400",
+    iconColor: "text-red-600 dark:text-red-400",
+  },
+};
 
 function MetricCard({
   title,
@@ -38,31 +67,45 @@ function MetricCard({
   description,
   icon: Icon,
   trend,
+  variant = "default",
   className,
 }: MetricCardProps) {
+  const styles = variantStyles[variant];
+
   return (
-    <Card className={className}>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
-        {description && (
-          <p className="text-xs text-muted-foreground">{description}</p>
-        )}
-        {trend && (
-          <div
-            className={`flex items-center text-xs ${
-              trend.isPositive ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            <TrendingUp
-              className={`h-3 w-3 mr-1 ${!trend.isPositive && "rotate-180"}`}
-            />
-            {trend.value}% from last month
+    <Card className={cn(styles.card, className)}>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold tracking-tight">{value}</span>
+              {trend && (
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-0.5 text-xs font-medium px-1.5 py-0.5 rounded-full",
+                    trend.isPositive
+                      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                      : "bg-red-500/10 text-red-600 dark:text-red-400"
+                  )}
+                >
+                  {trend.isPositive ? (
+                    <TrendingUp className="h-3 w-3" />
+                  ) : (
+                    <TrendingDown className="h-3 w-3" />
+                  )}
+                  {trend.value}%
+                </span>
+              )}
+            </div>
+            {description && (
+              <p className="text-xs text-muted-foreground">{description}</p>
+            )}
           </div>
-        )}
+          <div className={cn("rounded-xl p-3", styles.icon)}>
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
@@ -70,14 +113,16 @@ function MetricCard({
 
 function MetricCardSkeleton() {
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-4" />
-      </CardHeader>
-      <CardContent>
-        <Skeleton className="h-8 w-20 mb-1" />
-        <Skeleton className="h-3 w-32" />
+    <Card className="hover:shadow-md transition-all duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-9 w-20" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <Skeleton className="h-11 w-11 rounded-xl" />
+        </div>
       </CardContent>
     </Card>
   );
@@ -115,29 +160,28 @@ export function DashboardMetricsCards({
         value={formatNumber(metrics.total_books)}
         description="Books in the library"
         icon={Library}
+        variant="primary"
       />
       <MetricCard
         title="Active Transactions"
         value={formatNumber(metrics.active_borrows)}
         description="Currently borrowed"
         icon={ArrowLeftRight}
+        variant="success"
       />
       <MetricCard
         title="Overdue"
         value={formatNumber(metrics.overdue_books)}
         description="Books past due date"
         icon={AlertTriangle}
-        className={
-          metrics.overdue_books > 0
-            ? "border-destructive/50 bg-destructive/5"
-            : undefined
-        }
+        variant={metrics.overdue_books > 0 ? "danger" : "default"}
       />
       <MetricCard
         title="Pending Reservations"
         value={formatNumber(metrics.pending_reservations)}
         description="Awaiting fulfillment"
         icon={BookMarked}
+        variant="warning"
       />
 
       {showLibrarianMetrics && (
@@ -147,29 +191,28 @@ export function DashboardMetricsCards({
             value={formatNumber(metrics.total_students)}
             description="Registered students"
             icon={Users}
+            variant="primary"
           />
           <MetricCard
             title="Borrowed Today"
             value={formatNumber(metrics.today_borrows)}
             description="Books checked out today"
             icon={BookOpen}
+            variant="success"
           />
           <MetricCard
             title="Returned Today"
             value={formatNumber(metrics.today_returns)}
             description="Books returned today"
             icon={BookOpen}
+            variant="success"
           />
           <MetricCard
             title="Unpaid Fines"
             value={formatCurrency(metrics.total_fines)}
             description="Outstanding fines"
             icon={DollarSign}
-            className={
-              metrics.total_fines > 0
-                ? "border-yellow-500/50 bg-yellow-500/5"
-                : undefined
-            }
+            variant={metrics.total_fines > 0 ? "warning" : "default"}
           />
         </>
       )}
