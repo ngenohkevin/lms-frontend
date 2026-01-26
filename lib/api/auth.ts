@@ -30,7 +30,8 @@ export const authApi = {
       {
         username: credentials.email,
         password: credentials.password,
-      }
+      },
+      { skipAuthRedirect: true }
     );
 
     if (response.data?.access_token) {

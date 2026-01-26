@@ -87,8 +87,17 @@ class ApiClient {
     return url.toString();
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async handleResponse<T>(response: Response, skipAuthRedirect = false): Promise<T> {
     if (response.status === 401) {
+      // For login failures, extract the error message instead of redirecting
+      if (skipAuthRedirect) {
+        const error = await response.json().catch(() => ({
+          message: "Invalid email or password",
+        }));
+        const errorMessage = error.error?.message || error.message || error.error || "Invalid email or password";
+        throw new Error(typeof errorMessage === 'string' ? errorMessage : "Invalid email or password");
+      }
+
       // Try to refresh the token
       const refreshed = await this.refreshToken();
       if (!refreshed) {
@@ -200,7 +209,7 @@ class ApiClient {
   async post<T>(
     endpoint: string,
     data?: unknown,
-    options?: RequestOptions
+    options?: RequestOptions & { skipAuthRedirect?: boolean }
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
     const response = await fetch(url, {
@@ -210,7 +219,7 @@ class ApiClient {
       body: data ? JSON.stringify(data) : undefined,
       credentials: "include",
     });
-    return this.handleResponse<T>(response);
+    return this.handleResponse<T>(response, options?.skipAuthRedirect);
   }
 
   async put<T>(
