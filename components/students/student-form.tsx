@@ -59,8 +59,8 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           email: student.email,
           phone: student.phone || "",
           department: student.department || "",
-          year_of_study: student.year_of_study,
-          max_books: student.max_books,
+          year_of_study: student.year_of_study || 1,
+          max_books: student.max_books ?? 5,
         }
       : {
           max_books: 5,
@@ -189,19 +189,22 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="max_books">Max Books Allowed</Label>
-          <Input
-            id="max_books"
-            type="number"
-            min={1}
-            max={20}
-            {...register("max_books", { valueAsNumber: true })}
-          />
-          {errors.max_books && (
-            <p className="text-sm text-destructive">{errors.max_books.message}</p>
-          )}
-        </div>
+        {!isEditing && (
+          <div className="space-y-2">
+            <Label htmlFor="max_books">Max Books Allowed</Label>
+            <Input
+              id="max_books"
+              type="number"
+              min={1}
+              max={20}
+              defaultValue={5}
+              {...register("max_books", { valueAsNumber: true })}
+            />
+            {errors.max_books && (
+              <p className="text-sm text-destructive">{errors.max_books.message}</p>
+            )}
+          </div>
+        )}
 
         {!isEditing && (
           <div className="space-y-2">

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
-import { useStudent, useStudentAnalytics } from "@/lib/hooks/use-students";
+import { useStudent } from "@/lib/hooks/use-students";
 import { studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { Button } from "@/components/ui/button";
@@ -53,7 +53,6 @@ export default function StudentDetailPage() {
   const studentId = params.id as string;
 
   const { student, isLoading, error, refresh } = useStudent(studentId);
-  const { analytics, isLoading: analyticsLoading } = useStudentAnalytics(studentId);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -342,55 +341,35 @@ export default function StudentDetailPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    {analyticsLoading ? (
-                      <div className="space-y-4">
-                        <Skeleton className="h-20 w-full" />
-                        <Skeleton className="h-20 w-full" />
-                      </div>
-                    ) : analytics ? (
-                      <div className="space-y-6">
-                        <div>
-                          <h4 className="font-medium mb-3">Favorite Categories</h4>
-                          {analytics.favorite_categories && analytics.favorite_categories.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {analytics.favorite_categories.map((cat) => (
-                                <Badge key={cat.category} variant="secondary">
-                                  {cat.category} ({cat.count})
-                                </Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground text-sm">
-                              No borrowing history yet
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <h4 className="font-medium mb-3">Summary</h4>
-                          <div className="grid gap-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Books currently on hand:</span>
-                              <span className="font-medium">{analytics.books_on_hand}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Overdue books:</span>
-                              <span className={`font-medium ${analytics.overdue_count > 0 ? "text-red-600" : ""}`}>
-                                {analytics.overdue_count}
-                              </span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-muted-foreground">Total books borrowed:</span>
-                              <span className="font-medium">{analytics.total_borrowed}</span>
-                            </div>
+                    <div className="space-y-6">
+                      <div>
+                        <h4 className="font-medium mb-3">Summary</h4>
+                        <div className="grid gap-2 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Books currently borrowed:</span>
+                            <span className="font-medium">{student?.current_books ?? 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Max books allowed:</span>
+                            <span className="font-medium">{student?.max_books ?? 5}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total books borrowed:</span>
+                            <span className="font-medium">{student?.total_borrowed ?? 0}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Total fines:</span>
+                            <span className="font-medium">${(student?.total_fines ?? 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Unpaid fines:</span>
+                            <span className={`font-medium ${(student?.unpaid_fines ?? 0) > 0 ? "text-red-600" : ""}`}>
+                              ${(student?.unpaid_fines ?? 0).toFixed(2)}
+                            </span>
                           </div>
                         </div>
                       </div>
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8">
-                        No analytics data available
-                      </p>
-                    )}
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
