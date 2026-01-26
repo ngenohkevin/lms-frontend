@@ -90,14 +90,31 @@ export interface BookImportData {
   location?: string;
 }
 
+export interface BookImportError {
+  row: number;
+  book_id?: string;
+  field?: string;
+  message: string;
+  type?: string;
+}
+
+export interface BookImportSummary {
+  processed_at: string;
+  processing_time: string;
+  file_name: string;
+  file_size: number;
+  duplicates_found: number;
+  new_books: number;
+  updated_books: number;
+}
+
 export interface BookImportResult {
-  success: number;
-  failed: number;
-  errors: Array<{
-    row: number;
-    isbn: string;
-    error: string;
-  }>;
+  total_records: number;
+  success_count: number;
+  failure_count: number;
+  errors?: BookImportError[];
+  imported_books?: Book[];
+  summary: BookImportSummary;
 }
 
 export const BOOK_CATEGORIES = [

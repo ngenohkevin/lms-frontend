@@ -8,7 +8,7 @@ import { useBooks } from "@/lib/hooks/use-books";
 import { BookList, BookSearch } from "@/components/books";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus } from "lucide-react";
+import { Plus, Upload } from "lucide-react";
 import type { Book, BookSearchParams } from "@/lib/types";
 
 function BooksContent() {
@@ -67,6 +67,12 @@ function BooksContent() {
         </div>
         {isLibrarian && (
           <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/books/import">
+                <Upload className="mr-2 h-4 w-4" />
+                Import
+              </Link>
+            </Button>
             <Button asChild>
               <Link href="/books/new">
                 <Plus className="mr-2 h-4 w-4" />
