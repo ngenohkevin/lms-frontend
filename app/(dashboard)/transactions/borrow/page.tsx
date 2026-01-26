@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
@@ -29,9 +29,27 @@ import {
   BookOpen,
   User,
   CheckCircle,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Book, Student } from "@/lib/types";
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 const borrowSchema = z.object({
   due_days: z.number().min(1).max(90).optional(),
@@ -58,6 +76,10 @@ function BorrowContent() {
   const [studentSearch, setStudentSearch] = useState("");
   const [isSearchingStudent, setIsSearchingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentResults, setStudentResults] = useState<Student[]>([]);
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const studentSearchRef = useRef<HTMLDivElement>(null);
+  const debouncedStudentSearch = useDebounce(studentSearch, 300);
 
   const {
     register,
@@ -92,6 +114,44 @@ function BorrowContent() {
       loadBook();
     }
   }, [initialBookId]);
+
+  // Auto-search students when typing
+  useEffect(() => {
+    if (!debouncedStudentSearch.trim() || selectedStudent) {
+      setStudentResults([]);
+      setShowStudentDropdown(false);
+      return;
+    }
+
+    const searchStudents = async () => {
+      setIsSearchingStudent(true);
+      try {
+        const results = await studentsApi.search({ query: debouncedStudentSearch.trim(), per_page: 10 });
+        setStudentResults(results.data);
+        setShowStudentDropdown(results.data.length > 0);
+      } catch {
+        setStudentResults([]);
+        setShowStudentDropdown(false);
+      } finally {
+        setIsSearchingStudent(false);
+      }
+    };
+    searchStudents();
+  }, [debouncedStudentSearch, selectedStudent]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (studentSearchRef.current && !studentSearchRef.current.contains(event.target as Node)) {
+        setShowStudentDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Search for book by ISBN or ID
   const handleBookSearch = async () => {
@@ -136,51 +196,39 @@ function BorrowContent() {
     }
   };
 
-  // Search for student by ID or registration number
-  const handleStudentSearch = async () => {
-    if (!studentSearch.trim()) return;
-
-    setIsSearchingStudent(true);
+  // Select student from search results
+  const handleSelectStudent = useCallback((student: Student) => {
     setError(null);
 
-    try {
-      const student = await studentsApi.getByStudentId(studentSearch.trim());
-      if (student.status !== "active") {
-        setError(`Student account is ${student.status}`);
-        setSelectedStudent(null);
-      } else if (student.current_books >= student.max_books) {
-        setError("Student has reached maximum borrowing limit");
-        setSelectedStudent(null);
-      } else if (student.unpaid_fines > 0) {
-        setError(
-          `Student has unpaid fines of $${student.unpaid_fines.toFixed(2)}`
-        );
-        // Still allow selection but show warning
-        setSelectedStudent(student);
-      } else {
-        setSelectedStudent(student);
-      }
-    } catch {
-      try {
-        // Try by internal ID
-        const student = await studentsApi.get(studentSearch.trim());
-        if (student.status !== "active") {
-          setError(`Student account is ${student.status}`);
-          setSelectedStudent(null);
-        } else if (student.current_books >= student.max_books) {
-          setError("Student has reached maximum borrowing limit");
-          setSelectedStudent(null);
-        } else {
-          setSelectedStudent(student);
-        }
-      } catch {
-        setError("Student not found");
-        setSelectedStudent(null);
-      }
-    } finally {
-      setIsSearchingStudent(false);
+    if (student.status !== "active") {
+      setError(`Student account is ${student.status}`);
+      setSelectedStudent(null);
+    } else if (student.current_books >= student.max_books) {
+      setError("Student has reached maximum borrowing limit");
+      setSelectedStudent(null);
+    } else if (student.unpaid_fines > 0) {
+      setError(
+        `Student has unpaid fines of $${student.unpaid_fines.toFixed(2)}`
+      );
+      // Still allow selection but show warning
+      setSelectedStudent(student);
+    } else {
+      setSelectedStudent(student);
     }
-  };
+
+    setStudentSearch("");
+    setStudentResults([]);
+    setShowStudentDropdown(false);
+  }, []);
+
+  // Clear selected student
+  const handleClearStudent = useCallback(() => {
+    setSelectedStudent(null);
+    setStudentSearch("");
+    setStudentResults([]);
+    setShowStudentDropdown(false);
+    setError(null);
+  }, []);
 
   const onSubmit = async (data: BorrowFormData) => {
     if (!selectedBook || !selectedStudent) {
@@ -330,29 +378,91 @@ function BorrowContent() {
               Select Student
             </CardTitle>
             <CardDescription>
-              Search by student ID or registration number
+              Search by name, student ID, or email
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter student ID"
-                value={studentSearch}
-                onChange={(e) => setStudentSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleStudentSearch()}
-              />
-              <Button
-                variant="outline"
-                onClick={handleStudentSearch}
-                disabled={isSearchingStudent}
-              >
-                {isSearchingStudent ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
+            {!selectedStudent && (
+              <div className="relative" ref={studentSearchRef}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Type student name, ID, or email..."
+                    value={studentSearch}
+                    onChange={(e) => {
+                      setStudentSearch(e.target.value);
+                      if (!e.target.value.trim()) {
+                        setShowStudentDropdown(false);
+                      }
+                    }}
+                    onFocus={() => {
+                      if (studentResults.length > 0) {
+                        setShowStudentDropdown(true);
+                      }
+                    }}
+                    className="pl-10 pr-10"
+                  />
+                  {isSearchingStudent && (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                  {studentSearch && !isSearchingStudent && (
+                    <button
+                      onClick={() => {
+                        setStudentSearch("");
+                        setStudentResults([]);
+                        setShowStudentDropdown(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Search Results Dropdown */}
+                {showStudentDropdown && studentResults.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-[300px] overflow-auto">
+                    {studentResults.map((student) => (
+                      <button
+                        key={student.id}
+                        className="flex w-full items-start gap-3 p-3 text-left hover:bg-muted/50 transition-colors border-b last:border-b-0"
+                        onClick={() => handleSelectStudent(student)}
+                      >
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{student.name}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {student.student_id} • {student.email}
+                          </p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant={student.status === "active" ? "outline" : "secondary"} className="text-xs">
+                              {student.status}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs">
+                              {student.current_books}/{student.max_books} books
+                            </Badge>
+                            {student.unpaid_fines > 0 && (
+                              <Badge variant="destructive" className="text-xs">
+                                ${student.unpaid_fines.toFixed(2)} fine
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
-              </Button>
-            </div>
+
+                {/* No results message */}
+                {showStudentDropdown && studentResults.length === 0 && studentSearch.trim() && !isSearchingStudent && (
+                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg p-4 text-center text-muted-foreground">
+                    No students found matching &quot;{studentSearch}&quot;
+                  </div>
+                )}
+              </div>
+            )}
 
             {selectedStudent && (
               <div className="flex items-start gap-4 rounded-lg border p-4 bg-muted/50">
@@ -382,7 +492,7 @@ function BorrowContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedStudent(null)}
+                  onClick={handleClearStudent}
                 >
                   Change
                 </Button>

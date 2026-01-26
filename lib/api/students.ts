@@ -96,9 +96,19 @@ export const studentsApi = {
   search: async (
     params: StudentSearchParams
   ): Promise<PaginatedResponse<Student>> => {
+    // Transform frontend params to backend format
+    // Backend uses 'q' for query, 'limit' for per_page
+    const backendParams: Record<string, string | number | boolean | undefined> = {};
+    if (params.query) backendParams.q = params.query;
+    if (params.department) backendParams.department = params.department;
+    if (params.year_of_study) backendParams.year = params.year_of_study;
+    if (params.status) backendParams.active = params.status === "active";
+    if (params.page) backendParams.page = params.page;
+    if (params.per_page) backendParams.limit = params.per_page;
+
     const response = await apiClient.get<ApiResponse<BackendPaginatedStudents>>(
       `${STUDENTS_PREFIX}/search`,
-      { params }
+      { params: backendParams }
     );
     return {
       data: transformStudents(response.data?.students || []),
