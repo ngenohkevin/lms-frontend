@@ -231,18 +231,18 @@ export function BookSearch({
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filter Books
+            <SheetContent className="w-full sm:max-w-md overflow-y-auto p-6">
+              <SheetHeader className="space-y-2">
+                <SheetTitle className="flex items-center gap-2 text-lg">
+                  <Filter className="h-5 w-5 shrink-0" />
+                  <span>Filter Books</span>
                 </SheetTitle>
-                <SheetDescription>
+                <SheetDescription className="text-sm">
                   Refine your search with advanced filters
                 </SheetDescription>
               </SheetHeader>
 
-              <div className="mt-6 space-y-6">
+              <div className="mt-6 space-y-6 pr-2">
                 {/* Category filter */}
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold">Category</Label>
@@ -284,21 +284,23 @@ export function BookSearch({
 
                 {/* Publication year range */}
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Publication Year</Label>
-                    <span className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between gap-4">
+                    <Label className="text-sm font-semibold shrink-0">Publication Year</Label>
+                    <span className="text-sm text-muted-foreground tabular-nums">
                       {yearRange[0]} - {yearRange[1]}
                     </span>
                   </div>
-                  <Slider
-                    value={yearRange}
-                    onValueChange={(value) => setYearRange(value as [number, number])}
-                    min={1900}
-                    max={currentYear}
-                    step={1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="px-1">
+                    <Slider
+                      value={yearRange}
+                      onValueChange={(value) => setYearRange(value as [number, number])}
+                      min={1900}
+                      max={currentYear}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-muted-foreground px-1">
                     <span>1900</span>
                     <span>{currentYear}</span>
                   </div>
@@ -314,14 +316,14 @@ export function BookSearch({
                       {minRating > 0 ? `${minRating}+ stars` : "Any"}
                     </span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="grid grid-cols-5 gap-2">
                     {[0, 3, 3.5, 4, 4.5].map((rating) => (
                       <Button
                         key={rating}
                         variant={minRating === rating ? "default" : "outline"}
                         size="sm"
                         onClick={() => setMinRating(rating)}
-                        className="flex-1"
+                        className="px-2 text-xs"
                       >
                         {rating === 0 ? "Any" : `${rating}+`}
                       </Button>
