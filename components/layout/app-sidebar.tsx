@@ -15,6 +15,7 @@ import {
   BookMarked,
   ChevronUp,
   Sparkles,
+  Settings,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,12 @@ const managementNavItems: NavItem[] = [
     title: "Reports",
     href: "/reports",
     icon: BarChart3,
+    roles: ["admin", "librarian"],
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: Settings,
     roles: ["admin", "librarian"],
   },
 ];
