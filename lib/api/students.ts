@@ -107,8 +107,19 @@ export const studentsApi = {
   list: async (
     params?: StudentSearchParams
   ): Promise<PaginatedResponse<Student>> => {
+    // Transform frontend params to backend format
+    const backendParams: Record<string, string | number | boolean | undefined> = {};
+    if (params?.query) backendParams.q = params.query;
+    if (params?.department) backendParams.department = params.department;
+    if (params?.year_of_study) backendParams.year = params.year_of_study;
+    if (params?.status) backendParams.active = params.status === "active";
+    if (params?.page) backendParams.page = params.page;
+    if (params?.per_page) backendParams.limit = params.per_page;
+    // Note: has_overdue and has_fines are frontend-only filters for now
+    // Backend would need to implement these
+
     const response = await apiClient.get<ApiResponse<BackendPaginatedStudents>>(STUDENTS_PREFIX, {
-      params,
+      params: backendParams,
     });
     return {
       data: transformStudents(response.data?.students || []),
