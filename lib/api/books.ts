@@ -89,9 +89,14 @@ export const booksApi = {
     };
   },
 
-  // Get single book by ID
+  // Get single book by ID (numeric) or book_id (string like "BK001")
   get: async (id: string): Promise<Book> => {
-    const response = await apiClient.get<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`);
+    // Check if the ID is numeric or a string book_id
+    const isNumericId = /^\d+$/.test(id);
+    const endpoint = isNumericId
+      ? `${BOOKS_PREFIX}/${id}`
+      : `${BOOKS_PREFIX}/book/${id}`;
+    const response = await apiClient.get<ApiResponse<Book>>(endpoint);
     return transformBook(response.data);
   },
 
