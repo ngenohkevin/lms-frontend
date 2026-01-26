@@ -35,7 +35,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Separator } from "@/components/ui/separator";
@@ -263,17 +263,19 @@ export function BookSearch({
                 <Separator />
 
                 {/* Availability filter */}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-semibold">Availability</Label>
+                <div className="flex items-center justify-between py-1">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="available" className="text-sm font-semibold cursor-pointer">
+                      Availability
+                    </Label>
                     <p className="text-xs text-muted-foreground">
                       Show only books in stock
                     </p>
                   </div>
-                  <Checkbox
+                  <Switch
                     id="available"
                     checked={available}
-                    onCheckedChange={(checked) => setAvailable(checked === true)}
+                    onCheckedChange={(checked) => setAvailable(checked)}
                   />
                 </div>
 

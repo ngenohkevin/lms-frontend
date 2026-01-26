@@ -103,6 +103,8 @@ export interface BookImportResult {
 export const BOOK_CATEGORIES = [
   "Fiction",
   "Non-Fiction",
+  "Science Fiction",
+  "Fantasy",
   "Science",
   "Technology",
   "Mathematics",
