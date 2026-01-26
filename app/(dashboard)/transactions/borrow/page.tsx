@@ -391,6 +391,8 @@ function BorrowContent() {
                     value={studentSearch}
                     onChange={(e) => {
                       setStudentSearch(e.target.value);
+                      // Clear any previous student-related errors when starting a new search
+                      setError(null);
                       if (!e.target.value.trim()) {
                         setShowStudentDropdown(false);
                       }
@@ -411,6 +413,7 @@ function BorrowContent() {
                         setStudentSearch("");
                         setStudentResults([]);
                         setShowStudentDropdown(false);
+                        setError(null);
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                     >
