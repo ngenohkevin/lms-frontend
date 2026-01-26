@@ -27,21 +27,25 @@ interface BackendPagination {
 
 // Backend student structure (what the API actually returns)
 interface BackendStudent {
-  id: string;
+  id: string | number;
   student_id: string;
   user_id?: string;
   first_name: string;
   last_name: string;
-  email: string;
+  email?: string;
   phone?: string;
   department?: string;
   year_of_study?: number;
-  max_books: number;
-  current_books: number;
-  total_borrowed: number;
-  total_fines: number;
-  unpaid_fines: number;
-  status: string;
+  max_books?: number;
+  // These fields may or may not be present depending on the endpoint
+  current_books?: number;
+  total_borrowed?: number;
+  total_fines?: number;
+  unpaid_fines?: number;
+  // Backend returns is_active boolean, not status string
+  is_active?: boolean;
+  status?: string;
+  enrollment_date?: string;
   created_at: string;
   updated_at: string;
 }
@@ -54,10 +58,30 @@ interface BackendPaginatedStudents {
 
 // Transform backend student to frontend format (combine first_name + last_name into name)
 function transformStudent(student: BackendStudent): Student {
+  // Determine status from is_active boolean or status string
+  let status: Student["status"] = "active";
+  if (student.status) {
+    status = student.status as Student["status"];
+  } else if (student.is_active !== undefined) {
+    status = student.is_active ? "active" : "suspended";
+  }
+
   return {
-    ...student,
+    id: String(student.id),
+    student_id: student.student_id,
     name: `${student.first_name} ${student.last_name}`.trim(),
-    status: student.status as Student["status"],
+    email: student.email || "",
+    phone: student.phone,
+    department: student.department,
+    year_of_study: student.year_of_study,
+    max_books: student.max_books ?? 5,
+    current_books: student.current_books ?? 0,
+    total_borrowed: student.total_borrowed ?? 0,
+    total_fines: student.total_fines ?? 0,
+    unpaid_fines: student.unpaid_fines ?? 0,
+    status,
+    created_at: student.created_at,
+    updated_at: student.updated_at,
   };
 }
 
