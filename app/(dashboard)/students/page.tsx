@@ -9,7 +9,7 @@ import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Upload, Download } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Student, StudentSearchParams, StudentStatus } from "@/lib/types";
 import { formatCurrency, getInitials } from "@/lib/utils/format";
 
@@ -118,12 +118,6 @@ export default function StudentsPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/students/import">
-                <Upload className="mr-2 h-4 w-4" />
-                Import
-              </Link>
-            </Button>
             <Button asChild>
               <Link href="/students/new">
                 <Plus className="mr-2 h-4 w-4" />
