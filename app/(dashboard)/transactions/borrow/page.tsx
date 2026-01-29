@@ -248,8 +248,8 @@ function BorrowContent() {
       // Re-validate student and book data before submit to handle race conditions
       // where another librarian may have processed a transaction
       const [revalidatedStudent, revalidatedBook] = await Promise.all([
-        studentsApi.getById(selectedStudent.id),
-        booksApi.getById(selectedBook.id),
+        studentsApi.get(selectedStudent.id),
+        booksApi.get(selectedBook.id),
       ]);
 
       // Check if student still meets borrowing criteria
