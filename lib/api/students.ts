@@ -270,20 +270,9 @@ export const studentsApi = {
     return response.data;
   },
 
-  // Export students to CSV
+  // Export students to CSV (with authentication)
   export: async (params?: StudentSearchParams): Promise<Blob> => {
-    const url = new URL(`${STUDENTS_PREFIX}/export`);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
-    const response = await fetch(url.toString(), {
-      credentials: "include",
-    });
-    return response.blob();
+    return apiClient.download(`${STUDENTS_PREFIX}/export`, { params });
   },
 
   // Get departments

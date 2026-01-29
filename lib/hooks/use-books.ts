@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { toast } from "sonner";
 import { booksApi } from "@/lib/api";
 import type {
   Book,
@@ -7,13 +8,28 @@ import type {
   PaginatedResponse,
 } from "@/lib/types";
 
+// Helper to handle API errors consistently
+const handleApiError = (error: Error, context: string) => {
+  console.error(`${context}:`, error);
+  // Only show toast for non-network errors (avoid spamming on connection issues)
+  if (!error.message.includes("Failed to fetch")) {
+    toast.error(`Failed to ${context.toLowerCase()}`, {
+      description: error.message || "An unexpected error occurred",
+    });
+  }
+};
+
 export function useBooks(params?: BookSearchParams) {
   const key = params ? ["/api/v1/books", params] : "/api/v1/books";
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Book>>(
     key,
     () => booksApi.list(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load books"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -33,7 +49,11 @@ export function useBookSearch(params: BookSearchParams) {
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Book>>(
     key,
     () => booksApi.search(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Search books"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -49,7 +69,11 @@ export function useBook(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<Book>(
     id ? `/api/v1/books/${id}` : null,
     () => (id ? booksApi.get(id) : Promise.resolve(null as unknown as Book)),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load book details"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -71,7 +95,11 @@ export function useBookRatings(
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<BookRating>>(
     key,
     () => (bookId ? booksApi.getRatings(bookId, params) : Promise.resolve({ data: [], pagination: {} as never })),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load book ratings"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -87,7 +115,11 @@ export function useBookCategories() {
   const { data, error, isLoading } = useSWR<string[]>(
     "/api/v1/books/categories",
     () => booksApi.getCategories(),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load categories"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {

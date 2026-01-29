@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { toast } from "sonner";
 import { studentsApi } from "@/lib/api";
 import type {
   Student,
@@ -7,13 +8,28 @@ import type {
   PaginatedResponse,
 } from "@/lib/types";
 
+// Helper to handle API errors consistently
+const handleApiError = (error: Error, context: string) => {
+  console.error(`${context}:`, error);
+  // Only show toast for non-network errors (avoid spamming on connection issues)
+  if (!error.message.includes("Failed to fetch")) {
+    toast.error(`Failed to ${context.toLowerCase()}`, {
+      description: error.message || "An unexpected error occurred",
+    });
+  }
+};
+
 export function useStudents(params?: StudentSearchParams) {
   const key = params ? ["/api/v1/students", params] : "/api/v1/students";
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Student>>(
     key,
     () => studentsApi.list(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load students"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -29,7 +45,11 @@ export function useStudent(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<Student>(
     id ? `/api/v1/students/${id}` : null,
     () => (id ? studentsApi.get(id) : Promise.resolve(null as unknown as Student)),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load student details"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -44,7 +64,11 @@ export function useStudentAnalytics(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<StudentAnalytics>(
     id ? `/api/v1/students/${id}/analytics` : null,
     () => (id ? studentsApi.getAnalytics(id) : Promise.resolve(null as unknown as StudentAnalytics)),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load student analytics"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -59,7 +83,11 @@ export function useStudentDepartments() {
   const { data, error, isLoading } = useSWR<string[]>(
     "/api/v1/students/departments",
     () => studentsApi.getDepartments(),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load departments"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {

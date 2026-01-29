@@ -286,6 +286,26 @@ class ApiClient {
     });
     return this.handleResponse<T>(response);
   }
+
+  // Download file as blob with authentication
+  async download(endpoint: string, options?: RequestOptions): Promise<Blob> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const headers: HeadersInit = {};
+    const token = this.getCurrentToken();
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+    const response = await fetch(url, {
+      ...options,
+      method: "GET",
+      headers,
+      credentials: "include",
+    });
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.statusText}`);
+    }
+    return response.blob();
+  }
 }
 
 export const apiClient = new ApiClient();

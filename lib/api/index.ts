@@ -6,3 +6,4 @@ export { transactionsApi } from "./transactions";
 export { reservationsApi } from "./reservations";
 export { notificationsApi } from "./notifications";
 export { reportsApi } from "./reports";
+export { finesApi } from "./fines";

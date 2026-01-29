@@ -110,7 +110,10 @@ export default function ReservationsPage() {
       header: "Queue",
       render: (res: Reservation) => (
         <span className="text-sm">
-          {res.status === "pending" ? `#${res.queue_position}` : "-"}
+          {/* Show queue position for all active reservations (pending and ready) */}
+          {(res.status === "pending" || res.status === "ready") && res.queue_position
+            ? `#${res.queue_position}`
+            : "-"}
         </span>
       ),
     },

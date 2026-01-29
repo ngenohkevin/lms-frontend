@@ -220,20 +220,9 @@ export const booksApi = {
     return response.data;
   },
 
-  // Export books to CSV
+  // Export books to CSV (with authentication)
   export: async (params?: BookSearchParams): Promise<Blob> => {
-    const url = new URL(`${BOOKS_PREFIX}/export`);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          url.searchParams.append(key, String(value));
-        }
-      });
-    }
-    const response = await fetch(url.toString(), {
-      credentials: "include",
-    });
-    return response.blob();
+    return apiClient.download(`${BOOKS_PREFIX}/export`, { params });
   },
 
   // Get categories

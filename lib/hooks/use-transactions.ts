@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { toast } from "sonner";
 import { transactionsApi } from "@/lib/api";
 import type {
   Transaction,
@@ -9,6 +10,17 @@ import type {
   PaginatedResponse,
 } from "@/lib/types";
 
+// Helper to handle API errors consistently
+const handleApiError = (error: Error, context: string) => {
+  console.error(`${context}:`, error);
+  // Only show toast for non-network errors (avoid spamming on connection issues)
+  if (!error.message.includes("Failed to fetch")) {
+    toast.error(`Failed to ${context.toLowerCase()}`, {
+      description: error.message || "An unexpected error occurred",
+    });
+  }
+};
+
 export function useTransactions(params?: TransactionSearchParams) {
   const key = params
     ? ["/api/v1/transactions", params]
@@ -16,7 +28,11 @@ export function useTransactions(params?: TransactionSearchParams) {
 
   const { data, error, isLoading, mutate } = useSWR<
     PaginatedResponse<Transaction>
-  >(key, () => transactionsApi.list(params), { onError: () => {} });
+  >(key, () => transactionsApi.list(params), {
+    onError: (err) => handleApiError(err, "Load transactions"),
+    shouldRetryOnError: true,
+    errorRetryCount: 2,
+  });
 
   return {
     transactions: data?.data || [],
@@ -34,7 +50,11 @@ export function useTransaction(id: string | null) {
       id
         ? transactionsApi.get(id)
         : Promise.resolve(null as unknown as Transaction),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load transaction details"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -51,7 +71,9 @@ export function useTransactionStats() {
     () => transactionsApi.getStats(),
     {
       refreshInterval: 60000,
-      onError: () => {},
+      onError: (err) => handleApiError(err, "Load transaction stats"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
     }
   );
 
@@ -74,7 +96,11 @@ export function useOverdueTransactions(params?: {
 
   const { data, error, isLoading, mutate } = useSWR<
     PaginatedResponse<OverdueTransaction>
-  >(key, () => transactionsApi.getOverdue(params), { onError: () => {} });
+  >(key, () => transactionsApi.getOverdue(params), {
+    onError: (err) => handleApiError(err, "Load overdue transactions"),
+    shouldRetryOnError: true,
+    errorRetryCount: 2,
+  });
 
   return {
     overdueTransactions: data?.data || [],
@@ -94,7 +120,11 @@ export function useStudentActiveTransactions(studentId: string | null) {
       // Filter for active transactions (not returned)
       return transactions.filter(t => t.status === "active" || t.status === "overdue");
     },
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load student transactions"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -118,7 +148,11 @@ export function useFines(params?: {
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Fine>>(
     key,
     () => transactionsApi.fines.list(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load fines"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {

@@ -203,17 +203,17 @@ function BorrowContent() {
     setError(null);
 
     if (student.status !== "active") {
-      setError(`Student account is ${student.status}`);
+      setError(`Student account is ${student.status}. Cannot borrow books.`);
       setSelectedStudent(null);
     } else if (student.current_books >= student.max_books) {
-      setError("Student has reached maximum borrowing limit");
+      setError("Student has reached maximum borrowing limit. Cannot borrow more books.");
       setSelectedStudent(null);
     } else if (student.unpaid_fines > 0) {
+      // Block selection for students with unpaid fines - they must pay fines first
       setError(
-        `Student has unpaid fines of $${student.unpaid_fines.toFixed(2)}`
+        `Student has unpaid fines of $${student.unpaid_fines.toFixed(2)}. Fines must be paid before borrowing.`
       );
-      // Still allow selection but show warning
-      setSelectedStudent(student);
+      setSelectedStudent(null);
     } else {
       setSelectedStudent(student);
     }
@@ -241,7 +241,47 @@ function BorrowContent() {
     setIsLoading(true);
     setError(null);
 
+    // Create AbortController for race condition protection
+    const abortController = new AbortController();
+
     try {
+      // Re-validate student and book data before submit to handle race conditions
+      // where another librarian may have processed a transaction
+      const [revalidatedStudent, revalidatedBook] = await Promise.all([
+        studentsApi.getById(selectedStudent.id),
+        booksApi.getById(selectedBook.id),
+      ]);
+
+      // Check if student still meets borrowing criteria
+      if (revalidatedStudent.status !== "active") {
+        setError(`Student account is now ${revalidatedStudent.status}. Cannot borrow books.`);
+        setSelectedStudent(null);
+        return;
+      }
+      if (revalidatedStudent.current_books >= revalidatedStudent.max_books) {
+        setError("Student has reached maximum borrowing limit. Cannot borrow more books.");
+        setSelectedStudent(null);
+        return;
+      }
+      if (revalidatedStudent.unpaid_fines > 0) {
+        setError(`Student has unpaid fines of $${revalidatedStudent.unpaid_fines.toFixed(2)}. Fines must be paid before borrowing.`);
+        setSelectedStudent(null);
+        return;
+      }
+
+      // Check if book is still available
+      if (revalidatedBook.available_copies <= 0) {
+        setError("This book is no longer available for borrowing.");
+        setSelectedBook(null);
+        return;
+      }
+
+      // Check if abort was requested
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      // Proceed with borrowing
       await transactionsApi.borrow({
         book_id: selectedBook.id,
         student_id: selectedStudent.id,
@@ -252,6 +292,9 @@ function BorrowContent() {
       setSuccess(true);
       toast.success("Book borrowed successfully");
     } catch (err) {
+      if (abortController.signal.aborted) {
+        return;
+      }
       setError(
         err instanceof Error ? err.message : "Failed to process transaction"
       );

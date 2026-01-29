@@ -1,4 +1,5 @@
 import useSWR from "swr";
+import { toast } from "sonner";
 import { reportsApi } from "@/lib/api";
 import type {
   DashboardMetrics,
@@ -11,13 +12,26 @@ import type {
   ReportParams,
 } from "@/lib/types";
 
+// Helper to handle API errors consistently
+const handleApiError = (error: Error, context: string) => {
+  console.error(`${context}:`, error);
+  // Only show toast for non-network errors (avoid spamming on connection issues)
+  if (!error.message.includes("Failed to fetch")) {
+    toast.error(`Failed to ${context.toLowerCase()}`, {
+      description: error.message || "An unexpected error occurred",
+    });
+  }
+};
+
 export function useDashboardMetrics() {
   const { data, error, isLoading, mutate } = useSWR<DashboardMetrics>(
     "/api/v1/reports/dashboard-metrics",
     () => reportsApi.getDashboardMetrics(),
     {
       refreshInterval: 60000, // Refresh every minute
-      onError: () => {}, // Silently handle errors
+      onError: (err) => handleApiError(err, "Load dashboard metrics"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
     }
   );
 
@@ -37,7 +51,11 @@ export function useBorrowingStats(params?: ReportParams) {
   const { data, error, isLoading, mutate } = useSWR<BorrowingStats[]>(
     key,
     () => reportsApi.getBorrowingStats(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load borrowing statistics"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -56,7 +74,11 @@ export function useBorrowingTrends(params?: ReportParams) {
   const { data, error, isLoading, mutate } = useSWR<BorrowingTrend[]>(
     key,
     () => reportsApi.getBorrowingTrends(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load borrowing trends"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -80,7 +102,11 @@ export function usePopularBooks(params?: {
   const { data, error, isLoading, mutate } = useSWR<PopularBook[]>(
     key,
     () => reportsApi.getPopularBooks(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load popular books"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -95,7 +121,11 @@ export function useCategoryStats() {
   const { data, error, isLoading, mutate } = useSWR<CategoryStats[]>(
     "/api/v1/reports/library-overview",
     () => reportsApi.getCategoryStats(),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load category statistics"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -110,7 +140,11 @@ export function useInventoryReport() {
   const { data, error, isLoading, mutate } = useSWR<InventoryReport>(
     "/api/v1/reports/inventory-status",
     () => reportsApi.getInventoryReport(),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load inventory report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
@@ -129,7 +163,11 @@ export function useOverdueReport(params?: { department?: string }) {
   const { data, error, isLoading, mutate } = useSWR<OverdueReport>(
     key,
     () => reportsApi.getOverdueReport(params),
-    { onError: () => {} }
+    {
+      onError: (err) => handleApiError(err, "Load overdue report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
   );
 
   return {
