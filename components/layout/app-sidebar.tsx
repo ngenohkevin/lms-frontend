@@ -16,6 +16,7 @@ import {
   ChevronUp,
   Sparkles,
   Settings,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { cn } from "@/lib/utils";
@@ -78,6 +79,12 @@ const managementNavItems: NavItem[] = [
     href: "/students",
     icon: Users,
     roles: ["admin", "librarian"],
+  },
+  {
+    title: "Users",
+    href: "/users",
+    icon: Shield,
+    roles: ["admin"],
   },
   {
     title: "Reports",
