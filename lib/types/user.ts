@@ -40,3 +40,57 @@ export interface RoleOption {
   label: string;
   description: string;
 }
+
+// Invite types
+export type InviteStatus = "pending" | "accepted" | "expired";
+
+export interface UserInvite {
+  id: string;
+  email: string;
+  name: string;
+  role: StaffRole;
+  status: InviteStatus;
+  invited_by: number;
+  inviter_name: string;
+  expires_at: string;
+  accepted_at?: string;
+  created_at: string;
+}
+
+export interface CreateInviteRequest {
+  email: string;
+  name: string;
+  role: StaffRole;
+}
+
+export interface AcceptInviteRequest {
+  token: string;
+  username: string;
+  password: string;
+  confirm_password: string;
+}
+
+export interface ValidateInviteResponse {
+  valid: boolean;
+  email?: string;
+  name?: string;
+  role?: StaffRole;
+  message?: string;
+}
+
+export interface SetupRequest {
+  username: string;
+  email: string;
+  password: string;
+  confirm_password: string;
+}
+
+export interface SetupCheckResponse {
+  setup_required: boolean;
+  message: string;
+}
+
+export interface InviteSearchParams {
+  page?: number;
+  per_page?: number;
+}

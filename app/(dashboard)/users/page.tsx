@@ -139,12 +139,17 @@ export default function UsersPage() {
               Manage staff accounts and permissions
             </p>
           </div>
-          <Button asChild>
-            <Link href="/users/new">
-              <Plus className="mr-2 h-4 w-4" />
-              Add User
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/users/invites">View Invites</Link>
+            </Button>
+            <Button asChild>
+              <Link href="/users/invites/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Invite User
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <UserSearch onSearch={handleSearch} />

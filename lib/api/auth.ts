@@ -5,6 +5,11 @@ import type {
   User,
   ForgotPasswordRequest,
   ResetPasswordRequest,
+  SetupRequest,
+  SetupCheckResponse,
+  AcceptInviteRequest,
+  ValidateInviteResponse,
+  StaffUser,
 } from "@/lib/types";
 
 const AUTH_PREFIX = "/api/v1/auth";
@@ -118,6 +123,42 @@ export const authApi = {
   me: async (): Promise<User> => {
     // API uses /profile endpoint, not /auth/me
     const response = await apiClient.get<{ success: boolean; data: User }>("/api/v1/profile");
+    return response.data;
+  },
+
+  // Setup endpoints (public - no auth required)
+  checkSetup: async (): Promise<SetupCheckResponse> => {
+    const response = await apiClient.get<{ success: boolean; data: SetupCheckResponse }>(
+      "/api/v1/setup/check",
+      { skipAuthRedirect: true }
+    );
+    return response.data;
+  },
+
+  createFirstAdmin: async (data: SetupRequest): Promise<StaffUser> => {
+    const response = await apiClient.post<{ success: boolean; data: StaffUser }>(
+      "/api/v1/setup",
+      data,
+      { skipAuthRedirect: true }
+    );
+    return response.data;
+  },
+
+  // Invite validation and acceptance (public - no auth required)
+  validateInvite: async (token: string): Promise<ValidateInviteResponse> => {
+    const response = await apiClient.get<{ success: boolean; data: ValidateInviteResponse }>(
+      `${AUTH_PREFIX}/invite/${token}`,
+      { skipAuthRedirect: true }
+    );
+    return response.data;
+  },
+
+  acceptInvite: async (data: AcceptInviteRequest): Promise<StaffUser> => {
+    const response = await apiClient.post<{ success: boolean; data: StaffUser }>(
+      `${AUTH_PREFIX}/invite/accept`,
+      data,
+      { skipAuthRedirect: true }
+    );
     return response.data;
   },
 };

@@ -195,7 +195,10 @@ class ApiClient {
     return headers;
   }
 
-  async get<T>(endpoint: string, options?: RequestOptions): Promise<T> {
+  async get<T>(
+    endpoint: string,
+    options?: RequestOptions & { skipAuthRedirect?: boolean }
+  ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
     const response = await fetch(url, {
       ...options,
@@ -203,7 +206,7 @@ class ApiClient {
       headers: this.getHeaders(),
       credentials: "include",
     });
-    return this.handleResponse<T>(response);
+    return this.handleResponse<T>(response, options?.skipAuthRedirect);
   }
 
   async post<T>(

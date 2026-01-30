@@ -20,6 +20,11 @@ function clearAuthCookies() {
   }
 }
 
+// Public paths that don't require authentication
+const PUBLIC_PATHS = ["/login", "/forgot-password", "/reset-password", "/setup"];
+const SETUP_PATH = "/setup";
+const ACCEPT_INVITE_PREFIX = "/accept-invite";
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -46,8 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearAuthCookies();
     setUser(null);
     // Only redirect if not already on a public page
-    const publicPaths = ["/login", "/forgot-password", "/reset-password"];
-    if (!publicPaths.includes(pathname)) {
+    const isPublicPath = PUBLIC_PATHS.includes(pathname) || pathname.startsWith(ACCEPT_INVITE_PREFIX);
+    if (!isPublicPath) {
       router.push("/login");
     }
   }, [pathname, router]);
@@ -64,6 +69,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        // Skip setup check for accept-invite pages
+        const isAcceptInvitePage = pathname.startsWith(ACCEPT_INVITE_PREFIX);
+
+        // Check if setup is required (only if not on setup or accept-invite page)
+        if (!isAcceptInvitePage && pathname !== SETUP_PATH) {
+          try {
+            const setupCheck = await authApi.checkSetup();
+            if (setupCheck.setup_required) {
+              router.push(SETUP_PATH);
+              setIsLoading(false);
+              return;
+            }
+          } catch {
+            // If setup check fails, continue with normal auth flow
+            console.warn("Setup check failed, continuing with auth flow");
+          }
+        }
+
         // Check if we have an access token (in cookie)
         const hasToken = typeof document !== "undefined" &&
           document.cookie.includes("access_token=");
@@ -95,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     initAuth();
-  }, [refreshUser, handleAuthFailure]);
+  }, [refreshUser, handleAuthFailure, pathname, router]);
 
   const login = async (credentials: LoginCredentials) => {
     const response = await authApi.login(credentials);
