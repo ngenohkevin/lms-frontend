@@ -86,11 +86,14 @@ export function InviteForm({ onSuccess, onCancel }: InviteFormProps) {
 
     try {
       const result = await invitesApi.create(data as CreateInviteRequest);
-      // Transform invite URL to use current domain instead of backend-configured URL
-      const backendUrl = result.invite_url;
-      const urlPath = new URL(backendUrl).pathname;
-      const currentOriginUrl = window.location.origin + urlPath;
-      setInviteUrl(currentOriginUrl);
+      // Use backend URL directly (LMS_FRONTEND_URL is configured on backend)
+      // Fallback: extract path and use current origin if backend returns localhost
+      let finalUrl = result.invite_url;
+      if (finalUrl.includes("localhost")) {
+        const url = new URL(finalUrl);
+        finalUrl = window.location.origin + url.pathname;
+      }
+      setInviteUrl(finalUrl);
       toast.success("Invitation created!", {
         description: `An invitation has been created for ${data.email}`,
       });
