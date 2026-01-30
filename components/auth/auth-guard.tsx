@@ -17,14 +17,15 @@ export function AuthGuard({
   requiredRoles,
   fallback,
 }: AuthGuardProps) {
-  const { user, isLoading, isAuthenticated } = useAuth();
+  const { user, isLoading, isAuthenticated, setupRequired } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Don't redirect to login if setup is required (will redirect to /setup instead)
+    if (!isLoading && !isAuthenticated && !setupRequired) {
       router.push("/login");
     }
-  }, [isLoading, isAuthenticated, router]);
+  }, [isLoading, isAuthenticated, setupRequired, router]);
 
   // Show loading state
   if (isLoading) {
@@ -34,6 +35,15 @@ export function AuthGuard({
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       )
+    );
+  }
+
+  // Setup required - don't render anything, will redirect to /setup
+  if (setupRequired) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 

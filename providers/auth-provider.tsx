@@ -29,6 +29,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  setupRequired: boolean;
   login: (credentials: LoginCredentials) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -43,6 +44,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [setupRequired, setSetupRequired] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -77,8 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             const setupCheck = await authApi.checkSetup();
             if (setupCheck.setup_required) {
-              router.push(SETUP_PATH);
+              setSetupRequired(true);
               setIsLoading(false);
+              router.push(SETUP_PATH);
               return;
             }
           } catch {
@@ -151,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isAuthenticated: !!user,
     isLoading,
+    setupRequired,
     login,
     logout,
     refreshUser,
