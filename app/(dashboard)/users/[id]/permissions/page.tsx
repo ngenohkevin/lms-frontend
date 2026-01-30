@@ -108,7 +108,7 @@ export default function UserPermissionsPage() {
       refreshOverrides();
     } catch (error) {
       console.error("Failed to add override:", error);
-      toast.error("Failed to add override");
+      toast.error(error instanceof Error ? error.message : "Failed to add override");
     } finally {
       setSaving(false);
     }
