@@ -88,7 +88,7 @@ class ApiClient {
     return url.toString();
   }
 
-  private async handleResponse<T>(response: Response, skipAuthRedirect = false): Promise<T> {
+  private async handleResponse<T>(response: Response, skipAuthRedirect = false, isRetry = false): Promise<T> {
     if (response.status === 401) {
       // For login failures, extract the error message instead of redirecting
       if (skipAuthRedirect) {
@@ -97,6 +97,16 @@ class ApiClient {
         }));
         const errorMessage = error.error?.message || error.message || error.error || "Invalid email or password";
         throw new Error(typeof errorMessage === 'string' ? errorMessage : "Invalid email or password");
+      }
+
+      // If this is already a retry, don't try to refresh again (prevent infinite loop)
+      if (isRetry) {
+        clearAuthCookies();
+        this.accessToken = null;
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+        throw new Error("Unauthorized");
       }
 
       // Try to refresh the token
@@ -111,9 +121,8 @@ class ApiClient {
         throw new Error("Unauthorized");
       }
       // Signal that token was refreshed and request should be retried
-      const retryError = new Error("Token refreshed, retry request");
-      (retryError as Error & { shouldRetry: boolean }).shouldRetry = true;
-      throw retryError;
+      // Use a specific error message that we can check for in the retry logic
+      throw new Error("__TOKEN_REFRESHED__");
     }
 
     if (!response.ok) {
@@ -216,7 +225,7 @@ class ApiClient {
 
   // Helper to check if error indicates retry is needed
   private shouldRetry(error: unknown): boolean {
-    return error instanceof Error && (error as Error & { shouldRetry?: boolean }).shouldRetry === true;
+    return error instanceof Error && error.message === "__TOKEN_REFRESHED__";
   }
 
   async get<T>(
@@ -224,21 +233,21 @@ class ApiClient {
     options?: RequestOptions & { skipAuthRedirect?: boolean }
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const response = await fetch(url, {
         ...options,
         method: "GET",
         headers: this.getHeaders(),
         credentials: "include",
       });
-      return this.handleResponse<T>(response, options?.skipAuthRedirect);
+      return this.handleResponse<T>(response, options?.skipAuthRedirect, isRetry);
     };
 
     try {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
@@ -250,7 +259,7 @@ class ApiClient {
     options?: RequestOptions & { skipAuthRedirect?: boolean }
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const response = await fetch(url, {
         ...options,
         method: "POST",
@@ -258,14 +267,14 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
       });
-      return this.handleResponse<T>(response, options?.skipAuthRedirect);
+      return this.handleResponse<T>(response, options?.skipAuthRedirect, isRetry);
     };
 
     try {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
@@ -277,7 +286,7 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const response = await fetch(url, {
         ...options,
         method: "PUT",
@@ -285,14 +294,14 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
       });
-      return this.handleResponse<T>(response);
+      return this.handleResponse<T>(response, false, isRetry);
     };
 
     try {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
@@ -304,7 +313,7 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const response = await fetch(url, {
         ...options,
         method: "PATCH",
@@ -312,14 +321,14 @@ class ApiClient {
         body: data ? JSON.stringify(data) : undefined,
         credentials: "include",
       });
-      return this.handleResponse<T>(response);
+      return this.handleResponse<T>(response, false, isRetry);
     };
 
     try {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
@@ -327,21 +336,21 @@ class ApiClient {
 
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const response = await fetch(url, {
         ...options,
         method: "DELETE",
         headers: this.getHeaders(),
         credentials: "include",
       });
-      return this.handleResponse<T>(response);
+      return this.handleResponse<T>(response, false, isRetry);
     };
 
     try {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
@@ -353,7 +362,7 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const headers: HeadersInit = {};
       const token = this.getCurrentToken();
       if (token) {
@@ -367,14 +376,14 @@ class ApiClient {
         body: formData,
         credentials: "include",
       });
-      return this.handleResponse<T>(response);
+      return this.handleResponse<T>(response, false, isRetry);
     };
 
     try {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
@@ -383,7 +392,7 @@ class ApiClient {
   // Download file as blob with authentication
   async download(endpoint: string, options?: RequestOptions): Promise<Blob> {
     const url = this.buildUrl(endpoint, options?.params);
-    const doFetch = async () => {
+    const doFetch = async (isRetry = false) => {
       const headers: HeadersInit = {};
       const token = this.getCurrentToken();
       if (token) {
@@ -396,6 +405,15 @@ class ApiClient {
         credentials: "include",
       });
       if (response.status === 401) {
+        // If this is already a retry, don't try to refresh again
+        if (isRetry) {
+          clearAuthCookies();
+          this.accessToken = null;
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          throw new Error("Unauthorized");
+        }
         const refreshed = await this.refreshToken();
         if (!refreshed) {
           clearAuthCookies();
@@ -405,9 +423,7 @@ class ApiClient {
           }
           throw new Error("Unauthorized");
         }
-        const retryError = new Error("Token refreshed, retry request");
-        (retryError as Error & { shouldRetry: boolean }).shouldRetry = true;
-        throw retryError;
+        throw new Error("__TOKEN_REFRESHED__");
       }
       if (!response.ok) {
         throw new Error(`Download failed: ${response.statusText}`);
@@ -419,7 +435,7 @@ class ApiClient {
       return await doFetch();
     } catch (error) {
       if (this.shouldRetry(error)) {
-        return await doFetch(); // Retry with new token
+        return await doFetch(true); // Retry with new token, mark as retry
       }
       throw error;
     }
