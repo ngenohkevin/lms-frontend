@@ -86,7 +86,11 @@ export function InviteForm({ onSuccess, onCancel }: InviteFormProps) {
 
     try {
       const result = await invitesApi.create(data as CreateInviteRequest);
-      setInviteUrl(result.invite_url);
+      // Transform invite URL to use current domain instead of backend-configured URL
+      const backendUrl = result.invite_url;
+      const urlPath = new URL(backendUrl).pathname + new URL(backendUrl).search;
+      const currentOriginUrl = window.location.origin + urlPath;
+      setInviteUrl(currentOriginUrl);
       toast.success("Invitation created!", {
         description: `An invitation has been created for ${data.email}`,
       });
@@ -225,16 +229,18 @@ export function InviteForm({ onSuccess, onCancel }: InviteFormProps) {
               disabled={isLoading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
+                <SelectValue placeholder="Select a role">
+                  {selectedRole && ROLES.find(r => r.value === selectedRole)?.label}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    <div>
-                      <div className="font-medium">{role.label}</div>
-                      <div className="text-xs text-muted-foreground">
+                  <SelectItem key={role.value} value={role.value} className="py-3">
+                    <div className="flex flex-col items-start">
+                      <span className="font-medium">{role.label}</span>
+                      <span className="text-xs text-muted-foreground">
                         {role.description}
-                      </div>
+                      </span>
                     </div>
                   </SelectItem>
                 ))}
