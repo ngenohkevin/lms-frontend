@@ -86,11 +86,17 @@ export default function UserPermissionsPage() {
 
     setSaving(true);
     try {
+      // Convert datetime-local format to ISO 8601/RFC3339 format for the backend
+      let formattedExpiresAt: string | undefined;
+      if (expiresAt) {
+        formattedExpiresAt = new Date(expiresAt).toISOString();
+      }
+
       await permissionsApi.createUserOverride(userId, {
         permission_code: selectedPermission,
         override_type: overrideType,
         reason: reason || undefined,
-        expires_at: expiresAt || undefined,
+        expires_at: formattedExpiresAt,
       });
       toast.success("Override added successfully");
       setIsAddDialogOpen(false);
