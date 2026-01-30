@@ -33,9 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -46,10 +52,12 @@ import {
   Shield,
   ShieldOff,
   Clock,
+  CalendarIcon,
 } from "lucide-react";
 import type { OverrideType, UserPermissionOverride, Permission } from "@/lib/types";
 import { PermissionCategoryNames } from "@/lib/types";
-import { formatDistanceToNow, format } from "date-fns";
+import { formatDistanceToNow, format, addDays, addMonths } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function UserPermissionsPage() {
   const params = useParams();
@@ -64,7 +72,8 @@ export default function UserPermissionsPage() {
   const [selectedPermission, setSelectedPermission] = useState<string>("");
   const [overrideType, setOverrideType] = useState<OverrideType>("grant");
   const [reason, setReason] = useState("");
-  const [expiresAt, setExpiresAt] = useState("");
+  const [hasExpiry, setHasExpiry] = useState(false);
+  const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -86,10 +95,13 @@ export default function UserPermissionsPage() {
 
     setSaving(true);
     try {
-      // Convert datetime-local format to ISO 8601/RFC3339 format for the backend
+      // Convert expiry date to ISO 8601 format if set
       let formattedExpiresAt: string | undefined;
-      if (expiresAt) {
-        formattedExpiresAt = new Date(expiresAt).toISOString();
+      if (hasExpiry && expiryDate) {
+        // Set to end of day for the selected date
+        const endOfDay = new Date(expiryDate);
+        endOfDay.setHours(23, 59, 59, 999);
+        formattedExpiresAt = endOfDay.toISOString();
       }
 
       await permissionsApi.createUserOverride(userId, {
@@ -103,7 +115,8 @@ export default function UserPermissionsPage() {
       setSelectedPermission("");
       setOverrideType("grant");
       setReason("");
-      setExpiresAt("");
+      setHasExpiry(false);
+      setExpiryDate(undefined);
       refreshPerms();
       refreshOverrides();
     } catch (error) {
@@ -264,14 +277,71 @@ export default function UserPermissionsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Expires At (optional)</Label>
-                  <Input
-                    type="datetime-local"
-                    value={expiresAt}
-                    onChange={(e) => setExpiresAt(e.target.value)}
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label>Set Expiry Date</Label>
+                    <Switch
+                      checked={hasExpiry}
+                      onCheckedChange={(checked) => {
+                        setHasExpiry(checked);
+                        if (!checked) setExpiryDate(undefined);
+                      }}
+                    />
+                  </div>
+                  {hasExpiry && (
+                    <>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "justify-start text-left font-normal",
+                              !expiryDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {expiryDate ? format(expiryDate, "PPP") : "Pick an expiry date"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={expiryDate}
+                            onSelect={setExpiryDate}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setExpiryDate(addDays(new Date(), 7))}
+                        >
+                          1 Week
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setExpiryDate(addMonths(new Date(), 1))}
+                        >
+                          1 Month
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setExpiryDate(addMonths(new Date(), 3))}
+                        >
+                          3 Months
+                        </Button>
+                      </div>
+                    </>
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    Leave empty for a permanent override
+                    {hasExpiry ? "Override will expire at end of selected day" : "Override will be permanent"}
                   </p>
                 </div>
               </div>
