@@ -12,5 +12,7 @@ interface AcceptInvitePageProps {
 
 export default async function AcceptInvitePage({ params }: AcceptInvitePageProps) {
   const { token } = await params;
-  return <AcceptInviteForm token={token} />;
+  // Decode URL-encoded characters (e.g., %3D -> =)
+  const decodedToken = decodeURIComponent(token);
+  return <AcceptInviteForm token={decodedToken} />;
 }
