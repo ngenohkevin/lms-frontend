@@ -256,26 +256,26 @@ export function AppSidebar() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex w-full items-center gap-3 rounded-xl p-3 hover:bg-muted/80 transition-colors group">
-              <Avatar className="h-10 w-10 border-2 border-primary/10">
+              <Avatar className="h-10 w-10 shrink-0 border-2 border-primary/10">
                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                   {user?.username ? getInitials(user.username) : "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col items-start flex-1 min-w-0">
-                <span className="font-medium text-sm truncate w-full">
+              <div className="flex flex-col items-start gap-0.5 flex-1 min-w-0 overflow-hidden">
+                <span className="font-medium text-sm truncate max-w-full text-left">
                   {user?.username || "User"}
                 </span>
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] px-1.5 py-0 font-medium capitalize",
+                    "text-[10px] px-1.5 py-0 h-4 font-medium capitalize shrink-0",
                     getRoleBadgeColor(user?.role)
                   )}
                 >
                   {user?.role || "Unknown"}
                 </Badge>
               </div>
-              <ChevronUp className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+              <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-56">
