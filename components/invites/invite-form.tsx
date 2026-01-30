@@ -88,7 +88,7 @@ export function InviteForm({ onSuccess, onCancel }: InviteFormProps) {
       const result = await invitesApi.create(data as CreateInviteRequest);
       // Transform invite URL to use current domain instead of backend-configured URL
       const backendUrl = result.invite_url;
-      const urlPath = new URL(backendUrl).pathname + new URL(backendUrl).search;
+      const urlPath = new URL(backendUrl).pathname;
       const currentOriginUrl = window.location.origin + urlPath;
       setInviteUrl(currentOriginUrl);
       toast.success("Invitation created!", {

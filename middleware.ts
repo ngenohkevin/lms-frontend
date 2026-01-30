@@ -27,8 +27,9 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  // If token exists and trying to access public auth pages (except setup), redirect to dashboard
-  if (token && isPublicPath && pathname !== "/setup") {
+  // If token exists and trying to access public auth pages (except setup and accept-invite), redirect to dashboard
+  // Allow accept-invite for logged-in users so admins can test invite links
+  if (token && isPublicPath && pathname !== "/setup" && !pathname.startsWith("/accept-invite")) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
