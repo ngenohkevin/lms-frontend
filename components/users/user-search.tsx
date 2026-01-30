@@ -26,6 +26,8 @@ export function UserSearch({ onSearch }: UserSearchProps) {
   const [role, setRole] = useState<StaffRole | "all">("all");
   const [status, setStatus] = useState<"all" | "active" | "inactive">("all");
 
+  const hasFilters = query !== "" || role !== "all" || status !== "all";
+
   const handleSearch = () => {
     onSearch({
       query: query || undefined,
@@ -100,10 +102,12 @@ export function UserSearch({ onSearch }: UserSearchProps) {
           <Search className="mr-2 h-4 w-4" />
           Search
         </Button>
-        <Button variant="outline" onClick={handleClear}>
-          <X className="mr-2 h-4 w-4" />
-          Clear
-        </Button>
+        {hasFilters && (
+          <Button variant="outline" onClick={handleClear}>
+            <X className="mr-2 h-4 w-4" />
+            Clear
+          </Button>
+        )}
       </div>
     </div>
   );

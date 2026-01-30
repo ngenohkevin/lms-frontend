@@ -168,13 +168,15 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
             onValueChange={(value) => setValue("role", value as StaffRole)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select role" />
+              <SelectValue placeholder="Select role">
+                {watch("role") && ROLES.find(r => r.value === watch("role"))?.label}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {ROLES.map((role) => (
-                <SelectItem key={role.value} value={role.value}>
-                  <div className="flex flex-col">
-                    <span>{role.label}</span>
+                <SelectItem key={role.value} value={role.value} className="py-3">
+                  <div className="flex flex-col items-start">
+                    <span className="font-medium">{role.label}</span>
                     <span className="text-xs text-muted-foreground">
                       {role.description}
                     </span>
