@@ -16,6 +16,7 @@ interface RequestOptions extends RequestInit {
 
 class ApiClient {
   private accessToken: string | null = null;
+  private refreshPromise: Promise<boolean> | null = null; // Mutex for refresh
 
   // Read access token from cookie (for persistence across page refreshes)
   private getAccessTokenFromCookie(): string | null {
@@ -109,7 +110,10 @@ class ApiClient {
         }
         throw new Error("Unauthorized");
       }
-      throw new Error("Token refreshed, retry request");
+      // Signal that token was refreshed and request should be retried
+      const retryError = new Error("Token refreshed, retry request");
+      (retryError as Error & { shouldRetry: boolean }).shouldRetry = true;
+      throw retryError;
     }
 
     if (!response.ok) {
@@ -131,6 +135,21 @@ class ApiClient {
   }
 
   private async refreshToken(): Promise<boolean> {
+    // Use a mutex to prevent multiple simultaneous refresh attempts
+    // If a refresh is already in progress, wait for it
+    if (this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.refreshPromise = this.doRefreshToken();
+    try {
+      return await this.refreshPromise;
+    } finally {
+      this.refreshPromise = null;
+    }
+  }
+
+  private async doRefreshToken(): Promise<boolean> {
     try {
       // Get refresh token from cookie
       let refreshTokenValue = "";
@@ -195,18 +214,34 @@ class ApiClient {
     return headers;
   }
 
+  // Helper to check if error indicates retry is needed
+  private shouldRetry(error: unknown): boolean {
+    return error instanceof Error && (error as Error & { shouldRetry?: boolean }).shouldRetry === true;
+  }
+
   async get<T>(
     endpoint: string,
     options?: RequestOptions & { skipAuthRedirect?: boolean }
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const response = await fetch(url, {
-      ...options,
-      method: "GET",
-      headers: this.getHeaders(),
-      credentials: "include",
-    });
-    return this.handleResponse<T>(response, options?.skipAuthRedirect);
+    const doFetch = async () => {
+      const response = await fetch(url, {
+        ...options,
+        method: "GET",
+        headers: this.getHeaders(),
+        credentials: "include",
+      });
+      return this.handleResponse<T>(response, options?.skipAuthRedirect);
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
+    }
   }
 
   async post<T>(
@@ -215,14 +250,25 @@ class ApiClient {
     options?: RequestOptions & { skipAuthRedirect?: boolean }
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const response = await fetch(url, {
-      ...options,
-      method: "POST",
-      headers: this.getHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-    });
-    return this.handleResponse<T>(response, options?.skipAuthRedirect);
+    const doFetch = async () => {
+      const response = await fetch(url, {
+        ...options,
+        method: "POST",
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+      return this.handleResponse<T>(response, options?.skipAuthRedirect);
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
+    }
   }
 
   async put<T>(
@@ -231,14 +277,25 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const response = await fetch(url, {
-      ...options,
-      method: "PUT",
-      headers: this.getHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-    });
-    return this.handleResponse<T>(response);
+    const doFetch = async () => {
+      const response = await fetch(url, {
+        ...options,
+        method: "PUT",
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+      return this.handleResponse<T>(response);
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
+    }
   }
 
   async patch<T>(
@@ -247,25 +304,47 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const response = await fetch(url, {
-      ...options,
-      method: "PATCH",
-      headers: this.getHeaders(),
-      body: data ? JSON.stringify(data) : undefined,
-      credentials: "include",
-    });
-    return this.handleResponse<T>(response);
+    const doFetch = async () => {
+      const response = await fetch(url, {
+        ...options,
+        method: "PATCH",
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+      return this.handleResponse<T>(response);
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
+    }
   }
 
   async delete<T>(endpoint: string, options?: RequestOptions): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const response = await fetch(url, {
-      ...options,
-      method: "DELETE",
-      headers: this.getHeaders(),
-      credentials: "include",
-    });
-    return this.handleResponse<T>(response);
+    const doFetch = async () => {
+      const response = await fetch(url, {
+        ...options,
+        method: "DELETE",
+        headers: this.getHeaders(),
+        credentials: "include",
+      });
+      return this.handleResponse<T>(response);
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
+    }
   }
 
   async upload<T>(
@@ -274,40 +353,76 @@ class ApiClient {
     options?: RequestOptions
   ): Promise<T> {
     const url = this.buildUrl(endpoint, options?.params);
-    const headers: HeadersInit = {};
-    const token = this.getCurrentToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    const doFetch = async () => {
+      const headers: HeadersInit = {};
+      const token = this.getCurrentToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      // Don't set Content-Type for FormData, browser will set it with boundary
+      const response = await fetch(url, {
+        ...options,
+        method: "POST",
+        headers,
+        body: formData,
+        credentials: "include",
+      });
+      return this.handleResponse<T>(response);
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
     }
-    // Don't set Content-Type for FormData, browser will set it with boundary
-    const response = await fetch(url, {
-      ...options,
-      method: "POST",
-      headers,
-      body: formData,
-      credentials: "include",
-    });
-    return this.handleResponse<T>(response);
   }
 
   // Download file as blob with authentication
   async download(endpoint: string, options?: RequestOptions): Promise<Blob> {
     const url = this.buildUrl(endpoint, options?.params);
-    const headers: HeadersInit = {};
-    const token = this.getCurrentToken();
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    const doFetch = async () => {
+      const headers: HeadersInit = {};
+      const token = this.getCurrentToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      const response = await fetch(url, {
+        ...options,
+        method: "GET",
+        headers,
+        credentials: "include",
+      });
+      if (response.status === 401) {
+        const refreshed = await this.refreshToken();
+        if (!refreshed) {
+          clearAuthCookies();
+          this.accessToken = null;
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          throw new Error("Unauthorized");
+        }
+        const retryError = new Error("Token refreshed, retry request");
+        (retryError as Error & { shouldRetry: boolean }).shouldRetry = true;
+        throw retryError;
+      }
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.statusText}`);
+      }
+      return response.blob();
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(); // Retry with new token
+      }
+      throw error;
     }
-    const response = await fetch(url, {
-      ...options,
-      method: "GET",
-      headers,
-      credentials: "include",
-    });
-    if (!response.ok) {
-      throw new Error(`Download failed: ${response.statusText}`);
-    }
-    return response.blob();
   }
 }
 
