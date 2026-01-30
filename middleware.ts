@@ -6,20 +6,11 @@ const publicPaths = [
   "/login",
   "/forgot-password",
   "/reset-password",
+  "/setup",
+  "/accept-invite",
 ];
 
-// Paths that require librarian or admin role
-const librarianPaths = [
-  "/students",
-  "/reports",
-];
-
-// Paths that require admin role only
-const adminPaths = [
-  "/settings",
-];
-
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Check if it's a public path
@@ -29,19 +20,17 @@ export function proxy(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
   // If no token and trying to access protected route, redirect to login
-  if (!token && !isPublicPath) {
+  // But NOT if we're going to /setup - the client-side auth will handle setup check
+  if (!token && !isPublicPath && pathname !== "/") {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  // If token exists and trying to access public auth pages, redirect to dashboard
-  if (token && isPublicPath) {
+  // If token exists and trying to access public auth pages (except setup), redirect to dashboard
+  if (token && isPublicPath && pathname !== "/setup") {
     return NextResponse.redirect(new URL("/", request.url));
   }
-
-  // For role-based access, we'll handle it client-side since we can't decode JWT in edge middleware
-  // without additional configuration. The auth guard component will handle role checks.
 
   return NextResponse.next();
 }
