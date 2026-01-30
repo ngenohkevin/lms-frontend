@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useCategories } from "@/lib/hooks";
 import { categoriesApi, type Category } from "@/lib/api/categories";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,8 @@ import {
   Loader2,
   ToggleLeft,
   ToggleRight,
+  Shield,
+  ChevronRight,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -163,6 +166,35 @@ export default function SettingsPage() {
           Manage system settings and configurations
         </p>
       </div>
+
+      {/* Permissions Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Permissions
+          </CardTitle>
+          <CardDescription>
+            Manage role-based permissions and user access controls
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">Role Permissions</p>
+              <p className="text-sm text-muted-foreground">
+                Configure what each role (Admin, Librarian, Staff) can access
+              </p>
+            </div>
+            <Button asChild>
+              <Link href="/settings/permissions">
+                Manage Permissions
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Categories Section */}
       <Card>

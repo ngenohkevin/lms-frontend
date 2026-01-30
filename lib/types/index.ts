@@ -7,3 +7,4 @@ export * from "./reservation";
 export * from "./notification";
 export * from "./report";
 export * from "./user";
+export * from "./permission";

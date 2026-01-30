@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { AuthProvider } from "./auth-provider";
 import { ThemeProvider } from "./theme-provider";
 import { SWRProvider } from "./swr-provider";
+import { PermissionProvider } from "./permission-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 interface ProvidersProps {
@@ -15,8 +16,10 @@ export function Providers({ children }: ProvidersProps) {
     <ThemeProvider>
       <SWRProvider>
         <AuthProvider>
-          {children}
-          <Toaster richColors position="top-right" />
+          <PermissionProvider>
+            {children}
+            <Toaster richColors position="top-right" />
+          </PermissionProvider>
         </AuthProvider>
       </SWRProvider>
     </ThemeProvider>
@@ -26,3 +29,10 @@ export function Providers({ children }: ProvidersProps) {
 export { AuthProvider, useAuth } from "./auth-provider";
 export { ThemeProvider } from "./theme-provider";
 export { SWRProvider } from "./swr-provider";
+export {
+  PermissionProvider,
+  usePermissions,
+  useHasPermission,
+  useHasAnyPermission,
+  useHasAllPermissions,
+} from "./permission-provider";

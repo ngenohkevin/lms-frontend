@@ -33,6 +33,7 @@ import {
   Edit,
   Trash2,
   Shield,
+  ShieldCheck,
   UserCog,
   User,
   CheckCircle,
@@ -171,6 +172,12 @@ export default function UserDetailPage() {
               <Link href={`/users/${user.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
                 Edit
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/users/${user.id}/permissions`}>
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Permissions
               </Link>
             </Button>
             <Button

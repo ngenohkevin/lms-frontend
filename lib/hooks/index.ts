@@ -5,3 +5,4 @@ export * from "./use-reports";
 export * from "./use-categories";
 export * from "./use-users";
 export * from "./use-invites";
+export * from "./use-permissions";
