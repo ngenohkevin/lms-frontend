@@ -29,11 +29,11 @@ interface ApiLoginResponse {
 
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    // Backend expects 'username' field, but we use email for login
+    // Backend accepts both username and email in the username field
     const response = await apiClient.post<ApiLoginResponse>(
       `${AUTH_PREFIX}/login`,
       {
-        username: credentials.email,
+        username: credentials.username,
         password: credentials.password,
       },
       { skipAuthRedirect: true }

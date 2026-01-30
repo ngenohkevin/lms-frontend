@@ -23,7 +23,7 @@ import {
 import Link from "next/link";
 
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  username: z.string().min(1, "Username or email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -74,7 +74,7 @@ export function LoginForm() {
       await login(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Invalid email or password"
+        err instanceof Error ? err.message : "Invalid username or password"
       );
     } finally {
       setIsLoading(false);
@@ -158,19 +158,19 @@ export function LoginForm() {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
+              <Label htmlFor="username">Username or Email</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="name@example.com"
-                autoComplete="email"
+                id="username"
+                type="text"
+                placeholder="Enter username or email"
+                autoComplete="username"
                 disabled={isLoading}
                 className="h-11"
-                {...register("email")}
+                {...register("username")}
               />
-              {errors.email && (
+              {errors.username && (
                 <p className="text-sm text-destructive">
-                  {errors.email.message}
+                  {errors.username.message}
                 </p>
               )}
             </div>
