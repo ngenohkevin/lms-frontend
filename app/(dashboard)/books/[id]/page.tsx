@@ -411,7 +411,7 @@ export default function BookDetailPage() {
           </TabsTrigger>
           {isLibrarian && (
             <TabsTrigger value="copies" className="text-sm">
-              Copies ({book.total_copies})
+              Copies
             </TabsTrigger>
           )}
         </TabsList>
