@@ -73,6 +73,21 @@ export const bookCopiesApi = {
     );
     return response.data;
   },
+
+  /**
+   * Generate multiple copies for a book
+   */
+  async generateCopies(
+    bookId: number,
+    count: number,
+    bookCode: string
+  ): Promise<BookCopy[]> {
+    const response = await apiClient.post<ApiResponse<BookCopy[]>>(
+      `${BOOKS_PREFIX}/${bookId}/copies/generate`,
+      { count, book_code: bookCode }
+    );
+    return response.data || [];
+  },
 };
 
 export default bookCopiesApi;

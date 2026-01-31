@@ -482,6 +482,7 @@ export default function BookDetailPage() {
           <TabsContent value="copies" className="mt-4">
             <BookCopiesList
               bookId={parseInt(bookId)}
+              bookCode={book.book_id}
               bookTitle={book.title}
             />
           </TabsContent>

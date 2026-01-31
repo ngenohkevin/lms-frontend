@@ -61,6 +61,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface BookCopiesListProps {
   bookId: number;
+  bookCode: string;
   bookTitle?: string;
 }
 
@@ -100,9 +101,11 @@ function getStatusColor(status: CopyStatus): string {
   }
 }
 
-export function BookCopiesList({ bookId, bookTitle }: BookCopiesListProps) {
+export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListProps) {
   const { copies, isLoading, refresh } = useBookCopies(bookId);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [generateCount, setGenerateCount] = useState(1);
   const [editingCopy, setEditingCopy] = useState<BookCopy | null>(null);
   const [deletingCopy, setDeletingCopy] = useState<BookCopy | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -151,6 +154,22 @@ export function BookCopiesList({ bookId, bookTitle }: BookCopiesListProps) {
     }
   };
 
+  const handleGenerate = async () => {
+    if (generateCount < 1) return;
+    setIsSubmitting(true);
+    try {
+      const generated = await bookCopiesApi.generateCopies(bookId, generateCount, bookCode);
+      toast.success(`Generated ${generated.length} copies successfully`);
+      setIsGenerateOpen(false);
+      setGenerateCount(1);
+      refresh();
+    } catch (error) {
+      toast.error("Failed to generate copies");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <Card>
@@ -180,11 +199,17 @@ export function BookCopiesList({ bookId, bookTitle }: BookCopiesListProps) {
               {bookTitle && `of "${bookTitle}"`}
             </CardDescription>
           </div>
-          <Button onClick={() => setIsFormOpen(true)} size="sm">
-            <Plus className="mr-2 h-4 w-4" />
-            <span className="hidden sm:inline">Add Copy</span>
-            <span className="sm:hidden">Add</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setIsGenerateOpen(true)} size="sm" variant="outline">
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Generate</span>
+            </Button>
+            <Button onClick={() => setIsFormOpen(true)} size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Add Copy</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {copies.length === 0 ? (
@@ -398,6 +423,55 @@ export function BookCopiesList({ bookId, bookTitle }: BookCopiesListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Generate Copies Dialog */}
+      <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Generate Copies</DialogTitle>
+            <DialogDescription>
+              Automatically create multiple copies with sequential numbering.
+              Copies will be named {bookCode}-COPY-001, {bookCode}-COPY-002, etc.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="count" className="text-sm font-medium">
+                Number of Copies
+              </label>
+              <input
+                id="count"
+                type="number"
+                min={1}
+                max={100}
+                value={generateCount}
+                onChange={(e) => setGenerateCount(parseInt(e.target.value) || 1)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                disabled={isSubmitting}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsGenerateOpen(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleGenerate} disabled={isSubmitting || generateCount < 1}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                `Generate ${generateCount} ${generateCount === 1 ? "Copy" : "Copies"}`
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
