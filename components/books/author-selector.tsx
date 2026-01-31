@@ -4,6 +4,23 @@ import * as React from "react";
 import { useState } from "react";
 import { Check, ChevronsUpDown, Plus, X, Loader2, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  horizontalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { useAuthors, useAuthorSearch } from "@/lib/hooks/use-authors";
 import { authorsApi } from "@/lib/api/authors";
@@ -36,6 +53,66 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+interface SortableAuthorBadgeProps {
+  author: Author;
+  index: number;
+  onRemove: (id: number) => void;
+  disabled?: boolean;
+}
+
+function SortableAuthorBadge({ author, index, onRemove, disabled }: SortableAuthorBadgeProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: author.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? "grabbing" : "grab",
+  };
+
+  return (
+    <Badge
+      ref={setNodeRef}
+      style={style}
+      variant="secondary"
+      className={cn(
+        "flex items-center gap-1 py-1.5 pl-2 pr-1 select-none",
+        isDragging && "ring-2 ring-primary"
+      )}
+    >
+      <button
+        type="button"
+        className="cursor-grab active:cursor-grabbing touch-none"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="h-3 w-3 text-muted-foreground" />
+      </button>
+      <span className="flex items-center gap-1">
+        <span className="text-xs text-muted-foreground">{index + 1}.</span>
+        {author.name}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-4 w-4 p-0 hover:bg-destructive/20 ml-1"
+        onClick={() => onRemove(author.id)}
+        disabled={disabled}
+        type="button"
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </Badge>
+  );
+}
+
 interface AuthorSelectorProps {
   selectedAuthors: Author[];
   onChange: (authors: Author[]) => void;
@@ -64,6 +141,27 @@ export function AuthorSelector({
   );
 
   const displayAuthors = search ? searchResults : allAuthors;
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, // 5px movement required before drag starts
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = selectedAuthors.findIndex((a) => a.id === active.id);
+      const newIndex = selectedAuthors.findIndex((a) => a.id === over.id);
+      onChange(arrayMove(selectedAuthors, oldIndex, newIndex));
+    }
+  };
 
   const handleSelectAuthor = (author: Author) => {
     const isSelected = selectedAuthors.some((a) => a.id === author.id);
@@ -99,14 +197,6 @@ export function AuthorSelector({
     }
   };
 
-  const moveAuthor = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= selectedAuthors.length) return;
-    const newOrder = [...selectedAuthors];
-    const [removed] = newOrder.splice(fromIndex, 1);
-    newOrder.splice(toIndex, 0, removed);
-    onChange(newOrder);
-  };
-
   return (
     <div className="space-y-3">
       <div className="space-y-2">
@@ -119,6 +209,7 @@ export function AuthorSelector({
               aria-expanded={open}
               className="w-full justify-between"
               disabled={disabled}
+              type="button"
             >
               {selectedAuthors.length > 0
                 ? `${selectedAuthors.length} author${selectedAuthors.length > 1 ? "s" : ""} selected`
@@ -151,9 +242,10 @@ export function AuthorSelector({
                             setCreateDialogOpen(true);
                             setOpen(false);
                           }}
+                          type="button"
                         >
                           <Plus className="mr-1 h-4 w-4" />
-                          Create "{search}"
+                          Create &quot;{search}&quot;
                         </Button>
                       </div>
                     </CommandEmpty>
@@ -200,48 +292,34 @@ export function AuthorSelector({
         </Popover>
       </div>
 
-      {/* Selected Authors List with Reordering */}
+      {/* Selected Authors List with Drag-and-Drop Reordering */}
       {selectedAuthors.length > 0 && (
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground">
-            Author Order (drag to reorder)
+            Author Order (drag to reorder, first is primary)
           </Label>
-          <div className="flex flex-wrap gap-2">
-            {selectedAuthors.map((author, index) => (
-              <Badge
-                key={author.id}
-                variant="secondary"
-                className="flex items-center gap-1 py-1.5 pl-2 pr-1"
-              >
-                <span className="flex items-center gap-1">
-                  <span className="text-xs text-muted-foreground">
-                    {index + 1}.
-                  </span>
-                  {author.name}
-                </span>
-                <div className="flex items-center ml-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 p-0 hover:bg-transparent"
-                    onClick={() => moveAuthor(index, index - 1)}
-                    disabled={index === 0 || disabled}
-                  >
-                    <GripVertical className="h-3 w-3 rotate-90" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-4 w-4 p-0 hover:bg-destructive/20"
-                    onClick={() => handleRemoveAuthor(author.id)}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={selectedAuthors.map((a) => a.id)}
+              strategy={horizontalListSortingStrategy}
+            >
+              <div className="flex flex-wrap gap-2">
+                {selectedAuthors.map((author, index) => (
+                  <SortableAuthorBadge
+                    key={author.id}
+                    author={author}
+                    index={index}
+                    onRemove={handleRemoveAuthor}
                     disabled={disabled}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              </Badge>
-            ))}
-          </div>
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
 
@@ -287,10 +365,11 @@ export function AuthorSelector({
               variant="outline"
               onClick={() => setCreateDialogOpen(false)}
               disabled={isCreating}
+              type="button"
             >
               Cancel
             </Button>
-            <Button onClick={handleCreateAuthor} disabled={isCreating}>
+            <Button onClick={handleCreateAuthor} disabled={isCreating} type="button">
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
