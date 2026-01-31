@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -75,7 +76,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     handleSubmit,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BookFormData>({
     resolver: zodResolver(bookSchema),
     defaultValues: book
@@ -112,6 +113,23 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
   const seriesId = watch("series_id");
   const language = watch("language");
   const format = watch("format");
+
+  // Track if form has unsaved changes (including authors selection)
+  const hasUnsavedChanges = isDirty || selectedAuthors.length > 0;
+
+  // Warn user about unsaved changes when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleISBNLookup = async () => {
     if (!isbn || isbn.length < 10) {

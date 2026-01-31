@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Users,
   Languages,
+  Library,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -56,6 +57,13 @@ const settingsLinks: SettingsLink[] = [
     href: "/settings/languages",
     icon: Languages,
     permission: PermissionCodes.LANGUAGES_VIEW,
+  },
+  {
+    title: "Series",
+    description: "Manage book series and collections",
+    href: "/settings/series",
+    icon: Library,
+    permission: PermissionCodes.SERIES_VIEW,
   },
 ];
 
