@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSWRConfig } from "swr";
 import { booksApi } from "@/lib/api";
 import { authorsApi } from "@/lib/api/authors";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,7 @@ interface BookFormProps {
 }
 
 export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
+  const { mutate } = useSWRConfig();
   const [isLoading, setIsLoading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [isLoadingAuthors, setIsLoadingAuthors] = useState(false);
@@ -305,6 +307,16 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         result = await booksApi.create(data);
         toast.success("Book created successfully");
       }
+
+      // Invalidate all books-related SWR cache
+      mutate(
+        (key) =>
+          typeof key === "string"
+            ? key.includes("/api/v1/books")
+            : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
+        undefined,
+        { revalidate: true }
+      );
 
       onSuccess?.(result);
     } catch (err) {
