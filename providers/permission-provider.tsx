@@ -33,8 +33,10 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
     isAuthenticated ? "/api/v1/permissions/me" : null,
     () => permissionsApi.getMyPermissions(),
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minute
+      revalidateOnFocus: true, // Refresh when user comes back to tab
+      revalidateOnReconnect: true, // Refresh on network reconnect
+      refreshInterval: 30000, // Refresh every 30 seconds for permission updates
+      dedupingInterval: 5000, // 5 second deduping (reduced from 1 minute)
       shouldRetryOnError: true,
       errorRetryCount: 2,
     }
