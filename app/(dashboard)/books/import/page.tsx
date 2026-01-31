@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useDropzone } from "react-dropzone";
+import { useSWRConfig } from "swr";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { booksApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ import type { BookImportResult } from "@/lib/types";
 
 export default function BookImportPage() {
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<BookImportResult | null>(null);
@@ -87,6 +89,15 @@ export default function BookImportPage() {
       setResult(importResult);
 
       if (importResult.success_count > 0) {
+        // Invalidate all books-related SWR cache so list shows imported books
+        await mutate(
+          (key) =>
+            typeof key === "string"
+              ? key.includes("/api/v1/books")
+              : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
+          undefined,
+          { revalidate: false }
+        );
         toast.success(`Successfully imported ${importResult.success_count} books`);
       }
       if (importResult.failure_count > 0) {

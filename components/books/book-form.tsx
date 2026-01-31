@@ -309,13 +309,14 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       }
 
       // Invalidate all books-related SWR cache
-      mutate(
+      // Use revalidate: false to clear cache; fresh data fetches on next mount
+      await mutate(
         (key) =>
           typeof key === "string"
             ? key.includes("/api/v1/books")
             : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
         undefined,
-        { revalidate: true }
+        { revalidate: false }
       );
 
       onSuccess?.(result);
