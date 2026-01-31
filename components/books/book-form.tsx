@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { booksApi } from "@/lib/api";
+import { authorsApi } from "@/lib/api/authors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -119,6 +120,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     try {
       const result = await booksApi.lookupISBN(isbn);
 
+      // Fill in basic book details
       if (result.title) setValue("title", result.title);
       if (result.author) setValue("author", result.author);
       if (result.publisher) setValue("publisher", result.publisher);
@@ -126,6 +128,48 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       if (result.description) setValue("description", result.description);
       if (result.pages) setValue("pages", result.pages);
       if (result.language) setValue("language", result.language);
+
+      // Try to match genre with existing categories
+      if (result.genre) {
+        const matchedCategory = categories.find(
+          (cat) => cat.name.toLowerCase() === result.genre?.toLowerCase()
+        );
+        if (matchedCategory) {
+          setValue("category", matchedCategory.name);
+          setValue("category_id", matchedCategory.id);
+        }
+      }
+
+      // Auto-create authors if they don't exist
+      if (result.author) {
+        const authorNames = parseAuthorNames(result.author);
+        const createdAuthors: Author[] = [];
+
+        for (const authorName of authorNames) {
+          try {
+            // Try to find existing author first
+            const existingAuthors = await authorsApi.search(authorName, 1, 10);
+            const exactMatch = existingAuthors.data.find(
+              (a) => a.name.toLowerCase() === authorName.toLowerCase()
+            );
+
+            if (exactMatch) {
+              createdAuthors.push(exactMatch);
+            } else {
+              // Create new author
+              const newAuthor = await authorsApi.create({ name: authorName });
+              createdAuthors.push(newAuthor);
+            }
+          } catch {
+            // If author operations fail, just continue with text field
+            console.debug(`Could not process author: ${authorName}`);
+          }
+        }
+
+        if (createdAuthors.length > 0) {
+          setSelectedAuthors(createdAuthors);
+        }
+      }
 
       toast.success("Book information loaded from ISBN");
     } catch (err) {
@@ -137,6 +181,15 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     } finally {
       setIsLookingUp(false);
     }
+  };
+
+  // Helper function to parse author names from various formats
+  const parseAuthorNames = (authorString: string): string[] => {
+    // Handle common separators: comma, "and", "&", semicolon
+    return authorString
+      .split(/[,;&]|\s+and\s+/i)
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0);
   };
 
   const handleSeriesChange = (

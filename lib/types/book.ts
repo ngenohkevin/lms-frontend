@@ -96,6 +96,7 @@ export interface ISBNLookupResult {
   cover_url?: string;
   pages?: number;
   language?: string;
+  genre?: string;
 }
 
 export interface BookImportData {
