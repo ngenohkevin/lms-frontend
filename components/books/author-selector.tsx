@@ -117,12 +117,14 @@ interface AuthorSelectorProps {
   selectedAuthors: Author[];
   onChange: (authors: Author[]) => void;
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
 export function AuthorSelector({
   selectedAuthors,
   onChange,
   disabled,
+  isLoading,
 }: AuthorSelectorProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -208,12 +210,19 @@ export function AuthorSelector({
               role="combobox"
               aria-expanded={open}
               className="w-full justify-between"
-              disabled={disabled}
+              disabled={disabled || isLoading}
               type="button"
             >
-              {selectedAuthors.length > 0
-                ? `${selectedAuthors.length} author${selectedAuthors.length > 1 ? "s" : ""} selected`
-                : "Select authors..."}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Loading authors...
+                </>
+              ) : selectedAuthors.length > 0 ? (
+                `${selectedAuthors.length} author${selectedAuthors.length > 1 ? "s" : ""} selected`
+              ) : (
+                "Select authors..."
+              )}
               <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
             </Button>
           </PopoverTrigger>

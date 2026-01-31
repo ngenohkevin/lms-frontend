@@ -8,6 +8,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useBook, useBookRatings } from "@/lib/hooks/use-books";
 import { useSeriesById } from "@/lib/hooks/use-series";
 import { booksApi } from "@/lib/api";
+import apiClient from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,6 +40,7 @@ import {
   Headphones,
   QrCode,
   Download,
+  Loader2,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -57,6 +59,7 @@ export default function BookDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
+  const [isDownloadingQR, setIsDownloadingQR] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -71,6 +74,29 @@ export default function BookDetailPage() {
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
+    }
+  };
+
+  const handleDownloadQR = async () => {
+    if (!book) return;
+    setIsDownloadingQR(true);
+    try {
+      const blob = await apiClient.download(`/api/v1/books/${book.id}/qr`);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `book-${book.book_id}-qr.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("QR code downloaded");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to download QR code"
+      );
+    } finally {
+      setIsDownloadingQR(false);
     }
   };
 
@@ -146,15 +172,18 @@ export default function BookDetailPage() {
         </Button>
         {isLibrarian && (
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <a
-                href={`/api/v1/books/${book.id}/qr`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadQR}
+              disabled={isDownloadingQR}
+            >
+              {isDownloadingQR ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
                 <QrCode className="mr-2 h-4 w-4" />
-                <span className="hidden sm:inline">QR Code</span>
-              </a>
+              )}
+              <span className="hidden sm:inline">QR Code</span>
             </Button>
             <Button variant="outline" size="sm" asChild>
               <Link href={`/books/${book.id}/edit`}>

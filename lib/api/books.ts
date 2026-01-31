@@ -57,6 +57,8 @@ function transformBook(book: Book): Book {
     category: book.genre,
     cover_url: book.cover_image_url,
     location: book.shelf_location,
+    // Map page_count to pages for form compatibility
+    pages: book.page_count ?? book.pages,
   };
 }
 
@@ -115,6 +117,14 @@ export const booksApi = {
       total_copies: data.total_copies,
       shelf_location: data.location || undefined,
       cover_image_url: data.cover_image_url || undefined,
+      // Additional metadata fields
+      category_id: data.category_id || undefined,
+      series_id: data.series_id || undefined,
+      series_number: data.series_number || undefined,
+      language: data.language || undefined,
+      page_count: data.pages || undefined,
+      edition: data.edition || undefined,
+      format: data.format || undefined,
     };
     const response = await apiClient.post<ApiResponse<Book>>(BOOKS_PREFIX, backendData);
     return transformBook(response.data);
@@ -135,6 +145,14 @@ export const booksApi = {
     if (data.total_copies !== undefined) backendData.total_copies = data.total_copies;
     if (data.location !== undefined) backendData.shelf_location = data.location || undefined;
     if (data.cover_image_url !== undefined) backendData.cover_image_url = data.cover_image_url || undefined;
+    // Additional metadata fields
+    if (data.category_id !== undefined) backendData.category_id = data.category_id || undefined;
+    if (data.series_id !== undefined) backendData.series_id = data.series_id || undefined;
+    if (data.series_number !== undefined) backendData.series_number = data.series_number || undefined;
+    if (data.language !== undefined) backendData.language = data.language || undefined;
+    if (data.pages !== undefined) backendData.page_count = data.pages || undefined;
+    if (data.edition !== undefined) backendData.edition = data.edition || undefined;
+    if (data.format !== undefined) backendData.format = data.format || undefined;
 
     const response = await apiClient.put<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`, backendData);
     return transformBook(response.data);

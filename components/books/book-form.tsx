@@ -63,6 +63,7 @@ interface BookFormProps {
 export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isLoadingAuthors, setIsLoadingAuthors] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
@@ -130,6 +131,47 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  // Load authors when editing an existing book
+  useEffect(() => {
+    if (!isEditing || !book?.author) return;
+
+    const loadAuthors = async () => {
+      setIsLoadingAuthors(true);
+      try {
+        // Parse author names from the stored string
+        const authorNames = book.author
+          .split(/[,;&]|\s+and\s+/i)
+          .map((name) => name.trim())
+          .filter((name) => name.length > 0);
+
+        const loadedAuthors: Author[] = [];
+
+        for (const authorName of authorNames) {
+          try {
+            const result = await authorsApi.search(authorName, 1, 10);
+            const exactMatch = result.data.find(
+              (a) => a.name.toLowerCase() === authorName.toLowerCase()
+            );
+            if (exactMatch) {
+              loadedAuthors.push(exactMatch);
+            }
+          } catch {
+            // If search fails, skip this author
+            console.debug(`Could not find author: ${authorName}`);
+          }
+        }
+
+        if (loadedAuthors.length > 0) {
+          setSelectedAuthors(loadedAuthors);
+        }
+      } finally {
+        setIsLoadingAuthors(false);
+      }
+    };
+
+    loadAuthors();
+  }, [isEditing, book?.author]);
 
   const handleISBNLookup = async () => {
     if (!isbn || isbn.length < 10) {
@@ -348,6 +390,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
             selectedAuthors={selectedAuthors}
             onChange={handleAuthorsChange}
             disabled={isLoading}
+            isLoading={isLoadingAuthors}
           />
           <input type="hidden" {...register("author")} />
           {errors.author && (
