@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useSWRConfig } from "swr";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
@@ -49,6 +50,7 @@ import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
 export default function BookDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { mutate } = useSWRConfig();
   const { isLibrarian, isAdmin } = useAuth();
   const bookId = params.id as string;
 
@@ -65,6 +67,19 @@ export default function BookDetailPage() {
     setIsDeleting(true);
     try {
       await booksApi.delete(bookId);
+      // Invalidate all books-related SWR caches
+      // Keys can be strings or arrays like ["/api/v1/books", params]
+      await mutate(
+        (key) => {
+          if (typeof key === "string") return key.startsWith("/api/v1/books");
+          if (Array.isArray(key) && typeof key[0] === "string") {
+            return key[0].startsWith("/api/v1/books");
+          }
+          return false;
+        },
+        undefined,
+        { revalidate: true }
+      );
       toast.success("Book deleted successfully");
       router.push("/books");
     } catch (err) {
