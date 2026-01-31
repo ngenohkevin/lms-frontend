@@ -96,7 +96,7 @@ export default function BookImportPage() {
               ? key.includes("/api/v1/books")
               : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
           undefined,
-          { revalidate: false }
+          { revalidate: true }
         );
         toast.success(`Successfully imported ${importResult.success_count} books`);
       }
