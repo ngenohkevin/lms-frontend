@@ -90,12 +90,12 @@ export interface BookRatingFormData {
 export interface ISBNLookupResult {
   isbn: string;
   title: string;
-  author: string;
+  authors: string;  // Backend returns "authors" not "author"
   publisher?: string;
-  publication_year?: number;
+  published_year?: number;  // Backend returns "published_year"
   description?: string;
-  cover_url?: string;
-  pages?: number;
+  cover_image_url?: string;  // Backend returns "cover_image_url"
+  page_count?: number;  // Backend returns "page_count"
   language?: string;
   genre?: string;
 }

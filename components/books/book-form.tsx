@@ -125,15 +125,15 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     try {
       const result = await booksApi.lookupISBN(isbn);
 
-      // Fill in basic book details
+      // Fill in basic book details (field names match backend ISBNBookInfo)
       if (result.title) setValue("title", result.title);
-      if (result.author) setValue("author", result.author);
+      if (result.authors) setValue("author", result.authors);
       if (result.publisher) setValue("publisher", result.publisher);
-      if (result.publication_year) setValue("publication_year", result.publication_year);
+      if (result.published_year) setValue("publication_year", result.published_year);
       if (result.description) setValue("description", result.description);
-      if (result.pages) setValue("pages", result.pages);
+      if (result.page_count) setValue("pages", result.page_count);
       if (result.language) setValue("language", result.language);
-      if (result.cover_url) setValue("cover_image_url", result.cover_url);
+      if (result.cover_image_url) setValue("cover_image_url", result.cover_image_url);
 
       // Try to match genre with existing categories
       if (result.genre) {
@@ -151,8 +151,8 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       }
 
       // Auto-create authors if they don't exist
-      if (result.author) {
-        const authorNames = parseAuthorNames(result.author);
+      if (result.authors) {
+        const authorNames = parseAuthorNames(result.authors);
         const createdAuthors: Author[] = [];
 
         for (const authorName of authorNames) {
