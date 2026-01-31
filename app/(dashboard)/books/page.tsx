@@ -3,8 +3,10 @@
 import { useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useAuth } from "@/providers/auth-provider";
 import { useBooks } from "@/lib/hooks/use-books";
+import { usePermissions } from "@/providers/permission-provider";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { BookList, BookSearch } from "@/components/books";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,7 +16,7 @@ import type { Book, BookSearchParams } from "@/lib/types";
 function BooksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isLibrarian } = useAuth();
+  const { hasPermission } = usePermissions();
 
   // Derive params from URL search params
   const urlParams = useMemo<BookSearchParams>(() => ({
@@ -65,7 +67,7 @@ function BooksContent() {
             Browse and search the library catalog
           </p>
         </div>
-        {isLibrarian && (
+        <PermissionGuard permission={PermissionCodes.BOOKS_CREATE} hideWhenDenied>
           <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/books/import">
@@ -80,7 +82,7 @@ function BooksContent() {
               </Link>
             </Button>
           </div>
-        )}
+        </PermissionGuard>
       </div>
 
       <BookSearch onSearch={handleSearch} />
@@ -95,7 +97,7 @@ function BooksContent() {
         onReserve={handleReserve}
         emptyMessage="No books match your search criteria."
         emptyAction={
-          isLibrarian ? (
+          hasPermission(PermissionCodes.BOOKS_CREATE) ? (
             <Button asChild>
               <Link href="/books/new">
                 <Plus className="mr-2 h-4 w-4" />

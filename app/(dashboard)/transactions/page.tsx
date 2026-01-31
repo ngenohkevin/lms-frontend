@@ -4,6 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTransactions, useTransactionStats } from "@/lib/hooks/use-transactions";
 import { useAuth } from "@/providers/auth-provider";
+import { usePermissions } from "@/providers/permission-provider";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,12 +32,15 @@ const statusColors: Record<TransactionStatus, string> = {
 };
 
 export default function TransactionsPage() {
-  const { isLibrarian, isStudent, user } = useAuth();
+  const { isStudent, user } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canBorrow = hasPermission(PermissionCodes.TRANSACTIONS_BORROW);
+  const canViewAll = hasPermission(PermissionCodes.STUDENTS_VIEW); // Can see all students' transactions
   const [activeTab, setActiveTab] = useState("all");
   const [params, setParams] = useState<TransactionSearchParams>({
     page: 1,
     per_page: 20,
-    student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,
+    student_id: !canViewAll && isStudent ? String(user?.id) : undefined,
   });
 
   const { stats, isLoading: statsLoading } = useTransactionStats();
@@ -45,7 +51,7 @@ export default function TransactionsPage() {
     const newParams: TransactionSearchParams = {
       page: 1,
       per_page: 20,
-      student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,
+      student_id: !canViewAll && isStudent ? String(user?.id) : undefined,
     };
 
     switch (tab) {
@@ -87,7 +93,7 @@ export default function TransactionsPage() {
         </div>
       ),
     },
-    ...(isLibrarian
+    ...(canViewAll
       ? [
           {
             key: "student",
@@ -167,12 +173,12 @@ export default function TransactionsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
           <p className="text-muted-foreground">
-            {isLibrarian
+            {canViewAll
               ? "Manage book borrowing and returns"
               : "View your borrowing history"}
           </p>
         </div>
-        {isLibrarian && (
+        <PermissionGuard permission={PermissionCodes.TRANSACTIONS_BORROW} hideWhenDenied>
           <div className="flex gap-2">
             <Button asChild>
               <Link href="/transactions/borrow">
@@ -181,11 +187,11 @@ export default function TransactionsPage() {
               </Link>
             </Button>
           </div>
-        )}
+        </PermissionGuard>
       </div>
 
       {/* Stats Cards */}
-      {isLibrarian && (
+      {canViewAll && (
         <div className="grid gap-4 md:grid-cols-4">
           {statsLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
@@ -269,7 +275,7 @@ export default function TransactionsPage() {
             columns={columns}
             pagination={pagination}
             onPageChange={handlePageChange}
-            onSearch={isLibrarian ? handleSearch : undefined}
+            onSearch={canViewAll ? handleSearch : undefined}
             searchPlaceholder="Search by book title or student..."
             isLoading={isLoading}
             emptyMessage="No transactions found."

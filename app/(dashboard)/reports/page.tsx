@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import {
   useDashboardMetrics,
   useBorrowingTrends,
@@ -75,7 +77,7 @@ export default function ReportsPage() {
   const { report: overdueReport, isLoading: overdueLoading } = useOverdueReport();
 
   return (
-    <AuthGuard requiredRoles={["admin", "librarian"]}>
+    <AuthGuard requiredPermission={PermissionCodes.REPORTS_VIEW}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -84,12 +86,14 @@ export default function ReportsPage() {
               Analytics and insights for the library
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Download className="mr-2 h-4 w-4" />
-              Export Report
-            </Button>
-          </div>
+          <PermissionGuard permission={PermissionCodes.REPORTS_EXPORT} hideWhenDenied>
+            <div className="flex gap-2">
+              <Button variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export Report
+              </Button>
+            </div>
+          </PermissionGuard>
         </div>
 
         {/* Summary Metrics */}

@@ -19,6 +19,8 @@ import {
   Shield,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
+import { usePermissions } from "@/providers/permission-provider";
+import { PermissionCodes } from "@/lib/types/permission";
 import { cn } from "@/lib/utils";
 import {
   Sidebar,
@@ -47,7 +49,8 @@ interface NavItem {
   title: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  roles?: ("admin" | "librarian" | "student")[];
+  permission?: string; // Permission code to check (takes precedence over roles)
+  roles?: ("admin" | "librarian" | "staff")[];
 }
 
 const mainNavItems: NavItem[] = [
@@ -60,16 +63,19 @@ const mainNavItems: NavItem[] = [
     title: "Books",
     href: "/books",
     icon: Library,
+    permission: PermissionCodes.BOOKS_VIEW,
   },
   {
     title: "Transactions",
     href: "/transactions",
     icon: ArrowLeftRight,
+    permission: PermissionCodes.TRANSACTIONS_VIEW,
   },
   {
     title: "Reservations",
     href: "/reservations",
     icon: BookMarked,
+    permission: PermissionCodes.RESERVATIONS_VIEW,
   },
 ];
 
@@ -78,19 +84,19 @@ const managementNavItems: NavItem[] = [
     title: "Students",
     href: "/students",
     icon: Users,
-    roles: ["admin", "librarian"],
+    permission: PermissionCodes.STUDENTS_VIEW,
   },
   {
     title: "Users",
     href: "/users",
     icon: Shield,
-    roles: ["admin"],
+    permission: PermissionCodes.USERS_VIEW,
   },
   {
     title: "Reports",
     href: "/reports",
     icon: BarChart3,
-    roles: ["admin", "librarian"],
+    permission: PermissionCodes.REPORTS_VIEW,
   },
   {
     title: "Settings",
@@ -105,15 +111,36 @@ const systemNavItems: NavItem[] = [
     title: "Notifications",
     href: "/notifications",
     icon: Bell,
+    permission: PermissionCodes.NOTIFICATIONS_SEND,
   },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout, hasRole } = useAuth();
+  const { hasPermission, isLoading: permissionsLoading } = usePermissions();
 
-  const filterByRole = (items: NavItem[]) =>
-    items.filter((item) => !item.roles || hasRole(item.roles));
+  // Filter items based on permissions (preferred) or roles (fallback)
+  const filterByAccess = (items: NavItem[]) =>
+    items.filter((item) => {
+      // If item has no restrictions, show it
+      if (!item.permission && !item.roles) return true;
+
+      // If permissions are still loading, hide restricted items
+      if (permissionsLoading && (item.permission || item.roles)) return false;
+
+      // Check permission first (if specified)
+      if (item.permission) {
+        return hasPermission(item.permission);
+      }
+
+      // Fall back to role check
+      if (item.roles) {
+        return hasRole(item.roles);
+      }
+
+      return true;
+    });
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -156,7 +183,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filterByRole(mainNavItems).map((item) => (
+              {filterByAccess(mainNavItems).map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
@@ -183,14 +210,14 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {filterByRole(managementNavItems).length > 0 && (
+        {filterByAccess(managementNavItems).length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
               Management
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {filterByRole(managementNavItems).map((item) => (
+                {filterByAccess(managementNavItems).map((item) => (
                   <SidebarMenuItem key={item.href}>
                     <SidebarMenuButton
                       asChild
@@ -224,7 +251,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {filterByRole(systemNavItems).map((item) => (
+              {filterByAccess(systemNavItems).map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild

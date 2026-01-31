@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useStudents } from "@/lib/hooks/use-students";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { StudentSearch } from "@/components/students";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -118,7 +120,7 @@ export default function StudentsPage() {
   ];
 
   return (
-    <AuthGuard requiredRoles={["admin", "librarian"]}>
+    <AuthGuard requiredPermission={PermissionCodes.STUDENTS_VIEW}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -127,20 +129,22 @@ export default function StudentsPage() {
               Manage library members and their accounts
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/students/import">
-                <Upload className="mr-2 h-4 w-4" />
-                Import
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href="/students/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Student
-              </Link>
-            </Button>
-          </div>
+          <PermissionGuard permission={PermissionCodes.STUDENTS_CREATE} hideWhenDenied>
+            <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <Link href="/students/import">
+                  <Upload className="mr-2 h-4 w-4" />
+                  Import
+                </Link>
+              </Button>
+              <Button asChild>
+                <Link href="/students/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Student
+                </Link>
+              </Button>
+            </div>
+          </PermissionGuard>
         </div>
 
         <StudentSearch onSearch={handleSearch} />

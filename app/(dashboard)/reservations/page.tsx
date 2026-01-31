@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
 import { useAuth } from "@/providers/auth-provider";
+import { usePermissions } from "@/providers/permission-provider";
+import { PermissionCodes } from "@/lib/types/permission";
 import { reservationsApi } from "@/lib/api";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -30,11 +32,14 @@ const statusIcons: Record<ReservationStatus, React.ComponentType<{ className?: s
 };
 
 export default function ReservationsPage() {
-  const { isLibrarian, isStudent, user } = useAuth();
+  const { isStudent, user } = useAuth();
+  const { hasPermission } = usePermissions();
+  const canManage = hasPermission(PermissionCodes.RESERVATIONS_MANAGE);
+  const canViewAll = hasPermission(PermissionCodes.STUDENTS_VIEW); // Can see all students' reservations
   const [params, setParams] = useState<ReservationSearchParams>({
     page: 1,
     per_page: 20,
-    student_id: !isLibrarian && isStudent ? String(user?.id) : undefined,
+    student_id: !canViewAll && isStudent ? String(user?.id) : undefined,
   });
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Reservation>>(
@@ -89,7 +94,7 @@ export default function ReservationsPage() {
         </div>
       ),
     },
-    ...(isLibrarian
+    ...(canViewAll
       ? [
           {
             key: "student",
@@ -154,7 +159,7 @@ export default function ReservationsPage() {
       header: "",
       render: (res: Reservation) => (
         <div className="flex justify-end gap-2">
-          {res.status === "ready" && isLibrarian && (
+          {res.status === "ready" && canManage && (
             <Button
               size="sm"
               variant="default"
@@ -189,7 +194,7 @@ export default function ReservationsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Reservations</h1>
           <p className="text-muted-foreground">
-            {isLibrarian
+            {canManage
               ? "Manage book reservations"
               : "View your book reservations"}
           </p>
@@ -201,7 +206,7 @@ export default function ReservationsPage() {
         columns={columns}
         pagination={pagination}
         onPageChange={handlePageChange}
-        onSearch={isLibrarian ? handleSearch : undefined}
+        onSearch={canViewAll ? handleSearch : undefined}
         searchPlaceholder="Search by book title or student..."
         isLoading={isLoading}
         emptyMessage="No reservations found."

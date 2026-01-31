@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUsers } from "@/lib/hooks/use-users";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { UserSearch } from "@/components/users";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -130,7 +132,7 @@ export default function UsersPage() {
   ];
 
   return (
-    <AuthGuard requiredRoles={["admin"]}>
+    <AuthGuard requiredPermission={PermissionCodes.USERS_VIEW}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
@@ -139,17 +141,19 @@ export default function UsersPage() {
               Manage staff accounts and permissions
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/users/invites">View Invites</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/users/invites/new">
-                <Plus className="mr-2 h-4 w-4" />
-                Invite User
-              </Link>
-            </Button>
-          </div>
+          <PermissionGuard permission={PermissionCodes.INVITES_MANAGE} hideWhenDenied>
+            <div className="flex gap-2">
+              <Button variant="outline" asChild>
+                <Link href="/users/invites">View Invites</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/users/invites/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Invite User
+                </Link>
+              </Button>
+            </div>
+          </PermissionGuard>
         </div>
 
         <UserSearch onSearch={handleSearch} />
