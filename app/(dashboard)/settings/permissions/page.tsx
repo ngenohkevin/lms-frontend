@@ -176,6 +176,55 @@ export default function PermissionsPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Role Details</CardTitle>
+            <CardDescription>
+              Click on a role to view and edit its permissions individually.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              {(["admin", "librarian", "staff"] as StaffRole[]).map((role) => {
+                const RoleIcon = roleIcons[role];
+                const permCount = categories.reduce(
+                  (acc, cat) =>
+                    acc +
+                    cat.permissions.filter((p) => getEffectiveValue(p, role)).length,
+                  0
+                );
+                const totalPerms = categories.reduce(
+                  (acc, cat) => acc + cat.permissions.length,
+                  0
+                );
+                return (
+                  <Link
+                    key={role}
+                    href={`/settings/permissions/roles/${role}`}
+                    className="block"
+                  >
+                    <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
+                      <CardContent className="pt-6">
+                        <div className="flex items-center gap-3">
+                          <div className="rounded-lg bg-primary/10 p-2">
+                            <RoleIcon className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-semibold">{roleLabels[role]}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {permCount} of {totalPerms} permissions
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Permission Matrix</CardTitle>
             <CardDescription>
               View and manage which permissions are assigned to each role.
@@ -258,55 +307,6 @@ export default function PermissionsPage() {
                   ))}
                 </TableBody>
               </Table>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Role Details</CardTitle>
-            <CardDescription>
-              Click on a role to view and edit its permissions individually.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              {(["admin", "librarian", "staff"] as StaffRole[]).map((role) => {
-                const RoleIcon = roleIcons[role];
-                const permCount = categories.reduce(
-                  (acc, cat) =>
-                    acc +
-                    cat.permissions.filter((p) => getEffectiveValue(p, role)).length,
-                  0
-                );
-                const totalPerms = categories.reduce(
-                  (acc, cat) => acc + cat.permissions.length,
-                  0
-                );
-                return (
-                  <Link
-                    key={role}
-                    href={`/settings/permissions/roles/${role}`}
-                    className="block"
-                  >
-                    <Card className="hover:bg-muted/50 transition-colors cursor-pointer">
-                      <CardContent className="pt-6">
-                        <div className="flex items-center gap-3">
-                          <div className="rounded-lg bg-primary/10 p-2">
-                            <RoleIcon className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <h3 className="font-semibold">{roleLabels[role]}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {permCount} of {totalPerms} permissions
-                            </p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                );
-              })}
             </div>
           </CardContent>
         </Card>
