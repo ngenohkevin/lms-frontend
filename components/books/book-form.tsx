@@ -49,6 +49,7 @@ const bookSchema = z.object({
   format: z.enum(["physical", "ebook", "audiobook"]).optional(),
   series_id: z.number().optional().nullable(),
   series_number: z.number().optional(),
+  cover_image_url: z.string().url().optional().or(z.literal("")),
 });
 
 interface BookFormProps {
@@ -93,6 +94,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           format: book.format || "physical",
           series_id: book.series_id || null,
           series_number: book.series_number,
+          cover_image_url: book.cover_image_url || "",
         }
       : {
           book_id: "",
@@ -100,6 +102,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           total_copies: 1,
           category: "",
           format: "physical",
+          cover_image_url: "",
         },
   });
 
@@ -128,6 +131,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       if (result.description) setValue("description", result.description);
       if (result.pages) setValue("pages", result.pages);
       if (result.language) setValue("language", result.language);
+      if (result.cover_url) setValue("cover_image_url", result.cover_url);
 
       // Try to match genre with existing categories
       if (result.genre) {
@@ -485,6 +489,34 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
               rows={4}
               {...register("description")}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="cover_image_url">Cover Image URL</Label>
+            <Input
+              id="cover_image_url"
+              type="url"
+              placeholder="https://example.com/cover.jpg"
+              {...register("cover_image_url")}
+            />
+            {errors.cover_image_url && (
+              <p className="text-xs text-destructive">{errors.cover_image_url.message}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              URL to the book cover image (auto-filled from ISBN lookup)
+            </p>
+            {watch("cover_image_url") && (
+              <div className="mt-2">
+                <img
+                  src={watch("cover_image_url")}
+                  alt="Book cover preview"
+                  className="h-32 w-auto rounded border object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = "none";
+                  }}
+                />
+              </div>
+            )}
           </div>
         </CollapsibleContent>
       </Collapsible>

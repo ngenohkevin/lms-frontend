@@ -55,6 +55,7 @@ export interface BookFormData {
   series_id?: number | null;
   series_number?: number;
   category_id?: number;
+  cover_image_url?: string;
 }
 
 export interface BookSearchParams {

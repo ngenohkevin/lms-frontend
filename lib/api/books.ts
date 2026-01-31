@@ -114,6 +114,7 @@ export const booksApi = {
       description: data.description || undefined,
       total_copies: data.total_copies,
       shelf_location: data.location || undefined,
+      cover_image_url: data.cover_image_url || undefined,
     };
     const response = await apiClient.post<ApiResponse<Book>>(BOOKS_PREFIX, backendData);
     return transformBook(response.data);
@@ -133,6 +134,7 @@ export const booksApi = {
     if (data.description !== undefined) backendData.description = data.description || undefined;
     if (data.total_copies !== undefined) backendData.total_copies = data.total_copies;
     if (data.location !== undefined) backendData.shelf_location = data.location || undefined;
+    if (data.cover_image_url !== undefined) backendData.cover_image_url = data.cover_image_url || undefined;
 
     const response = await apiClient.put<ApiResponse<Book>>(`${BOOKS_PREFIX}/${id}`, backendData);
     return transformBook(response.data);
