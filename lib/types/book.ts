@@ -181,6 +181,22 @@ export interface BookCopy {
   notes?: string;
   created_at: string;
   updated_at: string;
+  // Extended fields for borrowed copies (optional)
+  current_borrower?: {
+    transaction_id: number;
+    student_name: string;
+    student_code: string;
+    due_date: string;
+  };
+}
+
+export interface CopyBorrowingHistoryEntry {
+  transaction_id: number;
+  student_name: string;
+  student_code: string;
+  borrowed_date: string;
+  due_date: string;
+  returned_date?: string;
 }
 
 export interface BookCopyFormData {

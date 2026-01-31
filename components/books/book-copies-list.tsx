@@ -12,10 +12,17 @@ import {
   Loader2,
   Search,
   X,
+  History,
+  User,
+  Calendar,
+  ArrowRightCircle,
 } from "lucide-react";
+import Link from "next/link";
 import { useBookCopies } from "@/lib/hooks/use-book-copies";
 import { bookCopiesApi } from "@/lib/api/book-copies";
+import { transactionsApi } from "@/lib/api/transactions";
 import type { BookCopy, BookCopyFormData, CopyCondition, CopyStatus } from "@/lib/types/book";
+import type { BarcodeScanResult } from "@/lib/types/transaction";
 import { COPY_CONDITIONS, COPY_STATUSES } from "@/lib/types/book";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -113,7 +120,10 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
   const [generateCount, setGenerateCount] = useState(1);
   const [editingCopy, setEditingCopy] = useState<BookCopy | null>(null);
   const [deletingCopy, setDeletingCopy] = useState<BookCopy | null>(null);
+  const [viewingHistoryCopy, setViewingHistoryCopy] = useState<BookCopy | null>(null);
+  const [copyBorrowerInfo, setCopyBorrowerInfo] = useState<Map<number, BarcodeScanResult>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingBorrowerInfo, setIsLoadingBorrowerInfo] = useState(false);
 
   // Debounce search input
   React.useEffect(() => {
@@ -122,6 +132,36 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Fetch borrower info for borrowed copies
+  React.useEffect(() => {
+    const fetchBorrowerInfo = async () => {
+      const borrowedCopies = copies.filter(
+        (copy) => copy.status === "borrowed" && copy.barcode
+      );
+      if (borrowedCopies.length === 0) return;
+
+      setIsLoadingBorrowerInfo(true);
+      const infoMap = new Map<number, BarcodeScanResult>();
+
+      await Promise.all(
+        borrowedCopies.map(async (copy) => {
+          if (!copy.barcode) return;
+          try {
+            const result = await transactionsApi.scanBarcode(copy.barcode);
+            infoMap.set(copy.id, result);
+          } catch {
+            // Ignore errors for individual copies
+          }
+        })
+      );
+
+      setCopyBorrowerInfo(infoMap);
+      setIsLoadingBorrowerInfo(false);
+    };
+
+    fetchBorrowerInfo();
+  }, [copies]);
 
   const handleCreate = async (data: BookCopyFormData) => {
     setIsSubmitting(true);
@@ -284,7 +324,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                       <TableHead>Barcode</TableHead>
                       <TableHead>Condition</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Acquired</TableHead>
+                      <TableHead>Borrower / Due</TableHead>
                       <TableHead className="w-[70px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -310,9 +350,36 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {copy.acquisition_date
-                            ? new Date(copy.acquisition_date).toLocaleDateString()
-                            : "-"}
+                          {copy.status === "borrowed" ? (
+                            <div className="flex flex-col gap-1">
+                              {copyBorrowerInfo.get(copy.id)?.current_borrower ? (
+                                <>
+                                  <div className="flex items-center gap-1 text-sm">
+                                    <User className="h-3 w-3 text-muted-foreground" />
+                                    <span className="font-medium">
+                                      {copyBorrowerInfo.get(copy.id)?.current_borrower?.student_name}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                      ({copyBorrowerInfo.get(copy.id)?.current_borrower?.student_code})
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                    <Calendar className="h-3 w-3" />
+                                    Due: {new Date(copyBorrowerInfo.get(copy.id)?.current_borrower?.due_date || "").toLocaleDateString()}
+                                  </div>
+                                </>
+                              ) : isLoadingBorrowerInfo ? (
+                                <span className="text-sm text-muted-foreground flex items-center gap-1">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  Loading...
+                                </span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">-</span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -322,6 +389,20 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              {copy.status === "available" && (
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/transactions/borrow?book_id=${bookId}&copy_id=${copy.id}`}>
+                                    <ArrowRightCircle className="mr-2 h-4 w-4" />
+                                    Checkout
+                                  </Link>
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem
+                                onClick={() => setViewingHistoryCopy(copy)}
+                              >
+                                <History className="mr-2 h-4 w-4" />
+                                View History
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => setEditingCopy(copy)}
                               >
@@ -360,6 +441,18 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {copy.status === "available" && (
+                            <DropdownMenuItem asChild>
+                              <Link href={`/transactions/borrow?book_id=${bookId}&copy_id=${copy.id}`}>
+                                <ArrowRightCircle className="mr-2 h-4 w-4" />
+                                Checkout
+                              </Link>
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => setViewingHistoryCopy(copy)}>
+                            <History className="mr-2 h-4 w-4" />
+                            View History
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setEditingCopy(copy)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
@@ -389,6 +482,24 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                           ?.label || copy.status}
                       </Badge>
                     </div>
+                    {/* Borrower info for borrowed copies */}
+                    {copy.status === "borrowed" && copyBorrowerInfo.get(copy.id)?.current_borrower && (
+                      <div className="rounded-md bg-blue-50 dark:bg-blue-950 p-2 space-y-1">
+                        <div className="flex items-center gap-1 text-sm">
+                          <User className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                          <span className="font-medium text-blue-700 dark:text-blue-300">
+                            {copyBorrowerInfo.get(copy.id)?.current_borrower?.student_name}
+                          </span>
+                          <span className="text-blue-600/70 dark:text-blue-400/70">
+                            ({copyBorrowerInfo.get(copy.id)?.current_borrower?.student_code})
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-blue-600/70 dark:text-blue-400/70">
+                          <Calendar className="h-3 w-3" />
+                          Due: {new Date(copyBorrowerInfo.get(copy.id)?.current_borrower?.due_date || "").toLocaleDateString()}
+                        </div>
+                      </div>
+                    )}
                     {copy.acquisition_date && (
                       <div className="text-sm text-muted-foreground">
                         Acquired:{" "}
@@ -516,6 +627,54 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
               ) : (
                 `Generate ${generateCount} ${generateCount === 1 ? "Copy" : "Copies"}`
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copy History Dialog */}
+      <Dialog open={!!viewingHistoryCopy} onOpenChange={() => setViewingHistoryCopy(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copy History</DialogTitle>
+            <DialogDescription>
+              Borrowing history for {viewingHistoryCopy?.copy_number}
+              {viewingHistoryCopy?.barcode && ` (${viewingHistoryCopy.barcode})`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {viewingHistoryCopy && copyBorrowerInfo.get(viewingHistoryCopy.id)?.current_borrower ? (
+              <div className="space-y-3">
+                <div className="font-medium text-sm">Currently Borrowed</div>
+                <div className="rounded-md bg-blue-50 dark:bg-blue-950 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <span className="font-medium">
+                      {copyBorrowerInfo.get(viewingHistoryCopy.id)?.current_borrower?.student_name}
+                    </span>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Student ID: {copyBorrowerInfo.get(viewingHistoryCopy.id)?.current_borrower?.student_code}
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      Due: {new Date(copyBorrowerInfo.get(viewingHistoryCopy.id)?.current_borrower?.due_date || "").toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                <History className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p>No active borrowing</p>
+                <p className="text-xs mt-1">This copy is currently available</p>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingHistoryCopy(null)}>
+              Close
             </Button>
           </DialogFooter>
         </DialogContent>

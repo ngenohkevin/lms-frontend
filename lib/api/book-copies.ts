@@ -1,5 +1,6 @@
 import apiClient from "./client";
-import type { BookCopy, BookCopyFormData } from "@/lib/types/book";
+import type { BookCopy, BookCopyFormData, CopyBorrowingHistoryEntry } from "@/lib/types/book";
+import type { BarcodeScanResult } from "@/lib/types/transaction";
 
 const BOOKS_PREFIX = "/api/v1/books";
 
@@ -68,7 +69,7 @@ export const bookCopiesApi = {
   },
 
   /**
-   * Scan/lookup a copy by barcode
+   * Scan/lookup a copy by barcode (basic info)
    */
   async scanBarcode(barcode: string): Promise<BookCopy> {
     const response = await apiClient.get<ApiResponse<BookCopy>>(
@@ -76,6 +77,32 @@ export const bookCopiesApi = {
       { params: { barcode } }
     );
     return response.data;
+  },
+
+  /**
+   * Scan barcode for transaction context (includes borrower info)
+   */
+  async scanBarcodeForTransaction(barcode: string): Promise<BarcodeScanResult> {
+    const response = await apiClient.get<ApiResponse<BarcodeScanResult>>(
+      `/api/v1/transactions/scan`,
+      { params: { barcode } }
+    );
+    return response.data;
+  },
+
+  /**
+   * Get borrowing history for a specific copy
+   */
+  async getHistory(
+    bookId: number,
+    copyId: number,
+    params?: { limit?: number; offset?: number }
+  ): Promise<CopyBorrowingHistoryEntry[]> {
+    const response = await apiClient.get<ApiResponse<CopyBorrowingHistoryEntry[]>>(
+      `${BOOKS_PREFIX}/${bookId}/copies/${copyId}/history`,
+      { params }
+    );
+    return response.data || [];
   },
 
   /**

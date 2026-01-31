@@ -25,6 +25,11 @@ export interface Transaction {
     name: string;
     email: string;
   };
+  // Copy-level tracking fields
+  copy_id?: number;
+  copy_number?: string;
+  copy_barcode?: string;
+  copy_condition?: string;
   created_at: string;
   updated_at: string;
 }
@@ -36,8 +41,44 @@ export interface BorrowRequest {
   book_id: string;
   student_id: string;
   librarian_id: number;
+  copy_id?: number;
+  barcode?: string;
   due_days?: number;
   notes?: string;
+}
+
+export interface BorrowByBarcodeRequest {
+  barcode: string;
+  student_id: string;
+  librarian_id: number;
+  notes?: string;
+}
+
+export interface ReturnByBarcodeRequest {
+  barcode: string;
+  return_condition?: BookCondition;
+  condition_notes?: string;
+}
+
+export interface BarcodeScanResult {
+  copy_id: number;
+  copy_number: string;
+  barcode: string;
+  condition: string;
+  status: string;
+  book_id: number;
+  book_title: string;
+  book_author: string;
+  book_code: string;
+  isbn?: string;
+  is_borrowed: boolean;
+  can_borrow: boolean;
+  current_borrower?: {
+    transaction_id: number;
+    student_name: string;
+    student_code: string;
+    due_date: string;
+  };
 }
 
 export interface ReturnRequest {

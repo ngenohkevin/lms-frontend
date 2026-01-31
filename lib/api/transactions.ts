@@ -2,6 +2,9 @@ import apiClient from "./client";
 import type {
   Transaction,
   BorrowRequest,
+  BorrowByBarcodeRequest,
+  ReturnByBarcodeRequest,
+  BarcodeScanResult,
   ReturnRequest,
   RenewRequest,
   TransactionSearchParams,
@@ -113,8 +116,17 @@ function mapTransactionStatus(type: string, returnedDate?: string): "active" | "
   return "active"; // Default to active, overdue would need date check
 }
 
+// Backend transaction row with copy fields
+interface BackendTransactionRowWithCopy extends BackendTransactionRow {
+  copy_id?: number;
+  copy_number?: string;
+  copy_barcode?: string;
+  copy_condition?: string;
+}
+
 // Transform backend transaction to frontend format
-function transformTransaction(tx: BackendTransactionRow): Transaction {
+function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowWithCopy): Transaction {
+  const txWithCopy = tx as BackendTransactionRowWithCopy;
   return {
     id: String(tx.id),
     book_id: String(tx.book_id),
@@ -141,6 +153,11 @@ function transformTransaction(tx: BackendTransactionRow): Transaction {
       name: `${tx.first_name || ""} ${tx.last_name || ""}`.trim() || "Unknown",
       email: "", // Not available in this query
     },
+    // Copy-level tracking fields
+    copy_id: txWithCopy.copy_id,
+    copy_number: txWithCopy.copy_number,
+    copy_barcode: txWithCopy.copy_barcode,
+    copy_condition: txWithCopy.copy_condition,
     created_at: tx.created_at,
     updated_at: tx.updated_at,
   };
@@ -182,9 +199,37 @@ export const transactionsApi = {
       book_id: parseInt(data.book_id, 10),
       student_id: parseInt(data.student_id, 10),
       librarian_id: data.librarian_id,
+      copy_id: data.copy_id,
+      barcode: data.barcode,
       notes: data.notes || "",
     };
     const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/borrow`, backendData);
+    return response.data;
+  },
+
+  // Borrow a book by scanning barcode
+  borrowByBarcode: async (data: BorrowByBarcodeRequest): Promise<Transaction> => {
+    const backendData = {
+      barcode: data.barcode,
+      student_id: parseInt(data.student_id, 10),
+      librarian_id: data.librarian_id,
+      notes: data.notes || "",
+    };
+    const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/borrow-by-barcode`, backendData);
+    return response.data;
+  },
+
+  // Return a book by scanning barcode
+  returnByBarcode: async (data: ReturnByBarcodeRequest): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/return-by-barcode`, data);
+    return response.data;
+  },
+
+  // Scan a barcode for transaction info
+  scanBarcode: async (barcode: string): Promise<BarcodeScanResult> => {
+    const response = await apiClient.get<ApiResponse<BarcodeScanResult>>(`${TRANSACTIONS_PREFIX}/scan`, {
+      params: { barcode },
+    });
     return response.data;
   },
 

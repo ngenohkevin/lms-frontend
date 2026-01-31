@@ -64,6 +64,7 @@ function BorrowContent() {
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const initialBookId = searchParams.get("book_id");
+  const initialCopyId = searchParams.get("copy_id");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +74,9 @@ function BorrowContent() {
   const [bookSearch, setBookSearch] = useState("");
   const [isSearchingBook, setIsSearchingBook] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedCopyId, setSelectedCopyId] = useState<number | null>(
+    initialCopyId ? parseInt(initialCopyId, 10) : null
+  );
 
   // Student lookup
   const [studentSearch, setStudentSearch] = useState("");
@@ -286,6 +290,7 @@ function BorrowContent() {
         book_id: selectedBook.id,
         student_id: selectedStudent.id,
         librarian_id: user?.id || 0,
+        copy_id: selectedCopyId ?? undefined,
         notes: data.notes,
       });
 
