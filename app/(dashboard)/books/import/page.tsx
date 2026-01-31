@@ -89,14 +89,14 @@ export default function BookImportPage() {
       setResult(importResult);
 
       if (importResult.success_count > 0) {
-        // Invalidate all books-related SWR cache so list shows imported books
+        // Invalidate all books-related SWR cache
         await mutate(
           (key) =>
             typeof key === "string"
               ? key.includes("/api/v1/books")
               : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
           undefined,
-          { revalidate: true }
+          { revalidate: false }
         );
         toast.success(`Successfully imported ${importResult.success_count} books`);
       }

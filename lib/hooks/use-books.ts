@@ -29,8 +29,6 @@ export function useBooks(params?: BookSearchParams) {
       onError: (err) => handleApiError(err, "Load books"),
       shouldRetryOnError: true,
       errorRetryCount: 2,
-      revalidateOnFocus: true,
-      revalidateOnMount: true,
     }
   );
 

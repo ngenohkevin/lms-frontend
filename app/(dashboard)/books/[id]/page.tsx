@@ -67,8 +67,7 @@ export default function BookDetailPage() {
     setIsDeleting(true);
     try {
       await booksApi.delete(bookId);
-      // Invalidate all books-related SWR caches
-      // Keys can be strings or arrays like ["/api/v1/books", params]
+      // Invalidate all books-related SWR cache
       await mutate(
         (key) => {
           if (typeof key === "string") return key.startsWith("/api/v1/books");
@@ -78,7 +77,7 @@ export default function BookDetailPage() {
           return false;
         },
         undefined,
-        { revalidate: true }
+        { revalidate: false }
       );
       toast.success("Book deleted successfully");
       router.push("/books");

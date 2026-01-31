@@ -315,7 +315,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
             ? key.includes("/api/v1/books")
             : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
         undefined,
-        { revalidate: true }
+        { revalidate: false }
       );
 
       onSuccess?.(result);
