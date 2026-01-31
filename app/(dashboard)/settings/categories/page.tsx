@@ -57,7 +57,9 @@ import {
   Loader2,
   ToggleLeft,
   ToggleRight,
+  ArrowLeft,
 } from "lucide-react";
+import Link from "next/link";
 
 export default function CategoriesPage() {
   const { categories, isLoading, refresh } = useCategories(true); // Include inactive
@@ -162,14 +164,21 @@ export default function CategoriesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-              <Tags className="h-6 w-6" />
-              Book Categories
-            </h1>
-            <p className="text-muted-foreground">
-              Manage categories for organizing books in the library
-            </p>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" asChild>
+              <Link href="/settings">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
+                <Tags className="h-6 w-6" />
+                Book Categories
+              </h1>
+              <p className="text-muted-foreground">
+                Manage categories for organizing books in the library
+              </p>
+            </div>
           </div>
           <PermissionGuard permission={PermissionCodes.CATEGORIES_MANAGE} hideWhenDenied>
             <Dialog open={isAddOpen} onOpenChange={(open) => {

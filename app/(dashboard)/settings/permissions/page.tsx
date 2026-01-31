@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { Check, X, Save, Shield, UserCog, User, ArrowLeft } from "lucide-react";
 import type { StaffRole, PermissionMatrixEntry } from "@/lib/types";
 import { PermissionCategoryNames } from "@/lib/types";
+import { usePermissions } from "@/providers/permission-provider";
 
 const roleIcons: Record<StaffRole, React.ComponentType<{ className?: string }>> = {
   admin: Shield,
@@ -44,6 +45,8 @@ const roleLabels: Record<StaffRole, string> = {
 
 export default function PermissionsPage() {
   const { categories, isLoading, refresh } = usePermissionMatrix();
+  const { hasPermission } = usePermissions();
+  const canManage = hasPermission(PermissionCodes.PERMISSIONS_MANAGE);
   const [editMode, setEditMode] = useState(false);
   const [changes, setChanges] = useState<Record<string, Record<StaffRole, boolean>>>({});
   const [saving, setSaving] = useState(false);
@@ -100,8 +103,7 @@ export default function PermissionsPage() {
       setChanges({});
       setEditMode(false);
       refresh();
-    } catch (error) {
-      console.error("Failed to save permissions:", error);
+    } catch {
       toast.error("Failed to save permissions");
     } finally {
       setSaving(false);
@@ -166,9 +168,9 @@ export default function PermissionsPage() {
                   {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </>
-            ) : (
+            ) : canManage ? (
               <Button onClick={() => setEditMode(true)}>Edit Permissions</Button>
-            )}
+            ) : null}
           </div>
         </div>
 

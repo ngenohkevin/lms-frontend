@@ -11,9 +11,10 @@ export function useCategories(includeInactive = false) {
     () => categoriesApi.list(includeInactive),
     {
       onError: () => {},
-      // Cache categories for longer since they don't change often
-      revalidateOnFocus: false,
-      dedupingInterval: 60000, // 1 minute
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      refreshInterval: 30000, // Refresh every 30 seconds
+      dedupingInterval: 5000, // 5 second deduping
     }
   );
 

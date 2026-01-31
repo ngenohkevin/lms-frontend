@@ -121,7 +121,6 @@ export default function UserPermissionsPage() {
       refreshPerms();
       refreshOverrides();
     } catch (error) {
-      console.error("Failed to add override:", error);
       toast.error(error instanceof Error ? error.message : "Failed to add override");
     } finally {
       setSaving(false);
@@ -135,8 +134,7 @@ export default function UserPermissionsPage() {
       toast.success("Override removed successfully");
       refreshPerms();
       refreshOverrides();
-    } catch (error) {
-      console.error("Failed to delete override:", error);
+    } catch {
       toast.error("Failed to delete override");
     } finally {
       setDeletingId(null);
