@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
 import { useBook, useBookRatings } from "@/lib/hooks/use-books";
+import { useSeriesById } from "@/lib/hooks/use-series";
 import { booksApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { BookCopiesList } from "@/components/books/book-copies-list";
 import {
   BookOpen,
   ArrowLeft,
@@ -32,9 +34,15 @@ import {
   Languages,
   FileText,
   User,
+  Library,
+  Tablet,
+  Headphones,
+  QrCode,
+  Download,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
+import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
 
 export default function BookDetailPage() {
   const params = useParams();
@@ -44,9 +52,11 @@ export default function BookDetailPage() {
 
   const { book, isLoading, error, refresh } = useBook(bookId);
   const { ratings, isLoading: ratingsLoading } = useBookRatings(bookId);
+  const { series: bookSeries } = useSeriesById(book?.series_id ?? null);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -61,6 +71,27 @@ export default function BookDetailPage() {
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
+    }
+  };
+
+  const getLanguageName = (code?: string) => {
+    if (!code) return null;
+    return BOOK_LANGUAGES.find((l) => l.code === code)?.name || code;
+  };
+
+  const getFormatLabel = (value?: string) => {
+    if (!value) return null;
+    return BOOK_FORMATS.find((f) => f.value === value)?.label || value;
+  };
+
+  const getFormatIcon = (format?: string) => {
+    switch (format) {
+      case "ebook":
+        return Tablet;
+      case "audiobook":
+        return Headphones;
+      default:
+        return BookOpen;
     }
   };
 
@@ -101,11 +132,12 @@ export default function BookDetailPage() {
   }
 
   const isAvailable = book.available_copies > 0;
+  const FormatIcon = getFormatIcon(book.format);
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <Button variant="ghost" asChild>
           <Link href="/books">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -114,19 +146,30 @@ export default function BookDetailPage() {
         </Button>
         {isLibrarian && (
           <div className="flex gap-2">
-            <Button variant="outline" asChild>
+            <Button variant="outline" size="sm" asChild>
+              <a
+                href={`/api/v1/books/${book.id}/qr`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <QrCode className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">QR Code</span>
+              </a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
               <Link href={`/books/${book.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />
-                Edit
+                <span className="hidden sm:inline">Edit</span>
               </Link>
             </Button>
             {isAdmin && (
               <Button
                 variant="destructive"
+                size="sm"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                <span className="hidden sm:inline">Delete</span>
               </Button>
             )}
           </div>
@@ -136,7 +179,7 @@ export default function BookDetailPage() {
       {/* Book Details */}
       <div className="grid gap-6 lg:grid-cols-4">
         {/* Cover Image */}
-        <Card className="overflow-hidden lg:col-span-1 max-w-[200px] lg:max-w-none">
+        <Card className="overflow-hidden lg:col-span-1 max-w-[200px] lg:max-w-none mx-auto lg:mx-0">
           <div className="relative aspect-[3/4] bg-muted">
             {book.cover_url ? (
               <Image
@@ -148,7 +191,7 @@ export default function BookDetailPage() {
               />
             ) : (
               <div className="flex h-full items-center justify-center">
-                <BookOpen className="h-12 w-12 text-muted-foreground/50" />
+                <FormatIcon className="h-12 w-12 text-muted-foreground/50" />
               </div>
             )}
           </div>
@@ -157,21 +200,37 @@ export default function BookDetailPage() {
         {/* Book Info */}
         <div className="lg:col-span-3 space-y-6">
           <div>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <h1 className="text-3xl font-bold">{book.title}</h1>
-                <p className="text-xl text-muted-foreground mt-1">
+                <h1 className="text-2xl sm:text-3xl font-bold">{book.title}</h1>
+                <p className="text-lg sm:text-xl text-muted-foreground mt-1">
                   by {book.author}
                 </p>
+                {/* Series Info */}
+                {bookSeries && (
+                  <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                    <Library className="h-4 w-4" />
+                    {bookSeries.name}
+                    {book.series_number && ` - Book ${book.series_number}`}
+                  </p>
+                )}
               </div>
-              <Badge
-                variant={isAvailable ? "default" : "secondary"}
-                className="text-sm"
-              >
-                {isAvailable
-                  ? `${book.available_copies} of ${book.total_copies} available`
-                  : "Unavailable"}
-              </Badge>
+              <div className="flex flex-wrap gap-2">
+                <Badge
+                  variant={isAvailable ? "default" : "secondary"}
+                  className="text-sm"
+                >
+                  {isAvailable
+                    ? `${book.available_copies} of ${book.total_copies} available`
+                    : "Unavailable"}
+                </Badge>
+                {book.format && book.format !== "physical" && (
+                  <Badge variant="outline" className="text-sm gap-1">
+                    <FormatIcon className="h-3 w-3" />
+                    {getFormatLabel(book.format)}
+                  </Badge>
+                )}
+              </div>
             </div>
 
             {book.average_rating && book.average_rating > 0 && (
@@ -201,7 +260,7 @@ export default function BookDetailPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             {isAvailable ? (
               <Button asChild>
                 <Link href={`/transactions/borrow?book_id=${book.id}`}>
@@ -220,71 +279,81 @@ export default function BookDetailPage() {
           <Separator />
 
           {/* Book Metadata */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
             <div className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-              <div>
+              <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
                 <p className="text-sm text-muted-foreground">ISBN</p>
-                <p className="font-medium">{book.isbn}</p>
+                <p className="font-medium truncate">{book.isbn}</p>
               </div>
             </div>
 
             {book.category && (
               <div className="flex items-center gap-3">
-                <BookOpen className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <BookOpen className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Category</p>
-                  <p className="font-medium">{book.category}</p>
+                  <p className="font-medium truncate">{book.category}</p>
                 </div>
               </div>
             )}
 
             {book.publisher && (
               <div className="flex items-center gap-3">
-                <Building2 className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <Building2 className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Publisher</p>
-                  <p className="font-medium">{book.publisher}</p>
+                  <p className="font-medium truncate">{book.publisher}</p>
                 </div>
               </div>
             )}
 
             {book.publication_year && (
               <div className="flex items-center gap-3">
-                <Calendar className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <Calendar className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Published</p>
                   <p className="font-medium">{book.publication_year}</p>
                 </div>
               </div>
             )}
 
+            {book.edition && (
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-sm text-muted-foreground">Edition</p>
+                  <p className="font-medium truncate">{book.edition}</p>
+                </div>
+              </div>
+            )}
+
             {book.language && (
               <div className="flex items-center gap-3">
-                <Languages className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <Languages className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Language</p>
-                  <p className="font-medium">{book.language}</p>
+                  <p className="font-medium">{getLanguageName(book.language)}</p>
                 </div>
               </div>
             )}
 
             {book.location && (
               <div className="flex items-center gap-3">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <MapPin className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Location</p>
-                  <p className="font-medium">{book.location}</p>
+                  <p className="font-medium truncate">{book.location}</p>
                 </div>
               </div>
             )}
 
-            {book.pages && (
+            {(book.pages || book.page_count) && (
               <div className="flex items-center gap-3">
-                <FileText className="h-5 w-5 text-muted-foreground" />
-                <div>
+                <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                <div className="min-w-0">
                   <p className="text-sm text-muted-foreground">Pages</p>
-                  <p className="font-medium">{book.pages} pages</p>
+                  <p className="font-medium">{book.pages || book.page_count} pages</p>
                 </div>
               </div>
             )}
@@ -305,14 +374,20 @@ export default function BookDetailPage() {
         </div>
       </div>
 
-      {/* Tabs for Ratings and More */}
-      <Tabs defaultValue="ratings">
-        <TabsList>
-          <TabsTrigger value="ratings">
-            Reviews & Ratings ({book.total_ratings || 0})
+      {/* Tabs for Ratings, Copies and More */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:inline-flex">
+          <TabsTrigger value="details" className="text-sm">
+            Reviews ({book.total_ratings || 0})
           </TabsTrigger>
+          {isLibrarian && (
+            <TabsTrigger value="copies" className="text-sm">
+              Copies ({book.total_copies})
+            </TabsTrigger>
+          )}
         </TabsList>
-        <TabsContent value="ratings" className="mt-4">
+
+        <TabsContent value="details" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle>Reader Reviews</CardTitle>
@@ -325,7 +400,7 @@ export default function BookDetailPage() {
                 <div className="space-y-4">
                   {Array.from({ length: 3 }).map((_, i) => (
                     <div key={i} className="flex gap-4">
-                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <Skeleton className="h-10 w-10 rounded-full shrink-0" />
                       <div className="flex-1 space-y-2">
                         <Skeleton className="h-4 w-32" />
                         <Skeleton className="h-4 w-full" />
@@ -337,11 +412,11 @@ export default function BookDetailPage() {
                 <div className="space-y-6">
                   {ratings.map((rating) => (
                     <div key={rating.id} className="flex gap-4">
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
                         <User className="h-5 w-5 text-muted-foreground" />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
                           <div className="flex">
                             {Array.from({ length: 5 }).map((_, i) => (
                               <Star
@@ -359,7 +434,7 @@ export default function BookDetailPage() {
                           </span>
                         </div>
                         {rating.review && (
-                          <p className="mt-2 text-sm">{rating.review}</p>
+                          <p className="mt-2 text-sm break-words">{rating.review}</p>
                         )}
                       </div>
                     </div>
@@ -373,6 +448,15 @@ export default function BookDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {isLibrarian && (
+          <TabsContent value="copies" className="mt-4">
+            <BookCopiesList
+              bookId={parseInt(bookId)}
+              bookTitle={book.title}
+            />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Delete Confirmation */}

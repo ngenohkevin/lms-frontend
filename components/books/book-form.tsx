@@ -17,10 +17,18 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Search } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Loader2, Search, ChevronDown } from "lucide-react";
 import { useCategories } from "@/lib/hooks";
-import type { Book, BookFormData, ISBNLookupResult } from "@/lib/types";
+import type { Book, BookFormData, Author } from "@/lib/types";
+import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
 import { toast } from "sonner";
+import { SeriesSelector } from "./series-selector";
+import { AuthorSelector } from "./author-selector";
 
 const bookSchema = z.object({
   book_id: z.string().min(1, "Book ID is required").max(50, "Book ID must be at most 50 characters"),
@@ -30,11 +38,16 @@ const bookSchema = z.object({
   publisher: z.string().optional(),
   publication_year: z.number().optional(),
   category: z.string().min(1, "Category is required"),
+  category_id: z.number().optional(),
   description: z.string().optional(),
   total_copies: z.number().min(1, "Must have at least 1 copy"),
   location: z.string().optional(),
   language: z.string().optional(),
   pages: z.number().optional(),
+  edition: z.string().optional(),
+  format: z.enum(["physical", "ebook", "audiobook"]).optional(),
+  series_id: z.number().optional().nullable(),
+  series_number: z.number().optional(),
 });
 
 interface BookFormProps {
@@ -47,6 +60,8 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
   const { categories } = useCategories();
 
   const isEditing = !!book;
@@ -73,16 +88,24 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           location: book.location || book.shelf_location || "",
           language: book.language || "",
           pages: book.pages,
+          edition: book.edition || "",
+          format: book.format || "physical",
+          series_id: book.series_id || null,
+          series_number: book.series_number,
         }
       : {
           book_id: "",
           isbn: "",
           total_copies: 1,
           category: "",
+          format: "physical",
         },
   });
 
   const isbn = watch("isbn");
+  const seriesId = watch("series_id");
+  const language = watch("language");
+  const format = watch("format");
 
   const handleISBNLookup = async () => {
     if (!isbn || isbn.length < 10) {
@@ -113,6 +136,24 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       );
     } finally {
       setIsLookingUp(false);
+    }
+  };
+
+  const handleSeriesChange = (
+    newSeriesId: number | null,
+    newSeriesNumber?: number
+  ) => {
+    setValue("series_id", newSeriesId);
+    if (newSeriesNumber !== undefined) {
+      setValue("series_number", newSeriesNumber);
+    }
+  };
+
+  const handleAuthorsChange = (authors: Author[]) => {
+    setSelectedAuthors(authors);
+    // Set primary author name for the main author field
+    if (authors.length > 0) {
+      setValue("author", authors.map((a) => a.name).join(", "));
     }
   };
 
@@ -151,6 +192,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         </Alert>
       )}
 
+      {/* Essential Fields */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="book_id">Book ID *</Label>
@@ -197,7 +239,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="title">Title *</Label>
           <Input
             id="title"
@@ -209,16 +251,19 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="author">Author *</Label>
-          <Input
-            id="author"
-            placeholder="Author name"
-            {...register("author")}
+        <div className="space-y-2 sm:col-span-2">
+          <AuthorSelector
+            selectedAuthors={selectedAuthors}
+            onChange={handleAuthorsChange}
+            disabled={isLoading}
           />
+          <input type="hidden" {...register("author")} />
           {errors.author && (
             <p className="text-sm text-destructive">{errors.author.message}</p>
           )}
+          <p className="text-xs text-muted-foreground">
+            Select existing authors or create new ones. Order determines primary author.
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -244,6 +289,35 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="total_copies">Total Copies *</Label>
+          <Input
+            id="total_copies"
+            type="number"
+            min={1}
+            {...register("total_copies", { valueAsNumber: true })}
+          />
+          {errors.total_copies && (
+            <p className="text-sm text-destructive">
+              {errors.total_copies.message}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Series Selection */}
+      <div className="space-y-2">
+        <SeriesSelector
+          value={seriesId}
+          onChange={handleSeriesChange}
+          seriesNumber={watch("series_number")}
+          onSeriesNumberChange={(num) => setValue("series_number", num)}
+          disabled={isLoading}
+        />
+      </div>
+
+      {/* Publishing Details */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="space-y-2">
           <Label htmlFor="publisher">Publisher</Label>
           <Input
             id="publisher"
@@ -263,36 +337,55 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="total_copies">Total Copies *</Label>
+          <Label htmlFor="edition">Edition</Label>
           <Input
-            id="total_copies"
-            type="number"
-            min={1}
-            {...register("total_copies", { valueAsNumber: true })}
+            id="edition"
+            placeholder="1st Edition"
+            {...register("edition")}
           />
-          {errors.total_copies && (
-            <p className="text-sm text-destructive">
-              {errors.total_copies.message}
-            </p>
-          )}
         </div>
+      </div>
 
+      {/* Format and Language */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
-          <Input
-            id="location"
-            placeholder="Shelf A-1"
-            {...register("location")}
-          />
+          <Label htmlFor="format">Format</Label>
+          <Select
+            value={format}
+            onValueChange={(value) =>
+              setValue("format", value as "physical" | "ebook" | "audiobook")
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select format" />
+            </SelectTrigger>
+            <SelectContent>
+              {BOOK_FORMATS.map((fmt) => (
+                <SelectItem key={fmt.value} value={fmt.value}>
+                  {fmt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="language">Language</Label>
-          <Input
-            id="language"
-            placeholder="English"
-            {...register("language")}
-          />
+          <Select
+            value={language || ""}
+            onValueChange={(value) => setValue("language", value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select language" />
+            </SelectTrigger>
+            <SelectContent>
+              {BOOK_LANGUAGES.map((lang) => (
+                <SelectItem key={lang.code} value={lang.code}>
+                  {lang.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
@@ -306,17 +399,45 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Brief description of the book..."
-          rows={4}
-          {...register("description")}
-        />
-      </div>
+      {/* Advanced Options (Collapsible) */}
+      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+        <CollapsibleTrigger asChild>
+          <Button type="button" variant="ghost" className="w-full justify-between">
+            Additional Details
+            <ChevronDown
+              className={`h-4 w-4 transition-transform ${
+                showAdvanced ? "rotate-180" : ""
+              }`}
+            />
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="location">Shelf Location</Label>
+            <Input
+              id="location"
+              placeholder="Shelf A-1"
+              {...register("location")}
+            />
+            <p className="text-xs text-muted-foreground">
+              Physical location in the library (e.g., Shelf A-1, Row 3)
+            </p>
+          </div>
 
-      <div className="flex justify-end gap-2">
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Brief description of the book..."
+              rows={4}
+              {...register("description")}
+            />
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      {/* Form Actions */}
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel

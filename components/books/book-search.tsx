@@ -11,6 +11,11 @@ import {
   ArrowUpDown,
   Filter,
   Sparkles,
+  BookOpen,
+  Headphones,
+  Tablet,
+  Globe,
+  Library,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +47,8 @@ import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/lib/hooks";
+import { useSeries } from "@/lib/hooks/use-series";
+import { BOOK_LANGUAGES, BOOK_FORMATS, type BookFormat } from "@/lib/types/book";
 
 interface BookSearchProps {
   onSearch?: (params: Record<string, string | undefined>) => void;
@@ -56,7 +63,16 @@ const quickFilters = [
   { label: "New Arrivals", value: "new", icon: Sparkles },
   { label: "Top Rated", value: "top_rated", icon: ArrowUpDown },
   { label: "Available Now", value: "available", icon: Filter },
+  { label: "E-Books", value: "ebook", icon: Tablet },
+  { label: "Audiobooks", value: "audiobook", icon: Headphones },
 ];
+
+// Format icons
+const formatIcons: Record<BookFormat, typeof BookOpen> = {
+  physical: BookOpen,
+  ebook: Tablet,
+  audiobook: Headphones,
+};
 
 export function BookSearch({
   onSearch,
@@ -68,6 +84,7 @@ export function BookSearch({
   const [isOpen, setIsOpen] = useState(false);
   const [showQuickFilters, setShowQuickFilters] = useState(true);
   const { categories, isLoading: categoriesLoading } = useCategories();
+  const { series: seriesList } = useSeries(1, 100);
 
   const [query, setQuery] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
@@ -78,6 +95,10 @@ export function BookSearch({
   const [yearRange, setYearRange] = useState<[number, number]>([1900, currentYear]);
   const [minRating, setMinRating] = useState(0);
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
+  // New filter states
+  const [language, setLanguage] = useState(searchParams.get("language") || "");
+  const [format, setFormat] = useState(searchParams.get("format") || "");
+  const [seriesId, setSeriesId] = useState(searchParams.get("series_id") || "");
 
   const handleSearch = useCallback(
     (e?: React.FormEvent) => {
@@ -91,6 +112,10 @@ export function BookSearch({
       if (yearRange[0] > 1900) params.set("year_from", String(yearRange[0]));
       if (yearRange[1] < currentYear) params.set("year_to", String(yearRange[1]));
       if (minRating > 0) params.set("min_rating", String(minRating));
+      // New filters
+      if (language) params.set("language", language);
+      if (format) params.set("format", format);
+      if (seriesId) params.set("series_id", seriesId);
 
       const newUrl = `/books${params.toString() ? `?${params.toString()}` : ""}`;
       router.push(newUrl);
@@ -104,10 +129,13 @@ export function BookSearch({
           year_from: yearRange[0] > 1900 ? String(yearRange[0]) : undefined,
           year_to: yearRange[1] < currentYear ? String(yearRange[1]) : undefined,
           min_rating: minRating > 0 ? String(minRating) : undefined,
+          language: language || undefined,
+          format: format || undefined,
+          series_id: seriesId || undefined,
         });
       }
     },
-    [query, category, available, sortBy, yearRange, minRating, router, onSearch]
+    [query, category, available, sortBy, yearRange, minRating, language, format, seriesId, router, onSearch]
   );
 
   const clearFilters = () => {
@@ -118,6 +146,9 @@ export function BookSearch({
     setYearRange([1900, currentYear]);
     setMinRating(0);
     setQuickFilter(null);
+    setLanguage("");
+    setFormat("");
+    setSeriesId("");
     router.push("/books");
     if (onSearch) {
       onSearch({});
@@ -137,13 +168,22 @@ export function BookSearch({
       case "new":
         setSortBy("created_at");
         setAvailable(false);
+        setFormat("");
         break;
       case "top_rated":
         setSortBy("average_rating");
         setMinRating(4);
+        setFormat("");
         break;
       case "available":
         setAvailable(true);
+        setFormat("");
+        break;
+      case "ebook":
+        setFormat("ebook");
+        break;
+      case "audiobook":
+        setFormat("audiobook");
         break;
     }
 
@@ -156,10 +196,32 @@ export function BookSearch({
     yearRange[0] > 1900,
     yearRange[1] < currentYear,
     minRating > 0,
+    language,
+    format,
+    seriesId,
   ].filter(Boolean).length;
 
   const hasActiveFilters =
-    category || available || yearRange[0] > 1900 || yearRange[1] < currentYear || minRating > 0;
+    category ||
+    available ||
+    yearRange[0] > 1900 ||
+    yearRange[1] < currentYear ||
+    minRating > 0 ||
+    language ||
+    format ||
+    seriesId;
+
+  const getLanguageName = (code: string) => {
+    return BOOK_LANGUAGES.find((l) => l.code === code)?.name || code;
+  };
+
+  const getFormatLabel = (value: string) => {
+    return BOOK_FORMATS.find((f) => f.value === value)?.label || value;
+  };
+
+  const getSeriesName = (id: string) => {
+    return seriesList.find((s) => String(s.id) === id)?.name || id;
+  };
 
   return (
     <div className="space-y-4">
@@ -255,6 +317,88 @@ export function BookSearch({
                       {categories.map((cat) => (
                         <SelectItem key={cat.id} value={cat.name}>
                           {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                {/* Format filter */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Format
+                  </Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <Button
+                      variant={!format ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFormat("")}
+                      className="w-full"
+                    >
+                      All
+                    </Button>
+                    {BOOK_FORMATS.map((fmt) => {
+                      const Icon = formatIcons[fmt.value];
+                      return (
+                        <Button
+                          key={fmt.value}
+                          variant={format === fmt.value ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setFormat(fmt.value)}
+                          className="w-full gap-1"
+                        >
+                          <Icon className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">{fmt.label.split(" ")[0]}</span>
+                          <span className="sm:hidden">{fmt.value === "physical" ? "Book" : fmt.label.split(" ")[0]}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Language filter */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Language
+                  </Label>
+                  <Select value={language || "all"} onValueChange={(val) => setLanguage(val === "all" ? "" : val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All languages" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All languages</SelectItem>
+                      {BOOK_LANGUAGES.map((lang) => (
+                        <SelectItem key={lang.code} value={lang.code}>
+                          {lang.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Separator />
+
+                {/* Series filter */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold flex items-center gap-2">
+                    <Library className="h-4 w-4" />
+                    Series
+                  </Label>
+                  <Select value={seriesId || "all"} onValueChange={(val) => setSeriesId(val === "all" ? "" : val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All series" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All series</SelectItem>
+                      {seriesList.map((series) => (
+                        <SelectItem key={series.id} value={String(series.id)}>
+                          {series.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -398,6 +542,48 @@ export function BookSearch({
                 <button
                   onClick={() => {
                     setCategory("");
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {format && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {getFormatLabel(format)}
+                <button
+                  onClick={() => {
+                    setFormat("");
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {language && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {getLanguageName(language)}
+                <button
+                  onClick={() => {
+                    setLanguage("");
+                    handleSearch();
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
+            {seriesId && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {getSeriesName(seriesId)}
+                <button
+                  onClick={() => {
+                    setSeriesId("");
                     handleSearch();
                   }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
