@@ -146,6 +146,18 @@ export const PermissionCodes = {
 
   // Categories
   CATEGORIES_MANAGE: "categories.manage",
+
+  // Authors
+  AUTHORS_VIEW: "authors.view",
+  AUTHORS_CREATE: "authors.create",
+  AUTHORS_UPDATE: "authors.update",
+  AUTHORS_DELETE: "authors.delete",
+
+  // Languages
+  LANGUAGES_VIEW: "languages.view",
+  LANGUAGES_CREATE: "languages.create",
+  LANGUAGES_UPDATE: "languages.update",
+  LANGUAGES_DELETE: "languages.delete",
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];
@@ -163,4 +175,6 @@ export const PermissionCategoryNames: Record<string, string> = {
   fines: "Fines",
   notifications: "Notifications",
   categories: "Categories",
+  authors: "Authors",
+  languages: "Languages",
 };

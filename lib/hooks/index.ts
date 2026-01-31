@@ -6,3 +6,4 @@ export * from "./use-categories";
 export * from "./use-users";
 export * from "./use-invites";
 export * from "./use-permissions";
+export * from "./use-languages";

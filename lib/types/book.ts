@@ -228,6 +228,33 @@ export interface SeriesFormData {
   description?: string;
 }
 
+// Language Types (API-managed languages)
+export interface Language {
+  id: number;
+  code: string;
+  name: string;
+  native_name?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LanguageListResponse {
+  languages: Language[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
+  };
+}
+
+export interface LanguageFormData {
+  code: string;
+  name: string;
+  native_name?: string;
+}
+
 // Language constants
 export const BOOK_LANGUAGES = [
   { code: "en", name: "English" },

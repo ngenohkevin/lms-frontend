@@ -16,6 +16,8 @@ import {
   Shield,
   Tags,
   ChevronRight,
+  Users,
+  Languages,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -40,6 +42,20 @@ const settingsLinks: SettingsLink[] = [
     href: "/settings/categories",
     icon: Tags,
     permission: PermissionCodes.CATEGORIES_MANAGE,
+  },
+  {
+    title: "Authors",
+    description: "Manage authors for books in the library",
+    href: "/settings/authors",
+    icon: Users,
+    permission: PermissionCodes.AUTHORS_VIEW,
+  },
+  {
+    title: "Languages",
+    description: "Manage languages for books in the library",
+    href: "/settings/languages",
+    icon: Languages,
+    permission: PermissionCodes.LANGUAGES_VIEW,
   },
 ];
 
