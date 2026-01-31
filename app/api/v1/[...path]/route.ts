@@ -73,6 +73,27 @@ async function proxyRequest(request: NextRequest, path: string[]) {
       });
     }
 
+    // Handle binary responses (images, files, etc.)
+    if (
+      resContentType?.startsWith("image/") ||
+      resContentType?.startsWith("application/octet-stream") ||
+      resContentType?.includes("application/pdf") ||
+      resContentType?.includes("application/zip")
+    ) {
+      const buffer = await response.arrayBuffer();
+
+      // Forward content-disposition header for downloads
+      const contentDisposition = response.headers.get("content-disposition");
+      if (contentDisposition) {
+        responseHeaders.set("content-disposition", contentDisposition);
+      }
+
+      return new NextResponse(buffer, {
+        status: response.status,
+        headers: responseHeaders,
+      });
+    }
+
     const data = await response.text();
 
     return new NextResponse(data, {
