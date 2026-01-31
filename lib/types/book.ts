@@ -45,7 +45,7 @@ export interface BookFormData {
   publication_year?: number;
   category: string;
   description?: string;
-  total_copies: number;
+  total_copies?: number;
   location?: string;
   language?: string;
   pages?: number;

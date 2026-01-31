@@ -25,7 +25,16 @@ const bookCopySchema = z.object({
   status: z
     .enum(["available", "borrowed", "reserved", "maintenance", "lost", "damaged"])
     .optional(),
-  acquisition_date: z.string().optional(),
+  acquisition_date: z.string().optional().refine(
+    (date) => {
+      if (!date) return true;
+      const inputDate = new Date(date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      return inputDate <= today;
+    },
+    { message: "Acquisition date cannot be in the future" }
+  ),
   notes: z.string().optional(),
 });
 
@@ -151,9 +160,19 @@ export function BookCopyForm({
         <Input
           id="acquisition_date"
           type="date"
+          max={new Date().toISOString().split("T")[0]}
           {...register("acquisition_date")}
           disabled={isSubmitting}
         />
+        {errors.acquisition_date ? (
+          <p className="text-sm text-destructive">
+            {errors.acquisition_date.message}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Cannot be a future date
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">

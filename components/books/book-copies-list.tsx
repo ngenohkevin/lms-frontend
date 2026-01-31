@@ -10,6 +10,8 @@ import {
   MoreHorizontal,
   Barcode,
   Loader2,
+  Search,
+  X,
 } from "lucide-react";
 import { useBookCopies } from "@/lib/hooks/use-book-copies";
 import { bookCopiesApi } from "@/lib/api/book-copies";
@@ -58,6 +60,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { BookCopyForm } from "./book-copy-form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
 
 interface BookCopiesListProps {
   bookId: number;
@@ -102,13 +105,23 @@ function getStatusColor(status: CopyStatus): string {
 }
 
 export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListProps) {
-  const { copies, isLoading, refresh } = useBookCopies(bookId);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const { copies, isLoading, refresh } = useBookCopies(bookId, debouncedSearch || undefined);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [generateCount, setGenerateCount] = useState(1);
   const [editingCopy, setEditingCopy] = useState<BookCopy | null>(null);
   const [deletingCopy, setDeletingCopy] = useState<BookCopy | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Debounce search input
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const handleCreate = async (data: BookCopyFormData) => {
     setIsSubmitting(true);
@@ -212,7 +225,30 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           </div>
         </CardHeader>
         <CardContent>
-          {copies.length === 0 ? (
+          {/* Search Input */}
+          <div className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by copy number, barcode, or notes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {copies.length === 0 && !debouncedSearch ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
               <Barcode className="mb-4 h-12 w-12 text-muted-foreground" />
               <p className="text-muted-foreground">No copies registered yet</p>
@@ -223,6 +259,18 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add First Copy
+              </Button>
+            </div>
+          ) : copies.length === 0 && debouncedSearch ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Search className="mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="text-muted-foreground">No copies found for "{debouncedSearch}"</p>
+              <Button
+                variant="outline"
+                className="mt-4"
+                onClick={() => setSearchQuery("")}
+              >
+                Clear Search
               </Button>
             </div>
           ) : (

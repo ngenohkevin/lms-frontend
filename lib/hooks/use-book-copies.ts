@@ -12,12 +12,12 @@ const handleApiError = (error: Error, context: string) => {
   }
 };
 
-export function useBookCopies(bookId: number | null) {
-  const key = bookId ? ["/api/v1/books/copies", bookId] : null;
+export function useBookCopies(bookId: number | null, search?: string) {
+  const key = bookId ? ["/api/v1/books/copies", bookId, search || ""] : null;
 
   const { data, error, isLoading, mutate } = useSWR<BookCopy[]>(
     key,
-    () => (bookId ? bookCopiesApi.list(bookId) : Promise.resolve([])),
+    () => (bookId ? bookCopiesApi.list(bookId, search) : Promise.resolve([])),
     {
       onError: (err) => handleApiError(err, "Load book copies"),
       shouldRetryOnError: true,

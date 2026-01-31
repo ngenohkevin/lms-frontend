@@ -43,7 +43,7 @@ const bookSchema = z.object({
   category: z.string().min(1, "Category is required"),
   category_id: z.number().optional(),
   description: z.string().optional(),
-  total_copies: z.number().min(1, "Must have at least 1 copy"),
+  total_copies: z.number().min(0).optional().default(0),
   location: z.string().optional(),
   language: z.string().optional(),
   pages: z.number().optional(),
@@ -90,7 +90,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           publication_year: book.publication_year,
           category: book.category || book.genre || "",
           description: book.description || "",
-          total_copies: book.total_copies || 1,
+          total_copies: book.total_copies ?? 0,
           location: book.location || book.shelf_location || "",
           language: book.language || "",
           pages: book.pages,
@@ -103,7 +103,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       : {
           book_id: "",
           isbn: "",
-          total_copies: 1,
+          total_copies: 0,
           category: "",
           format: "physical",
           cover_image_url: "",
@@ -416,13 +416,16 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="total_copies">Total Copies *</Label>
+          <Label htmlFor="total_copies">Total Copies</Label>
           <Input
             id="total_copies"
             type="number"
-            min={1}
+            min={0}
             {...register("total_copies", { valueAsNumber: true })}
           />
+          <p className="text-xs text-muted-foreground">
+            Auto-managed when using copy tracking. Use "Generate" in the Copies tab after creating the book.
+          </p>
           {errors.total_copies && (
             <p className="text-sm text-destructive">
               {errors.total_copies.message}

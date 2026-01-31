@@ -12,10 +12,14 @@ interface ApiResponse<T> {
 export const bookCopiesApi = {
   /**
    * List all copies of a book
+   * @param bookId - The book ID
+   * @param search - Optional search query (searches copy number, barcode, notes)
    */
-  async list(bookId: number): Promise<BookCopy[]> {
+  async list(bookId: number, search?: string): Promise<BookCopy[]> {
+    const params = search ? { q: search } : undefined;
     const response = await apiClient.get<ApiResponse<BookCopy[]>>(
-      `${BOOKS_PREFIX}/${bookId}/copies`
+      `${BOOKS_PREFIX}/${bookId}/copies`,
+      { params }
     );
     return response.data || [];
   },
