@@ -30,6 +30,7 @@ import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
 import { toast } from "sonner";
 import { SeriesSelector } from "./series-selector";
 import { AuthorSelector } from "./author-selector";
+import { CategorySelector } from "./category-selector";
 
 const bookSchema = z.object({
   book_id: z.string().min(1, "Book ID is required").max(50, "Book ID must be at most 50 characters"),
@@ -64,6 +65,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [selectedAuthors, setSelectedAuthors] = useState<Author[]>([]);
+  const [suggestedGenre, setSuggestedGenre] = useState<string | undefined>();
   const { categories } = useCategories();
 
   const isEditing = !!book;
@@ -141,6 +143,10 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         if (matchedCategory) {
           setValue("category", matchedCategory.name);
           setValue("category_id", matchedCategory.id);
+          setSuggestedGenre(undefined); // Clear suggestion if matched
+        } else {
+          // Show as suggestion if no match found
+          setSuggestedGenre(result.genre);
         }
       }
 
@@ -212,6 +218,17 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     if (authors.length > 0) {
       setValue("author", authors.map((a) => a.name).join(", "));
     }
+  };
+
+  const handleCategoryChange = (categoryName: string, categoryId?: number) => {
+    setValue("category", categoryName);
+    if (categoryId) {
+      setValue("category_id", categoryId);
+    }
+  };
+
+  const handleSuggestionUsed = () => {
+    setSuggestedGenre(undefined);
   };
 
   const onSubmit = async (data: BookFormData) => {
@@ -324,22 +341,14 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="category">Category *</Label>
-          <Select
+          <CategorySelector
             value={watch("category")}
-            onValueChange={(value) => setValue("category", value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.name}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            categoryId={watch("category_id")}
+            onChange={handleCategoryChange}
+            disabled={isLoading}
+            suggestedGenre={suggestedGenre}
+            onSuggestionUsed={handleSuggestionUsed}
+          />
           {errors.category && (
             <p className="text-sm text-destructive">{errors.category.message}</p>
           )}
