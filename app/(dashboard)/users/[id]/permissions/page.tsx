@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { useUser } from "@/lib/hooks/use-users";
 import { useUserPermissions, useUserOverrides, useAllPermissions } from "@/lib/hooks/use-permissions";
 import { permissionsApi } from "@/lib/api";
@@ -144,7 +145,7 @@ export default function UserPermissionsPage() {
 
   if (isLoading) {
     return (
-      <AuthGuard requiredRoles={["admin"]}>
+      <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
@@ -169,7 +170,7 @@ export default function UserPermissionsPage() {
 
   if (!user) {
     return (
-      <AuthGuard requiredRoles={["admin"]}>
+      <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
         <div className="flex flex-col items-center justify-center gap-4 py-12">
           <h1 className="text-2xl font-bold">User Not Found</h1>
           <p className="text-muted-foreground">The user could not be found.</p>
@@ -185,7 +186,7 @@ export default function UserPermissionsPage() {
   }
 
   return (
-    <AuthGuard requiredRoles={["admin"]}>
+    <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">

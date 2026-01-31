@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { usePermissionMatrix } from "@/lib/hooks/use-permissions";
 import { permissionsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -114,7 +115,7 @@ export default function PermissionsPage() {
 
   if (isLoading) {
     return (
-      <AuthGuard requiredRoles={["admin"]}>
+      <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_VIEW}>
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
@@ -138,7 +139,7 @@ export default function PermissionsPage() {
   }
 
   return (
-    <AuthGuard requiredRoles={["admin"]}>
+    <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_VIEW}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">

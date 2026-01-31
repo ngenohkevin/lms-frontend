@@ -13,12 +13,28 @@ import type {
 
 // Helper to handle API errors consistently
 const handleApiError = (error: Error, context: string) => {
-  console.error(`${context}:`, error);
-  if (!error.message.includes("Failed to fetch")) {
-    toast.error(`Failed to ${context.toLowerCase()}`, {
-      description: error.message || "An unexpected error occurred",
-    });
+  // Don't log or show toast for permission errors - these are expected
+  // when user doesn't have access and will be handled by AuthGuard
+  const isPermissionError =
+    error.message.includes("permission") ||
+    error.message.includes("Forbidden") ||
+    error.message.includes("INSUFFICIENT_PERMISSIONS");
+
+  if (isPermissionError) {
+    return; // Silently ignore - AuthGuard will show access denied
   }
+
+  // Don't show toast for network errors (already logged by browser)
+  if (error.message.includes("Failed to fetch")) {
+    console.error(`${context}:`, error);
+    return;
+  }
+
+  // Log and show toast for other errors
+  console.error(`${context}:`, error);
+  toast.error(`Failed to ${context.toLowerCase()}`, {
+    description: error.message || "An unexpected error occurred",
+  });
 };
 
 // Hook for current user's permissions
@@ -52,7 +68,10 @@ export function useAllPermissions() {
     () => permissionsApi.listAll(),
     {
       onError: (err) => handleApiError(err, "Load permissions"),
-      shouldRetryOnError: true,
+      shouldRetryOnError: (err) => {
+        const msg = err?.message || "";
+        return !msg.includes("permission") && !msg.includes("Forbidden");
+      },
       errorRetryCount: 2,
     }
   );
@@ -73,7 +92,11 @@ export function usePermissionMatrix() {
     () => permissionsApi.getMatrix(),
     {
       onError: (err) => handleApiError(err, "Load permission matrix"),
-      shouldRetryOnError: true,
+      shouldRetryOnError: (err) => {
+        // Don't retry on permission errors
+        const msg = err?.message || "";
+        return !msg.includes("permission") && !msg.includes("Forbidden");
+      },
       errorRetryCount: 2,
     }
   );
@@ -93,7 +116,10 @@ export function useRolePermissions(role: StaffRole | null) {
     () => (role ? permissionsApi.getRolePermissions(role) : Promise.resolve(null as unknown as RolePermissionsResponse)),
     {
       onError: (err) => handleApiError(err, "Load role permissions"),
-      shouldRetryOnError: true,
+      shouldRetryOnError: (err) => {
+        const msg = err?.message || "";
+        return !msg.includes("permission") && !msg.includes("Forbidden");
+      },
       errorRetryCount: 2,
     }
   );
@@ -115,7 +141,10 @@ export function useUserPermissions(userId: string | null) {
     () => (userId ? permissionsApi.getUserPermissions(userId) : Promise.resolve(null as unknown as UserEffectivePermissionsResponse)),
     {
       onError: (err) => handleApiError(err, "Load user permissions"),
-      shouldRetryOnError: true,
+      shouldRetryOnError: (err) => {
+        const msg = err?.message || "";
+        return !msg.includes("permission") && !msg.includes("Forbidden");
+      },
       errorRetryCount: 2,
     }
   );
@@ -140,7 +169,10 @@ export function useUserOverrides(userId: string | null) {
     () => (userId ? permissionsApi.getUserOverrides(userId) : Promise.resolve(null as unknown as UserOverridesResponse)),
     {
       onError: (err) => handleApiError(err, "Load user overrides"),
-      shouldRetryOnError: true,
+      shouldRetryOnError: (err) => {
+        const msg = err?.message || "";
+        return !msg.includes("permission") && !msg.includes("Forbidden");
+      },
       errorRetryCount: 2,
     }
   );

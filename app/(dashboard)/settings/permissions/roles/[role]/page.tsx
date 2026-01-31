@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import { useRolePermissions, useAllPermissions } from "@/lib/hooks/use-permissions";
 import { permissionsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -124,7 +125,7 @@ export default function RolePermissionsPage() {
 
   if (!isValidRole) {
     return (
-      <AuthGuard requiredRoles={["admin"]}>
+      <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
         <div className="flex flex-col items-center justify-center gap-4 py-12">
           <h1 className="text-2xl font-bold">Invalid Role</h1>
           <p className="text-muted-foreground">The role &quot;{role}&quot; does not exist.</p>
@@ -144,7 +145,7 @@ export default function RolePermissionsPage() {
 
   if (isLoading) {
     return (
-      <AuthGuard requiredRoles={["admin"]}>
+      <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
         <div className="space-y-6">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
@@ -175,7 +176,7 @@ export default function RolePermissionsPage() {
   );
 
   return (
-    <AuthGuard requiredRoles={["admin"]}>
+    <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
