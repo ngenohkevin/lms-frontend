@@ -436,7 +436,7 @@ function BorrowContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="shrink-0"
+                  className="shrink-0 cursor-pointer"
                   onClick={() => {
                     setSelectedBook(null);
                     setSelectedCopy(null);
@@ -633,6 +633,7 @@ function BorrowContent() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="cursor-pointer"
                   onClick={handleClearStudent}
                 >
                   Change
