@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSWRConfig } from "swr";
@@ -330,8 +330,13 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     }
   };
 
+  const onInvalid = (errors: FieldErrors<BookFormData>) => {
+    const errorFields = Object.keys(errors);
+    toast.error(`Please fix the following fields: ${errorFields.join(", ")}`);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
@@ -364,6 +369,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
               placeholder="978-0-123456-78-9"
               {...register("isbn")}
               className="flex-1"
+              disabled={isEditing}
             />
             {!isEditing && (
               <Button
