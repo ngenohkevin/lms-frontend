@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -404,17 +405,29 @@ function BorrowContent() {
             </div>
 
             {selectedBook && (
-              <div className="flex items-start gap-4 rounded-lg border p-4 bg-muted/50">
-                <div className="h-16 w-12 rounded bg-muted flex items-center justify-center">
-                  <BookOpen className="h-6 w-6 text-muted-foreground" />
+              <div className="flex gap-4 rounded-lg border p-4 bg-muted/50">
+                <div className="shrink-0">
+                  {selectedBook.cover_url ? (
+                    <Image
+                      src={selectedBook.cover_url}
+                      alt={selectedBook.title}
+                      width={80}
+                      height={120}
+                      className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
+                    />
+                  ) : (
+                    <div className="w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center">
+                      <BookOpen className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium">{selectedBook.title}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium line-clamp-2">{selectedBook.title}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
                     {selectedBook.author}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    ISBN: {selectedBook.isbn}
+                  <p className="text-xs text-muted-foreground mt-1 font-mono">
+                    ISBN: {selectedBook.isbn || "N/A"}
                   </p>
                   <Badge variant="outline" className="mt-2">
                     {selectedBook.available_copies} available
@@ -423,6 +436,7 @@ function BorrowContent() {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="shrink-0"
                   onClick={() => {
                     setSelectedBook(null);
                     setSelectedCopy(null);
