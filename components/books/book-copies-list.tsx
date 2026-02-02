@@ -290,45 +290,47 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 pr-9"
               />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                  onClick={() => setSearchQuery("")}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 transition-opacity ${
+                  searchQuery ? "opacity-100" : "opacity-0 pointer-events-none"
+                }`}
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
+              </Button>
             </div>
           </div>
 
-          {copies.length === 0 && !debouncedSearch ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Barcode className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">No copies registered yet</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setIsFormOpen(true)}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add First Copy
-              </Button>
-            </div>
-          ) : copies.length === 0 && debouncedSearch ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <Search className="mb-4 h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">No copies found for "{debouncedSearch}"</p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => setSearchQuery("")}
-              >
-                Clear Search
-              </Button>
-            </div>
-          ) : (
+          {/* Content area with min-height to prevent layout shifts */}
+          <div className="min-h-[200px]">
+            {copies.length === 0 && !debouncedSearch ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Barcode className="mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No copies registered yet</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => setIsFormOpen(true)}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add First Copy
+                </Button>
+              </div>
+            ) : copies.length === 0 && debouncedSearch ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <Search className="mb-4 h-12 w-12 text-muted-foreground" />
+                <p className="text-muted-foreground">No copies found for &quot;{debouncedSearch}&quot;</p>
+                <Button
+                  variant="outline"
+                  className="mt-4"
+                  onClick={() => setSearchQuery("")}
+                >
+                  Clear Search
+                </Button>
+              </div>
+            ) : (
             <>
               {/* Desktop Table View */}
               <div className="hidden md:block overflow-x-auto">
@@ -445,10 +447,16 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                 {paginatedCopies.map((copy) => (
                   <div
                     key={copy.id}
-                    className="rounded-lg border p-4 space-y-3"
+                    className="rounded-lg border p-4 space-y-2"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium">{copy.copy_number}</span>
+                    {/* Header row - always same height */}
+                    <div className="flex items-center justify-between h-10">
+                      <div className="flex flex-col">
+                        <span className="font-medium">{copy.copy_number}</span>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {copy.barcode || "No barcode"}
+                        </span>
+                      </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon">
@@ -482,12 +490,8 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    {copy.barcode && (
-                      <div className="text-sm text-muted-foreground font-mono">
-                        {copy.barcode}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap gap-2">
+                    {/* Badges row - always same height */}
+                    <div className="flex flex-wrap gap-2 min-h-[28px]">
                       <Badge className={getConditionColor(copy.condition)}>
                         {COPY_CONDITIONS.find((c) => c.value === copy.condition)
                           ?.label || copy.condition}
@@ -513,17 +517,6 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                           <Calendar className="h-3 w-3" />
                           Due: {new Date(copyBorrowerInfo.get(copy.id)?.current_borrower?.due_date || "").toLocaleDateString()}
                         </div>
-                      </div>
-                    )}
-                    {copy.acquisition_date && (
-                      <div className="text-sm text-muted-foreground">
-                        Acquired:{" "}
-                        {new Date(copy.acquisition_date).toLocaleDateString()}
-                      </div>
-                    )}
-                    {copy.notes && (
-                      <div className="text-sm text-muted-foreground">
-                        {copy.notes}
                       </div>
                     )}
                   </div>
@@ -561,6 +554,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
               )}
             </>
           )}
+          </div>
         </CardContent>
       </Card>
 
