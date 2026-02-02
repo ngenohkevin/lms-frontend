@@ -141,23 +141,28 @@ export default function BookDetailPage() {
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="flex flex-col sm:flex-row gap-6">
-          <div className="flex justify-center sm:justify-start shrink-0">
-            <Skeleton className="w-[160px] sm:w-[150px] lg:w-[180px] aspect-[2/3] rounded-lg" />
+        <div className="space-y-6">
+          {/* Cover + Title row */}
+          <div className="flex gap-4 sm:gap-6">
+            <Skeleton className="w-[100px] sm:w-[150px] lg:w-[180px] aspect-[2/3] rounded-lg shrink-0" />
+            <div className="flex-1 min-w-0 space-y-3">
+              <Skeleton className="h-7 sm:h-8 w-full max-w-md" />
+              <Skeleton className="h-5 w-32" />
+              <Skeleton className="hidden sm:block h-6 w-28 mt-3" />
+              <Skeleton className="hidden sm:block h-10 w-36 mt-4" />
+            </div>
           </div>
-          <div className="flex-1 min-w-0 space-y-4">
-            <Skeleton className="h-8 w-3/4" />
-            <Skeleton className="h-5 w-1/3" />
-            <div className="flex gap-2">
-              <Skeleton className="h-6 w-28" />
-            </div>
-            <Skeleton className="h-10 w-36" />
-            <Skeleton className="h-px w-full" />
-            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-12 w-full" />
-              ))}
-            </div>
+          {/* Mobile badges/button */}
+          <div className="sm:hidden space-y-3">
+            <Skeleton className="h-6 w-28" />
+            <Skeleton className="h-10 w-full" />
+          </div>
+          <Skeleton className="h-px w-full" />
+          {/* Metadata grid */}
+          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
           </div>
         </div>
       </div>
@@ -230,46 +235,47 @@ export default function BookDetailPage() {
       </div>
 
       {/* Book Details */}
-      <div className="flex flex-col sm:flex-row gap-6">
-        {/* Cover Image */}
-        <div className="flex justify-center sm:justify-start shrink-0">
-          <div className="relative w-[160px] sm:w-[150px] lg:w-[180px] rounded-lg overflow-hidden shadow-md bg-muted">
-            {book.cover_url ? (
-              <Image
-                src={book.cover_url}
-                alt={book.title}
-                width={180}
-                height={270}
-                className="w-full h-auto object-cover"
-                priority
-              />
-            ) : (
-              <div className="aspect-[2/3] flex items-center justify-center">
-                <FormatIcon className="h-12 w-12 text-muted-foreground/30" />
-              </div>
-            )}
+      <div className="space-y-6">
+        {/* Cover Image + Title/Author Row - Always side by side */}
+        <div className="flex gap-4 sm:gap-6">
+          {/* Cover Image */}
+          <div className="shrink-0">
+            <div className="relative w-[100px] sm:w-[150px] lg:w-[180px] rounded-lg overflow-hidden shadow-md">
+              {book.cover_url ? (
+                <Image
+                  src={book.cover_url}
+                  alt={book.title}
+                  width={180}
+                  height={270}
+                  className="w-full h-auto"
+                  priority
+                />
+              ) : (
+                <div className="aspect-[2/3] bg-muted flex items-center justify-center">
+                  <FormatIcon className="h-12 w-12 text-muted-foreground/30" />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Book Info */}
-        <div className="flex-1 min-w-0 space-y-4">
-          <div>
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">{book.title}</h1>
-                <p className="text-lg sm:text-xl text-muted-foreground mt-1">
-                  by {book.author}
+          {/* Title, Author, Badges, Actions */}
+          <div className="flex-1 min-w-0 flex flex-col">
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold leading-tight">{book.title}</h1>
+              <p className="text-base sm:text-lg text-muted-foreground mt-1">
+                by {book.author}
+              </p>
+              {/* Series Info */}
+              {bookSeries && (
+                <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
+                  <Library className="h-4 w-4" />
+                  {bookSeries.name}
+                  {book.series_number && ` - Book ${book.series_number}`}
                 </p>
-                {/* Series Info */}
-                {bookSeries && (
-                  <p className="text-sm text-muted-foreground mt-2 flex items-center gap-2">
-                    <Library className="h-4 w-4" />
-                    {bookSeries.name}
-                    {book.series_number && ` - Book ${book.series_number}`}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
+              )}
+
+              {/* Badges - hidden on mobile, shown on sm+ */}
+              <div className="hidden sm:flex flex-wrap gap-2 mt-3">
                 <Badge
                   variant={isAvailable ? "default" : "secondary"}
                   className="text-sm"
@@ -285,55 +291,115 @@ export default function BookDetailPage() {
                   </Badge>
                 )}
               </div>
+
+              {book.average_rating && book.average_rating > 0 && (
+                <div className="hidden sm:flex items-center gap-2 mt-3">
+                  <div className="flex">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${
+                          i < Math.round(book.average_rating!)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted-foreground/30"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-medium">
+                    {book.average_rating.toFixed(1)}
+                  </span>
+                  {book.total_ratings && (
+                    <span className="text-sm text-muted-foreground">
+                      ({book.total_ratings})
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
-            {book.average_rating && book.average_rating > 0 && (
-              <div className="flex items-center gap-2 mt-4">
-                <div className="flex">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-5 w-5 ${
-                        i < Math.round(book.average_rating!)
-                          ? "fill-yellow-400 text-yellow-400"
-                          : "text-muted-foreground/30"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-lg font-medium">
-                  {book.average_rating.toFixed(1)}
-                </span>
-                {book.total_ratings && (
-                  <span className="text-muted-foreground">
-                    ({book.total_ratings} ratings)
-                  </span>
-                )}
+            {/* Borrow button - hidden on mobile */}
+            <div className="hidden sm:block mt-4">
+              {isAvailable ? (
+                <Button asChild>
+                  <Link href={`/transactions/borrow?book_id=${book.id}`}>
+                    Borrow This Book
+                  </Link>
+                </Button>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link href={`/reservations?action=create&book_id=${book.id}`}>
+                    Reserve This Book
+                  </Link>
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile-only: Badges, Rating, and Borrow Button */}
+        <div className="sm:hidden space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <Badge
+              variant={isAvailable ? "default" : "secondary"}
+              className="text-sm"
+            >
+              {isAvailable
+                ? `${book.available_copies} of ${book.total_copies} available`
+                : "Unavailable"}
+            </Badge>
+            {book.format && book.format !== "physical" && (
+              <Badge variant="outline" className="text-sm gap-1">
+                <FormatIcon className="h-3 w-3" />
+                {getFormatLabel(book.format)}
+              </Badge>
+            )}
+          </div>
+
+          {book.average_rating && book.average_rating > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < Math.round(book.average_rating!)
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-muted-foreground/30"
+                    }`}
+                  />
+                ))}
               </div>
-            )}
-          </div>
+              <span className="text-sm font-medium">
+                {book.average_rating.toFixed(1)}
+              </span>
+              {book.total_ratings && (
+                <span className="text-sm text-muted-foreground">
+                  ({book.total_ratings})
+                </span>
+              )}
+            </div>
+          )}
 
-          {/* Quick Actions */}
-          <div className="flex flex-wrap gap-3">
-            {isAvailable ? (
-              <Button asChild>
-                <Link href={`/transactions/borrow?book_id=${book.id}`}>
-                  Borrow This Book
-                </Link>
-              </Button>
-            ) : (
-              <Button variant="outline" asChild>
-                <Link href={`/reservations?action=create&book_id=${book.id}`}>
-                  Reserve This Book
-                </Link>
-              </Button>
-            )}
-          </div>
+          {isAvailable ? (
+            <Button asChild className="w-full">
+              <Link href={`/transactions/borrow?book_id=${book.id}`}>
+                Borrow This Book
+              </Link>
+            </Button>
+          ) : (
+            <Button variant="outline" asChild className="w-full">
+              <Link href={`/reservations?action=create&book_id=${book.id}`}>
+                Reserve This Book
+              </Link>
+            </Button>
+          )}
+        </div>
 
-          <Separator />
+        <Separator />
 
-          {/* Book Metadata */}
-          <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+        {/* Book Metadata */}
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="min-w-0">
@@ -413,19 +479,18 @@ export default function BookDetailPage() {
             )}
           </div>
 
-          {/* Description */}
-          {book.description && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="font-semibold mb-2">Description</h3>
-                <p className="text-muted-foreground whitespace-pre-line">
-                  {book.description}
-                </p>
-              </div>
-            </>
-          )}
-        </div>
+        {/* Description */}
+        {book.description && (
+          <>
+            <Separator />
+            <div>
+              <h3 className="font-semibold mb-2">Description</h3>
+              <p className="text-muted-foreground whitespace-pre-line">
+                {book.description}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Tabs for Ratings, Copies and More */}
