@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { transactionsApi, studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
@@ -105,6 +106,7 @@ function useDebounce<T>(value: T, delay: number): T {
 type OperationMode = "idle" | "borrow" | "return";
 
 export default function QuickScanPage() {
+  const router = useRouter();
   const { user } = useAuth();
 
   const [barcode, setBarcode] = useState("");
@@ -312,19 +314,21 @@ export default function QuickScanPage() {
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
+        <Button
+          variant="ghost"
+          className="-ml-2"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/transactions">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Quick Scan</h1>
-              <p className="text-muted-foreground">
-                Scan to automatically borrow or return books
-              </p>
-            </div>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Quick Scan</h1>
+            <p className="text-muted-foreground">
+              Scan to automatically borrow or return books
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Label htmlFor="continuous" className="text-sm">

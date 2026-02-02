@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { PermissionCodes } from "@/lib/types/permission";
@@ -62,6 +62,7 @@ import { cn } from "@/lib/utils";
 
 export default function UserPermissionsPage() {
   const params = useParams();
+  const router = useRouter();
   const userId = params.id as string;
 
   const { user, isLoading: loadingUser } = useUser(userId);
@@ -145,13 +146,17 @@ export default function UserPermissionsPage() {
     return (
       <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/users/${userId}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div>
+
+            <div className="mt-2">
               <Skeleton className="h-8 w-48" />
               <Skeleton className="h-4 w-64 mt-2" />
             </div>
@@ -187,20 +192,22 @@ export default function UserPermissionsPage() {
     <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={`/users/${userId}`}>
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {user.username}&apos;s Permissions
-              </h1>
-              <p className="text-muted-foreground">
-                Manage permission overrides for this user
-              </p>
-            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight mt-2">
+              {user.username}&apos;s Permissions
+            </h1>
+            <p className="text-muted-foreground">
+              Manage permission overrides for this user
+            </p>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>

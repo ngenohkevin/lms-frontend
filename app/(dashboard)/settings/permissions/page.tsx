@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { PermissionCodes } from "@/lib/types/permission";
 import { usePermissionMatrix } from "@/lib/hooks/use-permissions";
@@ -44,6 +45,7 @@ const roleLabels: Record<StaffRole, string> = {
 };
 
 export default function PermissionsPage() {
+  const router = useRouter();
   const { categories, isLoading, refresh } = usePermissionMatrix();
   const { hasPermission } = usePermissions();
   const canManage = hasPermission(PermissionCodes.PERMISSIONS_MANAGE);
@@ -119,13 +121,17 @@ export default function PermissionsPage() {
     return (
       <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_VIEW}>
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/settings">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div>
+
+            <div className="mt-2">
               <Skeleton className="h-8 w-48" />
               <Skeleton className="h-4 w-64 mt-2" />
             </div>
@@ -144,18 +150,20 @@ export default function PermissionsPage() {
     <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_VIEW}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/settings">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">Permissions</h1>
-              <p className="text-muted-foreground">
-                Manage role-based permissions for the system
-              </p>
-            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight mt-2">Permissions</h1>
+            <p className="text-muted-foreground">
+              Manage role-based permissions for the system
+            </p>
           </div>
           <div className="flex gap-2">
             {editMode ? (

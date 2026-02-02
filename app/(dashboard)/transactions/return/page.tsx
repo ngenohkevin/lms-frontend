@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { transactionsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
@@ -82,6 +83,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function ReturnPage() {
+  const router = useRouter();
   const [barcode, setBarcode] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState<BarcodeScanResult | null>(null);
@@ -206,18 +208,20 @@ export default function ReturnPage() {
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/transactions">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Return Book</h1>
-            <p className="text-muted-foreground">
-              Scan the book barcode to process a return
-            </p>
-          </div>
+        <Button
+          variant="ghost"
+          className="-ml-2"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Return Book</h1>
+          <p className="text-muted-foreground">
+            Scan the book barcode to process a return
+          </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">

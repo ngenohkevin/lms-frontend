@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useOverdueTransactions } from "@/lib/hooks/use-transactions";
 import { AuthGuard } from "@/components/auth/auth-guard";
@@ -47,6 +48,7 @@ function getSeverityLabel(daysOverdue: number): string {
 }
 
 export default function OverdueTransactionsPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<OverdueTransaction | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -172,21 +174,23 @@ export default function OverdueTransactionsPage() {
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/transactions">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <AlertTriangle className="h-8 w-8 text-destructive" />
-              Overdue Books
-            </h1>
-            <p className="text-muted-foreground">
-              Monitor and manage overdue transactions
-            </p>
-          </div>
+        <Button
+          variant="ghost"
+          className="-ml-2"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <AlertTriangle className="h-8 w-8 text-destructive" />
+            Overdue Books
+          </h1>
+          <p className="text-muted-foreground">
+            Monitor and manage overdue transactions
+          </p>
         </div>
 
         {/* Stats Cards */}

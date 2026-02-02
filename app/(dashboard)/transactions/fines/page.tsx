@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useFines } from "@/lib/hooks/use-transactions";
 import { transactionsApi } from "@/lib/api";
@@ -36,6 +37,7 @@ import type { Fine } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 
 export default function FinesPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<"all" | "unpaid" | "paid">("all");
   const [page, setPage] = useState(1);
   const [actionFine, setActionFine] = useState<Fine | null>(null);
@@ -206,21 +208,23 @@ export default function FinesPage() {
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/transactions">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-              <DollarSign className="h-8 w-8 text-amber-600" />
-              Fine Management
-            </h1>
-            <p className="text-muted-foreground">
-              Track and manage library fines
-            </p>
-          </div>
+        <Button
+          variant="ghost"
+          className="-ml-2"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <DollarSign className="h-8 w-8 text-amber-600" />
+            Fine Management
+          </h1>
+          <p className="text-muted-foreground">
+            Track and manage library fines
+          </p>
         </div>
 
         {/* Stats Cards */}

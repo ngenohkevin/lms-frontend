@@ -13,18 +13,20 @@ export default function NewInvitePage() {
   return (
     <AuthGuard requiredRoles={["admin"]}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/users/invites">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+        <div>
+          <Button
+            variant="ghost"
+            className="-ml-2"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Send Invitation</h1>
-            <p className="text-muted-foreground">
-              Invite a new team member to join the library system
-            </p>
-          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight mt-2">Send Invitation</h1>
+          <p className="text-muted-foreground">
+            Invite a new team member to join the library system
+          </p>
         </div>
 
         <div className="max-w-lg">

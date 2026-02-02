@@ -68,9 +68,6 @@ function BorrowContent() {
   const initialBookId = searchParams.get("book_id");
   const initialCopyId = searchParams.get("copy_id");
 
-  // Determine back navigation - if we came from a book, go back there
-  const backUrl = initialBookId ? `/books/${initialBookId}` : "/transactions";
-
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -357,18 +354,20 @@ function BorrowContent() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={backUrl}>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Borrow Book</h1>
-          <p className="text-muted-foreground">
-            Process a new book borrowing transaction
-          </p>
-        </div>
+      <Button
+        variant="ghost"
+        className="-ml-2"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
+
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Borrow Book</h1>
+        <p className="text-muted-foreground">
+          Process a new book borrowing transaction
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -674,8 +673,8 @@ function BorrowContent() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button variant="outline" asChild>
-                <Link href={backUrl}>Cancel</Link>
+              <Button variant="outline" onClick={() => router.back()}>
+                Cancel
               </Button>
               <Button
                 type="submit"

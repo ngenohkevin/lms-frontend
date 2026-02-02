@@ -152,18 +152,20 @@ export default function BookImportPage() {
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/books">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+        <div>
+          <Button
+            variant="ghost"
+            className="-ml-2"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Import Books</h1>
-            <p className="text-muted-foreground">
-              Bulk import books from CSV or Excel files
-            </p>
-          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight mt-2">Import Books</h1>
+          <p className="text-muted-foreground">
+            Bulk import books from CSV or Excel files
+          </p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">

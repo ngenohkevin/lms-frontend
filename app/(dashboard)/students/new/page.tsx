@@ -25,18 +25,20 @@ export default function NewStudentPage() {
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/students">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
+        <div>
+          <Button
+            variant="ghost"
+            className="-ml-2"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Add New Student</h1>
-            <p className="text-muted-foreground">
-              Register a new student in the library system
-            </p>
-          </div>
+
+          <h1 className="text-3xl font-bold tracking-tight mt-2">Add New Student</h1>
+          <p className="text-muted-foreground">
+            Register a new student in the library system
+          </p>
         </div>
 
         <Card className="max-w-3xl">

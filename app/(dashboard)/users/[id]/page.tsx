@@ -154,18 +154,20 @@ export default function UserDetailPage() {
     <AuthGuard requiredRoles={["admin"]}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/users">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {user.username}
-              </h1>
-              <p className="text-muted-foreground">{user.email}</p>
-            </div>
+
+            <h1 className="text-3xl font-bold tracking-tight mt-2">
+              {user.username}
+            </h1>
+            <p className="text-muted-foreground">{user.email}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" asChild>

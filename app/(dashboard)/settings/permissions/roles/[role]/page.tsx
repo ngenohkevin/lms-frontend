@@ -149,16 +149,22 @@ export default function RolePermissionsPage() {
     return (
       <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
         <div className="space-y-6">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/settings/permissions">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <Skeleton className="h-10 w-10 rounded-lg" />
-            <div>
-              <Skeleton className="h-8 w-48" />
-              <Skeleton className="h-4 w-64 mt-2" />
+
+            <div className="flex items-center gap-4 mt-2">
+              <Skeleton className="h-10 w-10 rounded-lg" />
+              <div>
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-4 w-64 mt-2" />
+              </div>
             </div>
           </div>
           <Card>
@@ -181,20 +187,26 @@ export default function RolePermissionsPage() {
     <AuthGuard requiredPermission={PermissionCodes.PERMISSIONS_MANAGE}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/settings/permissions">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div className="rounded-lg bg-primary/10 p-2.5">
-              <RoleIcon className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                {roleLabels[role]} Permissions
-              </h1>
-              <p className="text-muted-foreground">{roleDescriptions[role]}</p>
+
+            <div className="flex items-center gap-4 mt-2">
+              <div className="rounded-lg bg-primary/10 p-2.5">
+                <RoleIcon className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  {roleLabels[role]} Permissions
+                </h1>
+                <p className="text-muted-foreground">{roleDescriptions[role]}</p>
+              </div>
             </div>
           </div>
           <div className="flex gap-2">

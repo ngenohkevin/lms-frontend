@@ -60,8 +60,10 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function CategoriesPage() {
+  const router = useRouter();
   const { categories, isLoading, refresh } = useCategories(true); // Include inactive
   const { hasPermission } = usePermissions();
   const canManage = hasPermission(PermissionCodes.CATEGORIES_MANAGE);
@@ -164,21 +166,23 @@ export default function CategoriesPage() {
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" asChild>
-              <Link href="/settings">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
+          <div>
+            <Button
+              variant="ghost"
+              className="-ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
             </Button>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-                <Tags className="h-6 w-6" />
-                Book Categories
-              </h1>
-              <p className="text-muted-foreground">
-                Manage categories for organizing books in the library
-              </p>
-            </div>
+
+            <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 mt-2">
+              <Tags className="h-6 w-6" />
+              Book Categories
+            </h1>
+            <p className="text-muted-foreground">
+              Manage categories for organizing books in the library
+            </p>
           </div>
           <PermissionGuard permission={PermissionCodes.CATEGORIES_MANAGE} hideWhenDenied>
             <Dialog open={isAddOpen} onOpenChange={(open) => {
