@@ -194,9 +194,9 @@ export default function BookDetailPage() {
         {isLibrarian && (
           <div className="flex gap-2">
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="sm:variant-outline sm:size-auto sm:h-9 sm:px-4 sm:border sm:border-input sm:bg-background sm:hover:bg-accent"
+              className="cursor-pointer sm:size-auto sm:h-9 sm:px-4"
               onClick={handleDownloadQR}
               disabled={isDownloadingQR}
             >
@@ -207,7 +207,7 @@ export default function BookDetailPage() {
               )}
               <span className="hidden sm:inline">QR Code</span>
             </Button>
-            <Button variant="ghost" size="icon" className="sm:size-auto sm:h-9 sm:px-4 sm:border sm:border-input sm:bg-background sm:hover:bg-accent" asChild>
+            <Button variant="outline" size="icon" className="cursor-pointer sm:size-auto sm:h-9 sm:px-4" asChild>
               <Link href={`/books/${book.id}/edit`}>
                 <Edit className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Edit</span>
@@ -217,7 +217,7 @@ export default function BookDetailPage() {
               <Button
                 variant="destructive"
                 size="icon"
-                className="sm:size-auto sm:h-9 sm:px-4"
+                className="cursor-pointer sm:size-auto sm:h-9 sm:px-4"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <Trash2 className="h-4 w-4 sm:mr-2" />
