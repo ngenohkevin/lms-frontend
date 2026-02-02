@@ -192,7 +192,7 @@ export default function BookDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <Button variant="ghost" asChild>
           <Link href="/books">
             <ArrowLeft className="mr-2 h-4 w-4" />
