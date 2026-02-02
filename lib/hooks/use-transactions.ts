@@ -7,6 +7,7 @@ import type {
   TransactionStats,
   OverdueTransaction,
   Fine,
+  RenewalEligibility,
   PaginatedResponse,
 } from "@/lib/types";
 
@@ -158,6 +159,29 @@ export function useFines(params?: {
   return {
     fines: data?.data || [],
     pagination: data?.pagination,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
+export function useRenewalEligibility(transactionId: string | null) {
+  const { data, error, isLoading, mutate } = useSWR<RenewalEligibility>(
+    transactionId ? `/api/v1/transactions/${transactionId}/can-renew` : null,
+    () =>
+      transactionId
+        ? transactionsApi.canRenew(transactionId)
+        : Promise.resolve({ can_renew: false, reason: "" }),
+    {
+      onError: (err) => handleApiError(err, "Check renewal eligibility"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    canRenew: data?.can_renew ?? false,
+    reason: data?.reason ?? "",
     isLoading,
     error,
     refresh: mutate,

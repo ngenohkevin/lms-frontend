@@ -7,6 +7,7 @@ import type {
   BarcodeScanResult,
   ReturnRequest,
   RenewRequest,
+  RenewalEligibility,
   TransactionSearchParams,
   Fine,
   FinePaymentRequest,
@@ -233,15 +234,29 @@ export const transactionsApi = {
     return response.data;
   },
 
-  // Return a book
-  return: async (data: ReturnRequest): Promise<Transaction> => {
-    const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/return`, data);
+  // Return a book by transaction ID
+  return: async (id: string, data?: ReturnRequest): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(
+      `${TRANSACTIONS_PREFIX}/${id}/return`,
+      data || {}
+    );
     return response.data;
   },
 
-  // Renew a book
-  renew: async (data: RenewRequest): Promise<Transaction> => {
-    const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/renew`, data);
+  // Check if a book can be renewed
+  canRenew: async (id: string): Promise<RenewalEligibility> => {
+    const response = await apiClient.get<ApiResponse<RenewalEligibility>>(
+      `${TRANSACTIONS_PREFIX}/${id}/can-renew`
+    );
+    return response.data;
+  },
+
+  // Renew a book by transaction ID
+  renew: async (id: string, data: RenewRequest): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(
+      `${TRANSACTIONS_PREFIX}/${id}/renew`,
+      data
+    );
     return response.data;
   },
 
@@ -306,11 +321,11 @@ export const transactionsApi = {
       return response.data;
     },
 
-    // Pay a fine
-    pay: async (data: FinePaymentRequest): Promise<Fine> => {
+    // Pay a fine (via transaction endpoint)
+    pay: async (transactionId: string, data?: { payment_method?: string }): Promise<Fine> => {
       const response = await apiClient.post<ApiResponse<Fine>>(
-        `${TRANSACTIONS_PREFIX}/fines/${data.fine_id}/pay`,
-        data
+        `${TRANSACTIONS_PREFIX}/${transactionId}/pay-fine`,
+        data || {}
       );
       return response.data;
     },

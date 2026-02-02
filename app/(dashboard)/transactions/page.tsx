@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import type { Transaction, TransactionSearchParams, TransactionStatus } from "@/lib/types";
 import { formatDate, formatRelativeTime, isOverdue, formatCurrency } from "@/lib/utils/format";
+import { TransactionDetailDialog } from "@/components/transactions/transaction-detail-dialog";
 
 const statusColors: Record<TransactionStatus, string> = {
   active: "bg-blue-500/10 text-blue-700 border-blue-500/20",
@@ -37,6 +38,8 @@ export default function TransactionsPage() {
   const canBorrow = hasPermission(PermissionCodes.TRANSACTIONS_BORROW);
   const canViewAll = hasPermission(PermissionCodes.STUDENTS_VIEW); // Can see all students' transactions
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [params, setParams] = useState<TransactionSearchParams>({
     page: 1,
     per_page: 20,
@@ -75,6 +78,11 @@ export default function TransactionsPage() {
 
   const handlePageChange = (page: number) => {
     setParams((prev) => ({ ...prev, page }));
+  };
+
+  const handleRowClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setDetailDialogOpen(true);
   };
 
   const columns = [
@@ -276,12 +284,21 @@ export default function TransactionsPage() {
             pagination={pagination}
             onPageChange={handlePageChange}
             onSearch={canViewAll ? handleSearch : undefined}
+            onRowClick={handleRowClick}
             searchPlaceholder="Search by book title or student..."
             isLoading={isLoading}
             emptyMessage="No transactions found."
           />
         </TabsContent>
       </Tabs>
+
+      {/* Transaction Detail Dialog */}
+      <TransactionDetailDialog
+        transaction={selectedTransaction}
+        open={detailDialogOpen}
+        onOpenChange={setDetailDialogOpen}
+        onRefresh={refresh}
+      />
     </div>
   );
 }

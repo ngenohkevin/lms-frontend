@@ -17,6 +17,10 @@ import {
   Sparkles,
   Settings,
   Shield,
+  ScanLine,
+  AlertTriangle,
+  DollarSign,
+  Undo2,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
@@ -103,6 +107,33 @@ const managementNavItems: NavItem[] = [
     href: "/settings",
     icon: Settings,
     roles: ["admin", "librarian"],
+  },
+];
+
+const transactionNavItems: NavItem[] = [
+  {
+    title: "Quick Scan",
+    href: "/transactions/scan",
+    icon: ScanLine,
+    permission: PermissionCodes.TRANSACTIONS_BORROW,
+  },
+  {
+    title: "Return Book",
+    href: "/transactions/return",
+    icon: Undo2,
+    permission: PermissionCodes.TRANSACTIONS_RETURN,
+  },
+  {
+    title: "Overdue",
+    href: "/transactions/overdue",
+    icon: AlertTriangle,
+    permission: PermissionCodes.TRANSACTIONS_VIEW,
+  },
+  {
+    title: "Fines",
+    href: "/transactions/fines",
+    icon: DollarSign,
+    permission: PermissionCodes.FINES_MANAGE,
   },
 ];
 
@@ -209,6 +240,41 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {filterByAccess(transactionNavItems).length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Quick Actions
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {filterByAccess(transactionNavItems).map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.href)}
+                      className={cn(
+                        "transition-all duration-200",
+                        isActive(item.href) &&
+                          "bg-primary/10 text-primary font-medium"
+                      )}
+                    >
+                      <Link href={item.href}>
+                        <item.icon
+                          className={cn(
+                            "h-4 w-4",
+                            isActive(item.href) && "text-primary"
+                          )}
+                        />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
         {filterByAccess(managementNavItems).length > 0 && (
           <SidebarGroup>

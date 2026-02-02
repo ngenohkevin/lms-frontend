@@ -31,9 +31,11 @@ import {
   User,
   CheckCircle,
   X,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { Book, Student } from "@/lib/types";
+import type { Book, Student, BookCopy } from "@/lib/types";
+import { CopySelector } from "@/components/books/copy-selector";
 
 // Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
@@ -74,6 +76,7 @@ function BorrowContent() {
   const [bookSearch, setBookSearch] = useState("");
   const [isSearchingBook, setIsSearchingBook] = useState(false);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [selectedCopy, setSelectedCopy] = useState<BookCopy | null>(null);
   const [selectedCopyId, setSelectedCopyId] = useState<number | null>(
     initialCopyId ? parseInt(initialCopyId, 10) : null
   );
@@ -242,6 +245,11 @@ function BorrowContent() {
       return;
     }
 
+    if (!selectedCopy) {
+      setError("Please select a specific copy to borrow");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -290,7 +298,7 @@ function BorrowContent() {
         book_id: selectedBook.id,
         student_id: selectedStudent.id,
         librarian_id: user?.id || 0,
-        copy_id: selectedCopyId ?? undefined,
+        copy_id: selectedCopy.id,
         notes: data.notes,
       });
 
@@ -327,6 +335,8 @@ function BorrowContent() {
             onClick={() => {
               setSuccess(false);
               setSelectedBook(null);
+              setSelectedCopy(null);
+              setSelectedCopyId(null);
               setSelectedStudent(null);
               setBookSearch("");
               setStudentSearch("");
@@ -411,7 +421,11 @@ function BorrowContent() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedBook(null)}
+                  onClick={() => {
+                    setSelectedBook(null);
+                    setSelectedCopy(null);
+                    setSelectedCopyId(null);
+                  }}
                 >
                   Change
                 </Button>
@@ -419,6 +433,64 @@ function BorrowContent() {
             )}
           </CardContent>
         </Card>
+
+        {/* Copy Selection - Only show when book is selected */}
+        {selectedBook && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Copy className="h-5 w-5" />
+                Select Copy
+              </CardTitle>
+              <CardDescription>
+                Choose which copy to borrow
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <CopySelector
+                bookId={parseInt(selectedBook.id, 10)}
+                value={selectedCopy?.id ?? selectedCopyId ?? undefined}
+                onSelect={(copy) => {
+                  setSelectedCopy(copy);
+                  setSelectedCopyId(copy?.id ?? null);
+                }}
+                showOnlyAvailable={true}
+                placeholder="Select an available copy..."
+              />
+
+              {selectedCopy && (
+                <div className="rounded-lg border p-4 bg-muted/50">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Copy #{selectedCopy.copy_number}</p>
+                      {selectedCopy.barcode && (
+                        <p className="text-sm text-muted-foreground font-mono">
+                          Barcode: {selectedCopy.barcode}
+                        </p>
+                      )}
+                    </div>
+                    <Badge
+                      variant="outline"
+                      className={
+                        selectedCopy.condition === "excellent"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : selectedCopy.condition === "good"
+                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                          : selectedCopy.condition === "fair"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                          : selectedCopy.condition === "poor"
+                          ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }
+                    >
+                      {selectedCopy.condition}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Student Selection */}
         <Card>
@@ -604,7 +676,7 @@ function BorrowContent() {
               </Button>
               <Button
                 type="submit"
-                disabled={isLoading || !selectedBook || !selectedStudent}
+                disabled={isLoading || !selectedBook || !selectedCopy || !selectedStudent}
               >
                 {isLoading ? (
                   <>

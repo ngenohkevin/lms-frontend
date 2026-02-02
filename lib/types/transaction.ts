@@ -82,16 +82,20 @@ export interface BarcodeScanResult {
 }
 
 export interface ReturnRequest {
-  transaction_id: string;
   condition?: BookCondition;
-  notes?: string;
+  condition_notes?: string;
 }
 
-export type BookCondition = "good" | "fair" | "damaged" | "lost";
+export type BookCondition = "excellent" | "good" | "fair" | "poor" | "damaged";
 
 export interface RenewRequest {
-  transaction_id: string;
+  librarian_id: number;
   days?: number;
+}
+
+export interface RenewalEligibility {
+  can_renew: boolean;
+  reason: string;
 }
 
 export interface TransactionSearchParams {
