@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bell, Search, Moon, Sun, Menu } from "lucide-react";
+import { Bell, Search, Moon, Sun, BookOpen, Users, FileText, CalendarDays, BarChart3 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/providers/auth-provider";
 import { notificationsApi } from "@/lib/api";
@@ -31,6 +31,7 @@ export function Header() {
   const { isAuthenticated, isLibrarian } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [commandOpen, setCommandOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -70,22 +71,30 @@ export function Header() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const handleSearch = (value: string) => {
-    if (value.startsWith("/books")) {
-      router.push("/books");
-    } else if (value.startsWith("/students") && isLibrarian) {
-      router.push("/students");
-    } else if (value.startsWith("/transactions")) {
-      router.push("/transactions");
-    } else if (value.startsWith("/reservations")) {
-      router.push("/reservations");
-    } else if (value.startsWith("/reports") && isLibrarian) {
-      router.push("/reports");
-    } else {
-      router.push(`/books?search=${encodeURIComponent(value)}`);
-    }
+  const handleNavigation = useCallback((path: string) => {
+    router.push(path);
     setCommandOpen(false);
-  };
+    setSearchValue("");
+  }, [router]);
+
+  const handleSearch = useCallback(() => {
+    const trimmedValue = searchValue.trim();
+    if (!trimmedValue) return;
+
+    // Navigate to books page with search query
+    router.push(`/books?search=${encodeURIComponent(trimmedValue)}`);
+    setCommandOpen(false);
+    setSearchValue("");
+  }, [searchValue, router]);
+
+  // Handle keyboard events in command input
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    // If user presses Enter and there's a search value, search for it
+    if (e.key === "Enter" && searchValue.trim()) {
+      e.preventDefault();
+      handleSearch();
+    }
+  }, [searchValue, handleSearch]);
 
   return (
     <>
@@ -160,26 +169,60 @@ export function Header() {
         </div>
       </header>
 
-      <CommandDialog open={commandOpen} onOpenChange={setCommandOpen}>
-        <CommandInput placeholder="Type to search..." />
+      <CommandDialog
+        open={commandOpen}
+        onOpenChange={(open) => {
+          setCommandOpen(open);
+          if (!open) setSearchValue("");
+        }}
+      >
+        <CommandInput
+          placeholder="Search books, students, or type a command..."
+          value={searchValue}
+          onValueChange={setSearchValue}
+          onKeyDown={handleKeyDown}
+        />
         <CommandList>
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>
+            {searchValue.trim() ? (
+              <div className="flex flex-col items-center gap-2 py-4">
+                <p className="text-sm text-muted-foreground">
+                  Press <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs font-mono">Enter</kbd> to search for &quot;{searchValue}&quot;
+                </p>
+              </div>
+            ) : (
+              "Type to search or select a quick action..."
+            )}
+          </CommandEmpty>
+          {searchValue.trim() && (
+            <CommandGroup heading="Search">
+              <CommandItem onSelect={handleSearch}>
+                <Search className="mr-2 h-4 w-4" />
+                Search for &quot;{searchValue}&quot;
+              </CommandItem>
+            </CommandGroup>
+          )}
           <CommandGroup heading="Quick Actions">
-            <CommandItem onSelect={() => handleSearch("/books")}>
-              Search Books
+            <CommandItem onSelect={() => handleNavigation("/books")}>
+              <BookOpen className="mr-2 h-4 w-4" />
+              Browse All Books
             </CommandItem>
-            <CommandItem onSelect={() => handleSearch("/transactions")}>
+            <CommandItem onSelect={() => handleNavigation("/transactions")}>
+              <FileText className="mr-2 h-4 w-4" />
               View Transactions
             </CommandItem>
-            <CommandItem onSelect={() => handleSearch("/reservations")}>
+            <CommandItem onSelect={() => handleNavigation("/reservations")}>
+              <CalendarDays className="mr-2 h-4 w-4" />
               View Reservations
             </CommandItem>
             {isLibrarian && (
               <>
-                <CommandItem onSelect={() => handleSearch("/students")}>
+                <CommandItem onSelect={() => handleNavigation("/students")}>
+                  <Users className="mr-2 h-4 w-4" />
                   Manage Students
                 </CommandItem>
-                <CommandItem onSelect={() => handleSearch("/reports")}>
+                <CommandItem onSelect={() => handleNavigation("/reports")}>
+                  <BarChart3 className="mr-2 h-4 w-4" />
                   View Reports
                 </CommandItem>
               </>
