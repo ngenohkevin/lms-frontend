@@ -243,7 +243,7 @@ export function BookSearch({
         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           {/* Sort dropdown */}
           <Select value={sortBy} onValueChange={(value) => { setSortBy(value); handleSearch(); }}>
-            <SelectTrigger className="w-full sm:w-[160px] h-11">
+            <SelectTrigger className="w-full sm:w-[160px] h-11 border border-input">
               <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>

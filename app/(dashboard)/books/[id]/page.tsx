@@ -215,9 +215,9 @@ export default function BookDetailPage() {
             </Button>
             {isAdmin && (
               <Button
-                variant="ghost"
+                variant="destructive"
                 size="icon"
-                className="text-destructive hover:text-destructive sm:size-auto sm:h-9 sm:px-4 sm:bg-destructive sm:text-destructive-foreground sm:hover:bg-destructive/90 sm:hover:text-destructive-foreground"
+                className="sm:size-auto sm:h-9 sm:px-4"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <Trash2 className="h-4 w-4 sm:mr-2" />
