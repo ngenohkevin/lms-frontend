@@ -371,149 +371,142 @@ function BorrowContent() {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Book Selection */}
+      <div className="max-w-2xl space-y-6">
+        {/* Step 1: Book & Copy Selection */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Select Book
+              1. Select Book & Copy
             </CardTitle>
             <CardDescription>
               Search by book ID, ISBN, or title
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter book ID or ISBN"
-                value={bookSearch}
-                onChange={(e) => setBookSearch(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleBookSearch()}
-              />
-              <Button
-                variant="outline"
-                onClick={handleBookSearch}
-                disabled={isSearchingBook}
-              >
-                {isSearchingBook ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Search className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-
-            {selectedBook && (
-              <div className="flex gap-4 rounded-lg border p-4 bg-muted/50">
-                <div className="shrink-0">
-                  {selectedBook.cover_url ? (
-                    <Image
-                      src={selectedBook.cover_url}
-                      alt={selectedBook.title}
-                      width={80}
-                      height={120}
-                      className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
-                    />
+            {!selectedBook ? (
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter book ID or ISBN"
+                  value={bookSearch}
+                  onChange={(e) => setBookSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleBookSearch()}
+                />
+                <Button
+                  variant="outline"
+                  onClick={handleBookSearch}
+                  disabled={isSearchingBook}
+                >
+                  {isSearchingBook ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <div className="w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center">
-                      <BookOpen className="h-6 w-6 text-muted-foreground" />
+                    <Search className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <>
+                {/* Selected Book Display */}
+                <div className="flex gap-4 rounded-lg border p-4 bg-muted/50">
+                  <div className="shrink-0">
+                    {selectedBook.cover_url ? (
+                      <Image
+                        src={selectedBook.cover_url}
+                        alt={selectedBook.title}
+                        width={80}
+                        height={120}
+                        className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
+                      />
+                    ) : (
+                      <div className="w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center">
+                        <BookOpen className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium line-clamp-2">{selectedBook.title}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      {selectedBook.author}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 font-mono">
+                      ISBN: {selectedBook.isbn || "N/A"}
+                    </p>
+                    <Badge variant="outline" className="mt-2">
+                      {selectedBook.available_copies} available
+                    </Badge>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="shrink-0 cursor-pointer"
+                    onClick={() => {
+                      setSelectedBook(null);
+                      setSelectedCopy(null);
+                      setSelectedCopyId(null);
+                    }}
+                  >
+                    Change
+                  </Button>
+                </div>
+
+                {/* Copy Selection - inline below book */}
+                <div className="pt-2 border-t">
+                  <Label className="text-sm font-medium flex items-center gap-2 mb-2">
+                    <Copy className="h-4 w-4" />
+                    Select Copy
+                  </Label>
+                  <CopySelector
+                    bookId={parseInt(selectedBook.id, 10)}
+                    value={selectedCopy?.id ?? selectedCopyId ?? undefined}
+                    onSelect={(copy) => {
+                      setSelectedCopy(copy);
+                      setSelectedCopyId(copy?.id ?? null);
+                    }}
+                    showOnlyAvailable={true}
+                    placeholder="Select an available copy..."
+                  />
+                  {selectedCopy && (
+                    <div className="mt-3 rounded-lg border p-3 bg-background">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm">Copy #{selectedCopy.copy_number}</p>
+                          {selectedCopy.barcode && (
+                            <p className="text-xs text-muted-foreground font-mono">
+                              Barcode: {selectedCopy.barcode}
+                            </p>
+                          )}
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={
+                            selectedCopy.condition === "excellent"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                              : selectedCopy.condition === "good"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                              : selectedCopy.condition === "fair"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                              : selectedCopy.condition === "poor"
+                              ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
+                              : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                          }
+                        >
+                          {selectedCopy.condition}
+                        </Badge>
+                      </div>
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium line-clamp-2">{selectedBook.title}</p>
-                  <p className="text-sm text-muted-foreground mt-0.5">
-                    {selectedBook.author}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 font-mono">
-                    ISBN: {selectedBook.isbn || "N/A"}
-                  </p>
-                  <Badge variant="outline" className="mt-2">
-                    {selectedBook.available_copies} available
-                  </Badge>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 cursor-pointer"
-                  onClick={() => {
-                    setSelectedBook(null);
-                    setSelectedCopy(null);
-                    setSelectedCopyId(null);
-                  }}
-                >
-                  Change
-                </Button>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
 
-        {/* Copy Selection - Only show when book is selected */}
-        {selectedBook && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Copy className="h-5 w-5" />
-                Select Copy
-              </CardTitle>
-              <CardDescription>
-                Choose which copy to borrow
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CopySelector
-                bookId={parseInt(selectedBook.id, 10)}
-                value={selectedCopy?.id ?? selectedCopyId ?? undefined}
-                onSelect={(copy) => {
-                  setSelectedCopy(copy);
-                  setSelectedCopyId(copy?.id ?? null);
-                }}
-                showOnlyAvailable={true}
-                placeholder="Select an available copy..."
-              />
-
-              {selectedCopy && (
-                <div className="rounded-lg border p-4 bg-muted/50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Copy #{selectedCopy.copy_number}</p>
-                      {selectedCopy.barcode && (
-                        <p className="text-sm text-muted-foreground font-mono">
-                          Barcode: {selectedCopy.barcode}
-                        </p>
-                      )}
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className={
-                        selectedCopy.condition === "excellent"
-                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                          : selectedCopy.condition === "good"
-                          ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-                          : selectedCopy.condition === "fair"
-                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                          : selectedCopy.condition === "poor"
-                          ? "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200"
-                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                      }
-                    >
-                      {selectedCopy.condition}
-                    </Badge>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Student Selection */}
+        {/* Step 2: Student Selection */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
-              Select Student
+              2. Select Student
             </CardTitle>
             <CardDescription>
               Search by name, student ID, or email
@@ -642,16 +635,15 @@ function BorrowContent() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Transaction Details */}
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Transaction Details</CardTitle>
-          <CardDescription>
-            Set the due date and add any notes
-          </CardDescription>
-        </CardHeader>
+        {/* Step 3: Transaction Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle>3. Transaction Details</CardTitle>
+            <CardDescription>
+              Set the due date and add any notes
+            </CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
@@ -708,6 +700,7 @@ function BorrowContent() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
@@ -718,9 +711,11 @@ export default function BorrowPage() {
       <Suspense
         fallback={
           <div className="space-y-6">
-            <Skeleton className="h-10 w-48" />
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Skeleton className="h-64" />
+            <Skeleton className="h-10 w-20" />
+            <Skeleton className="h-16 w-64" />
+            <div className="max-w-2xl space-y-6">
+              <Skeleton className="h-48" />
+              <Skeleton className="h-48" />
               <Skeleton className="h-64" />
             </div>
           </div>
