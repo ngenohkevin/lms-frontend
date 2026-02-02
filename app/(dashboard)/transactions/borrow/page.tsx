@@ -371,7 +371,7 @@ function BorrowContent() {
         </p>
       </div>
 
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-2xl space-y-6 isolate">
         {/* Step 1: Book & Copy Selection */}
         <Card>
           <CardHeader>
@@ -383,7 +383,7 @@ function BorrowContent() {
               Search by book ID, ISBN, or title
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 min-h-[120px]">
             {!selectedBook ? (
               <div className="flex gap-2">
                 <Input
@@ -391,11 +391,16 @@ function BorrowContent() {
                   value={bookSearch}
                   onChange={(e) => setBookSearch(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleBookSearch()}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                 />
                 <Button
                   variant="outline"
                   onClick={handleBookSearch}
                   disabled={isSearchingBook}
+                  className="shrink-0"
                 >
                   {isSearchingBook ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -519,11 +524,11 @@ function BorrowContent() {
               Search by name, student ID, or email
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 min-h-[80px]">
             {!selectedStudent && (
               <div className="relative" ref={studentSearchRef}>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                   <Input
                     placeholder="Type student name, ID, or email..."
                     value={studentSearch}
@@ -541,32 +546,40 @@ function BorrowContent() {
                       }
                     }}
                     className="pl-10 pr-10"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck="false"
                   />
-                  {isSearchingStudent && (
-                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-                  )}
-                  {studentSearch && !isSearchingStudent && (
-                    <button
-                      onClick={() => {
-                        setStudentSearch("");
-                        setStudentResults([]);
-                        setShowStudentDropdown(false);
-                        setError(null);
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4">
+                    {isSearchingStudent && (
+                      <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                    {studentSearch && !isSearchingStudent && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStudentSearch("");
+                          setStudentResults([]);
+                          setShowStudentDropdown(false);
+                          setError(null);
+                        }}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Search Results Dropdown */}
                 {showStudentDropdown && studentResults.length > 0 && (
-                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-[300px] overflow-auto">
+                  <div className="absolute left-0 right-0 z-50 mt-1 rounded-md border bg-popover shadow-lg max-h-[250px] overflow-auto overscroll-contain">
                     {studentResults.map((student) => (
                       <button
                         key={student.id}
-                        className="flex w-full items-start gap-3 p-3 text-left hover:bg-muted/50 transition-colors border-b last:border-b-0"
+                        type="button"
+                        className="flex w-full items-start gap-3 p-3 text-left hover:bg-muted/50 active:bg-muted transition-colors border-b last:border-b-0"
                         onClick={() => handleSelectStudent(student)}
                       >
                         <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
@@ -574,10 +587,10 @@ function BorrowContent() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{student.name}</p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-sm text-muted-foreground truncate">
                             {student.student_id} • {student.email}
                           </p>
-                          <div className="flex gap-2 mt-1">
+                          <div className="flex flex-wrap gap-1 mt-1">
                             <Badge variant={student.status === "active" ? "outline" : "secondary"} className="text-xs">
                               {student.status}
                             </Badge>
@@ -598,7 +611,7 @@ function BorrowContent() {
 
                 {/* No results message */}
                 {showStudentDropdown && studentResults.length === 0 && studentSearch.trim() && !isSearchingStudent && (
-                  <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg p-4 text-center text-muted-foreground">
+                  <div className="absolute left-0 right-0 z-50 mt-1 rounded-md border bg-popover shadow-lg p-4 text-center text-muted-foreground">
                     No students found matching &quot;{studentSearch}&quot;
                   </div>
                 )}
