@@ -6,22 +6,14 @@ import { useSWRConfig } from "swr";
 import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
-import { useBook, useBookRatings } from "@/lib/hooks/use-books";
+import { useBook } from "@/lib/hooks/use-books";
 import { useSeriesById } from "@/lib/hooks/use-series";
 import { booksApi } from "@/lib/api";
 import apiClient from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { BookCopiesList } from "@/components/books/book-copies-list";
 import {
@@ -35,17 +27,18 @@ import {
   Building2,
   Languages,
   FileText,
-  User,
   Library,
   Tablet,
   Headphones,
   QrCode,
-  Download,
   Loader2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
-import { formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
 import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
+
+const DESCRIPTION_WORD_LIMIT = 80;
 
 export default function BookDetailPage() {
   const params = useParams();
@@ -54,14 +47,13 @@ export default function BookDetailPage() {
   const { isLibrarian, isAdmin } = useAuth();
   const bookId = params.id as string;
 
-  const { book, isLoading, error, refresh } = useBook(bookId);
-  const { ratings, isLoading: ratingsLoading } = useBookRatings(bookId);
+  const { book, isLoading, error } = useBook(bookId);
   const { series: bookSeries } = useSeriesById(book?.series_id ?? null);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [activeTab, setActiveTab] = useState("details");
   const [isDownloadingQR, setIsDownloadingQR] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -487,99 +479,52 @@ export default function BookDetailPage() {
             <Separator />
             <div>
               <h3 className="font-semibold mb-2">Description</h3>
-              <p className="text-muted-foreground whitespace-pre-line">
-                {book.description}
-              </p>
+              {(() => {
+                const words = book.description.split(/\s+/);
+                const isLong = words.length > DESCRIPTION_WORD_LIMIT;
+                const displayText = isLong && !isDescriptionExpanded
+                  ? words.slice(0, DESCRIPTION_WORD_LIMIT).join(" ") + "..."
+                  : book.description;
+
+                return (
+                  <>
+                    <p className="text-muted-foreground whitespace-pre-line">
+                      {displayText}
+                    </p>
+                    {isLong && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2 h-auto p-0 text-primary hover:text-primary/80"
+                        onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                      >
+                        {isDescriptionExpanded ? (
+                          <>
+                            Show less <ChevronUp className="ml-1 h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            Show more <ChevronDown className="ml-1 h-4 w-4" />
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </>
         )}
       </div>
 
-      {/* Tabs for Ratings, Copies and More */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="w-full sm:w-auto grid grid-cols-2 sm:inline-flex">
-          <TabsTrigger value="details" className="text-sm">
-            Reviews ({book.total_ratings || 0})
-          </TabsTrigger>
-          {isLibrarian && (
-            <TabsTrigger value="copies" className="text-sm">
-              Copies
-            </TabsTrigger>
-          )}
-        </TabsList>
-
-        <TabsContent value="details" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reader Reviews</CardTitle>
-              <CardDescription>
-                See what others are saying about this book
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {ratingsLoading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="flex gap-4">
-                      <Skeleton className="h-10 w-10 rounded-full shrink-0" />
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-32" />
-                        <Skeleton className="h-4 w-full" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : ratings && ratings.length > 0 ? (
-                <div className="space-y-6">
-                  {ratings.map((rating) => (
-                    <div key={rating.id} className="flex gap-4">
-                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
-                        <User className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="flex">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`h-4 w-4 ${
-                                  i < rating.rating
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-muted-foreground/30"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm text-muted-foreground">
-                            {formatDate(rating.created_at)}
-                          </span>
-                        </div>
-                        {rating.review && (
-                          <p className="mt-2 text-sm break-words">{rating.review}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  No reviews yet. Be the first to review this book!
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {isLibrarian && (
-          <TabsContent value="copies" className="mt-4">
-            <BookCopiesList
-              bookId={parseInt(bookId)}
-              bookCode={book.book_id}
-              bookTitle={book.title}
-            />
-          </TabsContent>
-        )}
-      </Tabs>
+      {/* Book Copies - Librarian Only */}
+      {isLibrarian && (
+        <BookCopiesList
+          bookId={parseInt(bookId)}
+          bookCode={book.book_id}
+          bookTitle={book.title}
+        />
+      )}
 
       {/* Delete Confirmation */}
       <ConfirmDialog

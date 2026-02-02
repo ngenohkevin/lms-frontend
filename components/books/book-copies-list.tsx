@@ -16,6 +16,8 @@ import {
   User,
   Calendar,
   ArrowRightCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { useBookCopies } from "@/lib/hooks/use-book-copies";
@@ -111,6 +113,8 @@ function getStatusColor(status: CopyStatus): string {
   }
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -124,6 +128,17 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
   const [copyBorrowerInfo, setCopyBorrowerInfo] = useState<Map<number, BarcodeScanResult>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingBorrowerInfo, setIsLoadingBorrowerInfo] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(copies.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedCopies = copies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  // Reset to page 1 when search changes
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
 
   // Debounce search input
   React.useEffect(() => {
@@ -133,10 +148,10 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Fetch borrower info for borrowed copies
+  // Fetch borrower info for borrowed copies (only for current page)
   React.useEffect(() => {
     const fetchBorrowerInfo = async () => {
-      const borrowedCopies = copies.filter(
+      const borrowedCopies = paginatedCopies.filter(
         (copy) => copy.status === "borrowed" && copy.barcode
       );
       if (borrowedCopies.length === 0) return;
@@ -161,7 +176,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
     };
 
     fetchBorrowerInfo();
-  }, [copies]);
+  }, [paginatedCopies]);
 
   const handleCreate = async (data: BookCopyFormData) => {
     setIsSubmitting(true);
@@ -329,7 +344,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {copies.map((copy) => (
+                    {paginatedCopies.map((copy) => (
                       <TableRow key={copy.id}>
                         <TableCell className="font-medium">
                           {copy.copy_number}
@@ -427,7 +442,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
 
               {/* Mobile Card View */}
               <div className="md:hidden space-y-3">
-                {copies.map((copy) => (
+                {paginatedCopies.map((copy) => (
                   <div
                     key={copy.id}
                     className="rounded-lg border p-4 space-y-3"
@@ -514,6 +529,36 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                   </div>
                 ))}
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, copies.length)} of {copies.length} copies
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <span className="text-sm font-medium px-2">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </CardContent>
