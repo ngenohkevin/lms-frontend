@@ -407,38 +407,11 @@ function BorrowContent() {
             ) : (
               <>
                 {/* Selected Book Display */}
-                <div className="flex gap-4 rounded-lg border p-4 bg-muted/50">
-                  <div className="shrink-0">
-                    {selectedBook.cover_url ? (
-                      <Image
-                        src={selectedBook.cover_url}
-                        alt={selectedBook.title}
-                        width={80}
-                        height={120}
-                        className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
-                      />
-                    ) : (
-                      <div className="w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center">
-                        <BookOpen className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium line-clamp-2">{selectedBook.title}</p>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {selectedBook.author}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1 font-mono">
-                      ISBN: {selectedBook.isbn || "N/A"}
-                    </p>
-                    <Badge variant="outline" className="mt-2">
-                      {selectedBook.available_copies} available
-                    </Badge>
-                  </div>
+                <div className="relative rounded-lg border p-4 bg-muted/50">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="shrink-0 cursor-pointer"
+                    className="absolute top-2 right-2 cursor-pointer text-xs h-7 px-2"
                     onClick={() => {
                       setSelectedBook(null);
                       setSelectedCopy(null);
@@ -447,6 +420,40 @@ function BorrowContent() {
                   >
                     Change
                   </Button>
+                  <div className="flex gap-4">
+                    <div className="shrink-0">
+                      {selectedBook.cover_url ? (
+                        <Image
+                          src={selectedBook.cover_url}
+                          alt={selectedBook.title}
+                          width={80}
+                          height={120}
+                          className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
+                        />
+                      ) : (
+                        <div className="w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center">
+                          <BookOpen className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0 pr-14 sm:pr-16">
+                      <p className="font-medium leading-snug">{selectedBook.title}</p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {selectedBook.author}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 font-mono truncate">
+                        ISBN: {selectedBook.isbn || "N/A"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="mt-3 pt-3 border-t flex items-center justify-between">
+                    <Badge variant="outline">
+                      {selectedBook.available_copies} available
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {selectedBook.book_id}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Copy Selection - inline below book */}
