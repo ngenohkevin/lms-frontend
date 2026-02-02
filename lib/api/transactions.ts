@@ -17,6 +17,7 @@ import type {
 } from "@/lib/types";
 
 const TRANSACTIONS_PREFIX = "/api/v1/transactions";
+const FINES_PREFIX = "/api/v1/fines";
 
 // Backend response wrapper
 interface ApiResponse<T> {
@@ -305,9 +306,15 @@ export const transactionsApi = {
       page?: number;
       per_page?: number;
     }): Promise<PaginatedResponse<Fine>> => {
+      const backendParams: Record<string, string | number | boolean | undefined> = {
+        page: params?.page,
+        limit: params?.per_page,
+        paid: params?.paid,
+        student_id: params?.student_id,
+      };
       const response = await apiClient.get<ApiResponse<BackendPaginatedFines>>(
-        `${TRANSACTIONS_PREFIX}/fines`,
-        { params }
+        FINES_PREFIX,
+        { params: backendParams }
       );
       return {
         data: response.data?.fines || [],
@@ -317,14 +324,14 @@ export const transactionsApi = {
 
     // Get single fine
     get: async (id: string): Promise<Fine> => {
-      const response = await apiClient.get<ApiResponse<Fine>>(`${TRANSACTIONS_PREFIX}/fines/${id}`);
+      const response = await apiClient.get<ApiResponse<Fine>>(`${FINES_PREFIX}/${id}`);
       return response.data;
     },
 
-    // Pay a fine (via transaction endpoint)
+    // Pay a fine
     pay: async (transactionId: string, data?: { payment_method?: string }): Promise<Fine> => {
       const response = await apiClient.post<ApiResponse<Fine>>(
-        `${TRANSACTIONS_PREFIX}/${transactionId}/pay-fine`,
+        `${FINES_PREFIX}/${transactionId}/pay`,
         data || {}
       );
       return response.data;
@@ -333,7 +340,7 @@ export const transactionsApi = {
     // Waive a fine (admin only)
     waive: async (id: string, reason?: string): Promise<Fine> => {
       const response = await apiClient.post<ApiResponse<Fine>>(
-        `${TRANSACTIONS_PREFIX}/fines/${id}/waive`,
+        `${FINES_PREFIX}/${id}/waive`,
         { reason }
       );
       return response.data;
@@ -342,9 +349,17 @@ export const transactionsApi = {
     // Get total unpaid fines for a student
     getStudentUnpaid: async (studentId: string): Promise<{ total: number }> => {
       const response = await apiClient.get<ApiResponse<{ total: number }>>(
-        `${TRANSACTIONS_PREFIX}/fines/student/${studentId}/unpaid`
+        `${FINES_PREFIX}/student/${studentId}/unpaid`
       );
       return response.data || { total: 0 };
+    },
+
+    // Get fine statistics
+    getStatistics: async (): Promise<{ statistics: Record<string, number>; fine_per_day: number }> => {
+      const response = await apiClient.get<ApiResponse<{ statistics: Record<string, number>; fine_per_day: number }>>(
+        `${FINES_PREFIX}/statistics`
+      );
+      return response.data || { statistics: {}, fine_per_day: 0.5 };
     },
   },
 };

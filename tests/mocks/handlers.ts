@@ -210,7 +210,7 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE}/transactions/fines`, () => {
+  http.get(`${API_BASE}/fines`, () => {
     return HttpResponse.json({
       success: true,
       data: {
@@ -235,7 +235,24 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE}/transactions/:id/pay-fine`, async () => {
+  http.get(`${API_BASE}/fines/statistics`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        statistics: {
+          total_fines: 10,
+          total_paid: 5,
+          total_unpaid: 5,
+          total_amount: 25.0,
+          paid_amount: 12.5,
+          unpaid_amount: 12.5,
+        },
+        fine_per_day: 0.5,
+      },
+    });
+  }),
+
+  http.post(`${API_BASE}/fines/:id/pay`, async () => {
     return HttpResponse.json({
       success: true,
       data: {
@@ -246,6 +263,20 @@ export const handlers = [
         paid_at: new Date().toISOString(),
       },
       message: "Fine paid successfully",
+    });
+  }),
+
+  http.post(`${API_BASE}/fines/:id/waive`, async () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: "1",
+        transaction_id: "1",
+        amount: 2.5,
+        waived: true,
+        waived_at: new Date().toISOString(),
+      },
+      message: "Fine waived successfully",
     });
   }),
 
