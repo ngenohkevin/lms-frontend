@@ -141,11 +141,11 @@ export default function BookDetailPage() {
         <div className="flex items-center gap-4">
           <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
-          <div className="md:col-span-1 flex justify-center md:justify-start">
-            <Skeleton className="aspect-[2/3] w-full max-w-[280px] md:max-w-none rounded-lg" />
+        <div className="flex flex-col sm:flex-row gap-6 lg:gap-8">
+          <div className="flex justify-center sm:justify-start shrink-0">
+            <Skeleton className="w-[200px] sm:w-[180px] lg:w-[220px] aspect-[2/3] rounded-lg" />
           </div>
-          <div className="md:col-span-2 lg:col-span-3 space-y-4">
+          <div className="flex-1 space-y-4">
             <Skeleton className="h-10 w-3/4" />
             <Skeleton className="h-6 w-1/2" />
             <div className="flex gap-2">
@@ -231,18 +231,18 @@ export default function BookDetailPage() {
       </div>
 
       {/* Book Details */}
-      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+      <div className="flex flex-col sm:flex-row gap-6 lg:gap-8">
         {/* Cover Image */}
-        <div className="md:col-span-1 flex justify-center md:justify-start">
-          <Card className="overflow-hidden w-full max-w-[280px] md:max-w-none">
+        <div className="flex justify-center sm:justify-start shrink-0">
+          <Card className="overflow-hidden w-[200px] sm:w-[180px] lg:w-[220px]">
             <div className="relative aspect-[2/3] bg-muted">
               {book.cover_url ? (
                 <Image
                   src={book.cover_url}
                   alt={book.title}
                   fill
-                  className="object-contain"
-                  sizes="(max-width: 768px) 280px, (max-width: 1024px) 200px, 250px"
+                  className="object-cover"
+                  sizes="(max-width: 640px) 200px, (max-width: 1024px) 180px, 220px"
                   priority
                 />
               ) : (
@@ -255,7 +255,7 @@ export default function BookDetailPage() {
         </div>
 
         {/* Book Info */}
-        <div className="md:col-span-2 lg:col-span-3 space-y-6">
+        <div className="flex-1 space-y-6">
           <div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
