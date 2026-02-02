@@ -68,6 +68,9 @@ function BorrowContent() {
   const initialBookId = searchParams.get("book_id");
   const initialCopyId = searchParams.get("copy_id");
 
+  // Determine back navigation - if we came from a book, go back there
+  const backUrl = initialBookId ? `/books/${initialBookId}` : "/transactions";
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -356,7 +359,7 @@ function BorrowContent() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/transactions">
+          <Link href={backUrl}>
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
@@ -672,7 +675,7 @@ function BorrowContent() {
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" asChild>
-                <Link href="/transactions">Cancel</Link>
+                <Link href={backUrl}>Cancel</Link>
               </Button>
               <Button
                 type="submit"
