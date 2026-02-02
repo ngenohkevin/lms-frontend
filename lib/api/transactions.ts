@@ -166,7 +166,7 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
 }
 
 export const transactionsApi = {
-  // List all transactions with pagination
+  // List all transactions with pagination and search/filter
   list: async (
     params?: TransactionSearchParams
   ): Promise<PaginatedResponse<Transaction>> => {
@@ -174,7 +174,24 @@ export const transactionsApi = {
     const backendParams: Record<string, string | number | boolean | undefined> = {
       page: params?.page,
       limit: params?.per_page,
+      query: params?.query,
+      student_id: params?.student_id ? parseInt(params.student_id, 10) : undefined,
+      book_id: params?.book_id ? parseInt(params.book_id, 10) : undefined,
+      type: params?.type,
+      status: params?.status,
+      from_date: params?.from_date,
+      to_date: params?.to_date,
+      sort_by: params?.sort_by,
+      sort_order: params?.sort_order,
     };
+
+    // Remove undefined values
+    Object.keys(backendParams).forEach(key => {
+      if (backendParams[key] === undefined) {
+        delete backendParams[key];
+      }
+    });
+
     const response = await apiClient.get<ApiResponse<BackendPaginatedTransactions>>(TRANSACTIONS_PREFIX, {
       params: backendParams,
     });

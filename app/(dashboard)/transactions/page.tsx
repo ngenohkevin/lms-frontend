@@ -11,19 +11,18 @@ import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeftRight,
   BookOpen,
   AlertTriangle,
-  CheckCircle,
   Clock,
   DollarSign,
 } from "lucide-react";
 import type { Transaction, TransactionSearchParams, TransactionStatus } from "@/lib/types";
 import { formatDate, formatRelativeTime, isOverdue, formatCurrency } from "@/lib/utils/format";
 import { TransactionDetailDialog } from "@/components/transactions/transaction-detail-dialog";
+import { TransactionSearch } from "@/components/transactions/transaction-search";
 
 const statusColors: Record<TransactionStatus, string> = {
   active: "bg-blue-500/10 text-blue-700 border-blue-500/20",
@@ -35,9 +34,7 @@ const statusColors: Record<TransactionStatus, string> = {
 export default function TransactionsPage() {
   const { isStudent, user } = useAuth();
   const { hasPermission } = usePermissions();
-  const canBorrow = hasPermission(PermissionCodes.TRANSACTIONS_BORROW);
   const canViewAll = hasPermission(PermissionCodes.STUDENTS_VIEW); // Can see all students' transactions
-  const [activeTab, setActiveTab] = useState("all");
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [params, setParams] = useState<TransactionSearchParams>({
@@ -49,31 +46,11 @@ export default function TransactionsPage() {
   const { stats, isLoading: statsLoading } = useTransactionStats();
   const { transactions, pagination, isLoading, refresh } = useTransactions(params);
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-    const newParams: TransactionSearchParams = {
-      page: 1,
-      per_page: 20,
-      student_id: !canViewAll && isStudent ? String(user?.id) : undefined,
-    };
-
-    switch (tab) {
-      case "active":
-        newParams.status = "active";
-        break;
-      case "overdue":
-        newParams.overdue = true;
-        break;
-      case "returned":
-        newParams.status = "returned";
-        break;
-    }
-
-    setParams(newParams);
-  };
-
-  const handleSearch = (query: string) => {
-    setParams((prev) => ({ ...prev, query, page: 1 }));
+  const handleSearch = (newParams: TransactionSearchParams) => {
+    setParams({
+      ...newParams,
+      student_id: !canViewAll && isStudent ? String(user?.id) : newParams.student_id,
+    });
   };
 
   const handlePageChange = (page: number) => {
@@ -268,29 +245,24 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      {/* Transactions Table */}
-      <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="active">Active</TabsTrigger>
-          <TabsTrigger value="overdue">Overdue</TabsTrigger>
-          <TabsTrigger value="returned">Returned</TabsTrigger>
-        </TabsList>
+      {/* Search and Filters */}
+      {canViewAll && (
+        <TransactionSearch
+          onSearch={handleSearch}
+          initialParams={params}
+        />
+      )}
 
-        <TabsContent value={activeTab} className="mt-4">
-          <DataTable
-            data={transactions || []}
-            columns={columns}
-            pagination={pagination}
-            onPageChange={handlePageChange}
-            onSearch={canViewAll ? handleSearch : undefined}
-            onRowClick={handleRowClick}
-            searchPlaceholder="Search by book title or student..."
-            isLoading={isLoading}
-            emptyMessage="No transactions found."
-          />
-        </TabsContent>
-      </Tabs>
+      {/* Transactions Table */}
+      <DataTable
+        data={transactions || []}
+        columns={columns}
+        pagination={pagination}
+        onPageChange={handlePageChange}
+        onRowClick={handleRowClick}
+        isLoading={isLoading}
+        emptyMessage="No transactions found."
+      />
 
       {/* Transaction Detail Dialog */}
       <TransactionDetailDialog

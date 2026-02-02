@@ -337,4 +337,193 @@ export const handlers = [
       },
     });
   }),
+
+  // Reservation endpoints
+  http.get(`${API_BASE}/reservations`, ({ request }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get("status");
+
+    const mockReservations = [
+      {
+        id: "1",
+        book_id: "1",
+        student_id: "1",
+        status: "pending",
+        queue_position: 1,
+        reserved_at: "2024-01-15T10:00:00Z",
+        expires_at: "2024-01-22T10:00:00Z",
+        book: {
+          id: "1",
+          title: "Test Book",
+          author: "Test Author",
+          isbn: "978-0-123456-78-9",
+          available_copies: 0,
+        },
+        student: {
+          id: "1",
+          student_id: "STU001",
+          name: "John Doe",
+          email: "john.doe@test.com",
+        },
+        created_at: "2024-01-15T10:00:00Z",
+        updated_at: "2024-01-15T10:00:00Z",
+      },
+      {
+        id: "2",
+        book_id: "2",
+        student_id: "1",
+        status: "ready",
+        queue_position: 1,
+        reserved_at: "2024-01-14T10:00:00Z",
+        notified_at: "2024-01-20T10:00:00Z",
+        expires_at: "2024-01-23T10:00:00Z",
+        book: {
+          id: "2",
+          title: "Ready Book",
+          author: "Another Author",
+          isbn: "978-0-987654-32-1",
+          available_copies: 1,
+        },
+        student: {
+          id: "1",
+          student_id: "STU001",
+          name: "John Doe",
+          email: "john.doe@test.com",
+        },
+        created_at: "2024-01-14T10:00:00Z",
+        updated_at: "2024-01-20T10:00:00Z",
+      },
+    ];
+
+    const filtered = status
+      ? mockReservations.filter(r => r.status === status)
+      : mockReservations;
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        reservations: filtered,
+        pagination: {
+          page: 1,
+          limit: 20,
+          total: filtered.length,
+          total_pages: 1,
+        },
+      },
+    });
+  }),
+
+  http.get(`${API_BASE}/reservations/queue-position`, ({ request }) => {
+    const url = new URL(request.url);
+    const bookId = url.searchParams.get("book_id");
+    const studentId = url.searchParams.get("student_id");
+
+    return HttpResponse.json({
+      success: true,
+      data: {
+        position: bookId && studentId ? 2 : 0,
+        total_in_queue: 5,
+        has_reserved: !!(bookId && studentId),
+      },
+    });
+  }),
+
+  http.post(`${API_BASE}/reservations`, async ({ request }) => {
+    const body = (await request.json()) as { book_id: string; student_id?: string };
+    return HttpResponse.json(
+      {
+        success: true,
+        data: {
+          id: "new-reservation",
+          book_id: body.book_id,
+          student_id: body.student_id || "1",
+          status: "pending",
+          queue_position: 3,
+          reserved_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        },
+        message: "Book reserved successfully",
+      },
+      { status: 201 }
+    );
+  }),
+
+  http.post(`${API_BASE}/reservations/:id/cancel`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: "1",
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+      },
+      message: "Reservation cancelled",
+    });
+  }),
+
+  http.post(`${API_BASE}/reservations/:id/fulfill`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: "1",
+        status: "fulfilled",
+        fulfilled_at: new Date().toISOString(),
+      },
+      message: "Reservation fulfilled",
+    });
+  }),
+
+  http.post(`${API_BASE}/reservations/:id/ready`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: "1",
+        status: "ready",
+        notified_at: new Date().toISOString(),
+      },
+      message: "Reservation marked as ready",
+    });
+  }),
+
+  http.get(`${API_BASE}/reservations/book/:bookId`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          id: "1",
+          book_id: "1",
+          student_id: "1",
+          status: "pending",
+          queue_position: 1,
+          reserved_at: "2024-01-15T10:00:00Z",
+          student: {
+            id: "1",
+            student_id: "STU001",
+            name: "John Doe",
+            email: "john.doe@test.com",
+          },
+        },
+      ],
+    });
+  }),
+
+  http.get(`${API_BASE}/reservations/student/:studentId`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          id: "1",
+          book_id: "1",
+          student_id: "1",
+          status: "pending",
+          queue_position: 1,
+          reserved_at: "2024-01-15T10:00:00Z",
+          book: {
+            id: "1",
+            title: "Test Book",
+            author: "Test Author",
+          },
+        },
+      ],
+    });
+  }),
 ];

@@ -99,6 +99,7 @@ export interface RenewalEligibility {
 }
 
 export interface TransactionSearchParams {
+  query?: string; // Text search for book title, author, student name, barcode
   student_id?: string;
   book_id?: string;
   type?: TransactionType;

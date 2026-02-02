@@ -10,7 +10,8 @@ import { reservationsApi } from "@/lib/api";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle } from "lucide-react";
+import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle, Bell } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Reservation, ReservationSearchParams, ReservationStatus, PaginatedResponse } from "@/lib/types";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -188,6 +189,11 @@ export default function ReservationsPage() {
     },
   ];
 
+  // Count ready reservations for the current user
+  const readyReservations = reservations?.filter(
+    (r) => r.status === "ready" && (!canViewAll ? r.student_id === String(user?.id) : true)
+  ) || [];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -200,6 +206,20 @@ export default function ReservationsPage() {
           </p>
         </div>
       </div>
+
+      {/* Ready for Pickup Banner */}
+      {readyReservations.length > 0 && (
+        <Alert className="bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900">
+          <Bell className="h-4 w-4 text-green-600 dark:text-green-400" />
+          <AlertTitle className="text-green-800 dark:text-green-300">Ready for Pickup!</AlertTitle>
+          <AlertDescription className="text-green-700 dark:text-green-400">
+            {readyReservations.length === 1
+              ? `"${readyReservations[0].book?.title}" is ready for pickup.`
+              : `${readyReservations.length} book${readyReservations.length > 1 ? "s are" : " is"} ready for pickup.`}
+            {" "}Visit the library to complete your borrowing.
+          </AlertDescription>
+        </Alert>
+      )}
 
       <DataTable
         data={reservations || []}
