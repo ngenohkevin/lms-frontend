@@ -112,6 +112,9 @@ export const PermissionCodes = {
   STUDENTS_CREATE: "students.create",
   STUDENTS_UPDATE: "students.update",
   STUDENTS_DELETE: "students.delete",
+  STUDENTS_SUSPEND: "students.suspend",
+  STUDENTS_GRADUATE: "students.graduate",
+  STUDENTS_ADMIN_NOTES: "students.admin_notes",
 
   // Transactions
   TRANSACTIONS_VIEW: "transactions.view",
@@ -147,6 +150,14 @@ export const PermissionCodes = {
   // Categories
   CATEGORIES_MANAGE: "categories.manage",
 
+  // Departments
+  DEPARTMENTS_VIEW: "departments.view",
+  DEPARTMENTS_MANAGE: "departments.manage",
+
+  // Academic Years
+  ACADEMIC_YEARS_VIEW: "academic_years.view",
+  ACADEMIC_YEARS_MANAGE: "academic_years.manage",
+
   // Authors
   AUTHORS_VIEW: "authors.view",
   AUTHORS_CREATE: "authors.create",
@@ -181,6 +192,8 @@ export const PermissionCategoryNames: Record<string, string> = {
   fines: "Fines",
   notifications: "Notifications",
   categories: "Categories",
+  departments: "Departments",
+  academic_years: "Academic Years",
   authors: "Authors",
   languages: "Languages",
   series: "Series",

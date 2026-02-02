@@ -19,6 +19,8 @@ import {
   Users,
   Languages,
   Library,
+  Building2,
+  GraduationCap,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -36,6 +38,20 @@ const settingsLinks: SettingsLink[] = [
     href: "/settings/permissions",
     icon: Shield,
     permission: PermissionCodes.PERMISSIONS_VIEW,
+  },
+  {
+    title: "Departments",
+    description: "Manage departments for organizing students",
+    href: "/settings/departments",
+    icon: Building2,
+    permission: PermissionCodes.DEPARTMENTS_MANAGE,
+  },
+  {
+    title: "Academic Years",
+    description: "Manage academic years/levels for student classification",
+    href: "/settings/academic-years",
+    icon: GraduationCap,
+    permission: PermissionCodes.ACADEMIC_YEARS_MANAGE,
   },
   {
     title: "Book Categories",

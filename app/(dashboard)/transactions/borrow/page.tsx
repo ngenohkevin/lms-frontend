@@ -210,7 +210,20 @@ function BorrowContent() {
   const handleSelectStudent = useCallback((student: Student) => {
     setError(null);
 
-    if (student.status !== "active") {
+    // Check status-specific conditions
+    if (student.status === "suspended") {
+      const reason = student.suspension_reason
+        ? `: ${student.suspension_reason}`
+        : "";
+      setError(`Student is suspended${reason}. Cannot borrow books.`);
+      setSelectedStudent(null);
+    } else if (student.status === "graduated") {
+      setError("Student has graduated and cannot borrow books.");
+      setSelectedStudent(null);
+    } else if (student.status === "inactive") {
+      setError("Student account is inactive. Cannot borrow books.");
+      setSelectedStudent(null);
+    } else if (student.status !== "active") {
       setError(`Student account is ${student.status}. Cannot borrow books.`);
       setSelectedStudent(null);
     } else if (student.current_books >= student.max_books) {
@@ -266,6 +279,19 @@ function BorrowContent() {
       ]);
 
       // Check if student still meets borrowing criteria
+      if (revalidatedStudent.status === "suspended") {
+        const reason = revalidatedStudent.suspension_reason
+          ? `: ${revalidatedStudent.suspension_reason}`
+          : "";
+        setError(`Student is now suspended${reason}. Cannot borrow books.`);
+        setSelectedStudent(null);
+        return;
+      }
+      if (revalidatedStudent.status === "graduated") {
+        setError("Student has graduated and cannot borrow books.");
+        setSelectedStudent(null);
+        return;
+      }
       if (revalidatedStudent.status !== "active") {
         setError(`Student account is now ${revalidatedStudent.status}. Cannot borrow books.`);
         setSelectedStudent(null);

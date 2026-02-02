@@ -33,7 +33,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { DEPARTMENTS, STUDENT_STATUSES, type StudentStatus } from "@/lib/types";
+import { STUDENT_STATUSES, type StudentStatus } from "@/lib/types";
+import { useDepartments } from "@/lib/hooks/use-departments";
+import { useAcademicYears } from "@/lib/hooks/use-academic-years";
 
 interface StudentSearchProps {
   onSearch?: (params: Record<string, string | boolean | number | undefined>) => void;
@@ -67,6 +69,10 @@ export function StudentSearch({
   const [hasOverdue, setHasOverdue] = useState(initialValues.has_overdue || false);
   const [hasFines, setHasFines] = useState(initialValues.has_fines || false);
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
+
+  // Load departments and academic years dynamically
+  const { departments } = useDepartments();
+  const { academicYears } = useAcademicYears();
 
   const handleSearch = useCallback(
     (e?: React.FormEvent) => {
@@ -203,9 +209,9 @@ export function StudentSearch({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All departments</SelectItem>
-                      {DEPARTMENTS.map((dept) => (
-                        <SelectItem key={dept} value={dept}>
-                          {dept}
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.id} value={dept.name}>
+                          {dept.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -226,9 +232,9 @@ export function StudentSearch({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All years</SelectItem>
-                      {[1, 2, 3, 4, 5, 6].map((year) => (
-                        <SelectItem key={year} value={year.toString()}>
-                          Year {year}
+                      {academicYears.map((year) => (
+                        <SelectItem key={year.id} value={year.level.toString()}>
+                          {year.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -526,4 +526,191 @@ export const handlers = [
       ],
     });
   }),
+
+  // Department endpoints
+  http.get(`${API_BASE}/departments`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        departments: [
+          { id: 1, name: "Computer Science", code: "CS", is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+          { id: 2, name: "Engineering", code: "ENG", is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+          { id: 3, name: "Business", code: "BUS", is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+        ],
+        total: 3,
+      },
+    });
+  }),
+
+  http.post(`${API_BASE}/departments`, async ({ request }) => {
+    const body = (await request.json()) as { name: string; code?: string };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: 4,
+        name: body.name,
+        code: body.code,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      message: "Department created successfully",
+    }, { status: 201 });
+  }),
+
+  http.put(`${API_BASE}/departments/:id`, async ({ request, params }) => {
+    const body = (await request.json()) as { name: string; code?: string };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: Number(params.id),
+        name: body.name,
+        code: body.code,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      },
+      message: "Department updated successfully",
+    });
+  }),
+
+  http.delete(`${API_BASE}/departments/:id`, () => {
+    return HttpResponse.json({
+      success: true,
+      message: "Department deleted successfully",
+    });
+  }),
+
+  http.post(`${API_BASE}/departments/:id/activate`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      message: "Department activated successfully",
+    });
+  }),
+
+  http.post(`${API_BASE}/departments/:id/deactivate`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      message: "Department deactivated successfully",
+    });
+  }),
+
+  // Academic Year endpoints
+  http.get(`${API_BASE}/academic-years`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        academic_years: [
+          { id: 1, name: "Year 1", level: 1, is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+          { id: 2, name: "Year 2", level: 2, is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+          { id: 3, name: "Year 3", level: 3, is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+          { id: 4, name: "Year 4", level: 4, is_active: true, created_at: "2024-01-01T00:00:00Z", updated_at: "2024-01-01T00:00:00Z" },
+        ],
+        total: 4,
+      },
+    });
+  }),
+
+  http.post(`${API_BASE}/academic-years`, async ({ request }) => {
+    const body = (await request.json()) as { name: string; level: number };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: 5,
+        name: body.name,
+        level: body.level,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      },
+      message: "Academic year created successfully",
+    }, { status: 201 });
+  }),
+
+  http.put(`${API_BASE}/academic-years/:id`, async ({ request, params }) => {
+    const body = (await request.json()) as { name: string; level: number };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: Number(params.id),
+        name: body.name,
+        level: body.level,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      },
+      message: "Academic year updated successfully",
+    });
+  }),
+
+  http.delete(`${API_BASE}/academic-years/:id`, () => {
+    return HttpResponse.json({
+      success: true,
+      message: "Academic year deleted successfully",
+    });
+  }),
+
+  // Student status endpoints
+  http.post(`${API_BASE}/students/:id/suspend`, async ({ request, params }) => {
+    const body = (await request.json()) as { reason: string };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: params.id,
+        student_id: "STU001",
+        first_name: "John",
+        last_name: "Doe",
+        status: "suspended",
+        is_active: false,
+        suspension_reason: body.reason,
+      },
+      message: "Student suspended successfully",
+    });
+  }),
+
+  http.post(`${API_BASE}/students/:id/reactivate`, ({ params }) => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: params.id,
+        student_id: "STU001",
+        first_name: "John",
+        last_name: "Doe",
+        status: "active",
+        is_active: true,
+        suspension_reason: null,
+      },
+      message: "Student reactivated successfully",
+    });
+  }),
+
+  http.post(`${API_BASE}/students/:id/graduate`, async ({ request, params }) => {
+    const body = (await request.json()) as { graduated_at?: string } | null;
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: params.id,
+        student_id: "STU001",
+        first_name: "John",
+        last_name: "Doe",
+        status: "graduated",
+        is_active: false,
+        graduated_at: body?.graduated_at || new Date().toISOString(),
+      },
+      message: "Student graduated successfully",
+    });
+  }),
+
+  http.put(`${API_BASE}/students/:id/admin-notes`, async ({ request, params }) => {
+    const body = (await request.json()) as { admin_notes: string };
+    return HttpResponse.json({
+      success: true,
+      data: {
+        id: params.id,
+        student_id: "STU001",
+        first_name: "John",
+        last_name: "Doe",
+        admin_notes: body.admin_notes,
+      },
+      message: "Admin notes updated successfully",
+    });
+  }),
 ];

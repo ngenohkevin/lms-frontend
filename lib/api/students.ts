@@ -35,6 +35,8 @@ interface BackendStudent {
   email?: string;
   phone?: string;
   department?: string;
+  department_id?: number;
+  department_name?: string;
   year_of_study?: number;
   max_books?: number;
   // These fields may or may not be present depending on the endpoint
@@ -45,6 +47,9 @@ interface BackendStudent {
   // Backend returns is_active boolean, not status string
   is_active?: boolean;
   status?: string;
+  suspension_reason?: string;
+  graduated_at?: string;
+  admin_notes?: string;
   enrollment_date?: string;
   created_at: string;
   updated_at: string;
@@ -69,17 +74,25 @@ function transformStudent(student: BackendStudent): Student {
   return {
     id: String(student.id),
     student_id: student.student_id,
+    first_name: student.first_name,
+    last_name: student.last_name,
     name: `${student.first_name} ${student.last_name}`.trim(),
     email: student.email || "",
     phone: student.phone,
     department: student.department,
+    department_id: student.department_id,
+    department_name: student.department_name,
     year_of_study: student.year_of_study,
+    enrollment_date: student.enrollment_date,
     max_books: student.max_books ?? 5,
     current_books: student.current_books ?? 0,
     total_borrowed: student.total_borrowed ?? 0,
     total_fines: student.total_fines ?? 0,
     unpaid_fines: student.unpaid_fines ?? 0,
     status,
+    suspension_reason: student.suspension_reason,
+    graduated_at: student.graduated_at,
+    admin_notes: student.admin_notes,
     created_at: student.created_at,
     updated_at: student.updated_at,
   };
@@ -167,21 +180,16 @@ export const studentsApi = {
 
   // Create a new student
   create: async (data: StudentFormData): Promise<Student> => {
-    // Transform frontend field names to backend field names
-    // Split full name into first and last name
-    const nameParts = data.name.trim().split(/\s+/);
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ") || nameParts[0] || ""; // Use first name as last if no last name
-
     const backendData = {
       student_id: data.student_id,
-      first_name: firstName,
-      last_name: lastName,
+      first_name: data.first_name,
+      last_name: data.last_name,
       email: data.email || undefined,
       phone: data.phone || undefined,
       year_of_study: data.year_of_study || 1,
-      department: data.department || undefined,
+      department_id: data.department_id || undefined,
       max_books: data.max_books || 5,
+      enrollment_date: data.enrollment_date || undefined,
     };
     const response = await apiClient.post<ApiResponse<BackendStudent>>(STUDENTS_PREFIX, backendData);
     return transformStudent(response.data);
@@ -192,20 +200,16 @@ export const studentsApi = {
     id: string,
     data: Partial<StudentFormData>
   ): Promise<Student> => {
-    // Transform frontend field names to backend field names
     const backendData: Record<string, unknown> = {};
 
-    if (data.name !== undefined) {
-      // Split full name into first and last name
-      const nameParts = data.name.trim().split(/\s+/);
-      backendData.first_name = nameParts[0] || "";
-      backendData.last_name = nameParts.slice(1).join(" ") || nameParts[0] || "";
-    }
+    if (data.first_name !== undefined) backendData.first_name = data.first_name;
+    if (data.last_name !== undefined) backendData.last_name = data.last_name;
     if (data.email !== undefined) backendData.email = data.email || undefined;
     if (data.phone !== undefined) backendData.phone = data.phone || undefined;
     if (data.year_of_study !== undefined) backendData.year_of_study = data.year_of_study;
-    if (data.department !== undefined) backendData.department = data.department || undefined;
+    if (data.department_id !== undefined) backendData.department_id = data.department_id || undefined;
     if (data.max_books !== undefined) backendData.max_books = data.max_books;
+    if (data.enrollment_date !== undefined) backendData.enrollment_date = data.enrollment_date;
 
     const response = await apiClient.put<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}`, backendData);
     return transformStudent(response.data);
@@ -216,17 +220,33 @@ export const studentsApi = {
     await apiClient.delete(`${STUDENTS_PREFIX}/${id}`);
   },
 
-  // Suspend a student
-  suspend: async (id: string, reason?: string): Promise<Student> => {
+  // Suspend a student (reason is required)
+  suspend: async (id: string, reason: string): Promise<Student> => {
     const response = await apiClient.post<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/suspend`, {
       reason,
     });
     return transformStudent(response.data);
   },
 
-  // Activate a student
-  activate: async (id: string): Promise<Student> => {
-    const response = await apiClient.post<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/activate`);
+  // Reactivate a suspended/inactive student
+  reactivate: async (id: string): Promise<Student> => {
+    const response = await apiClient.post<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/reactivate`);
+    return transformStudent(response.data);
+  },
+
+  // Graduate a student
+  graduate: async (id: string, graduatedAt?: string): Promise<Student> => {
+    const response = await apiClient.post<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/graduate`, {
+      graduated_at: graduatedAt,
+    });
+    return transformStudent(response.data);
+  },
+
+  // Update admin notes for a student
+  updateAdminNotes: async (id: string, adminNotes: string): Promise<Student> => {
+    const response = await apiClient.put<ApiResponse<BackendStudent>>(`${STUDENTS_PREFIX}/${id}/admin-notes`, {
+      admin_notes: adminNotes,
+    });
     return transformStudent(response.data);
   },
 

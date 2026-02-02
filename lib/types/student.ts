@@ -2,17 +2,25 @@ export interface Student {
   id: string;
   student_id: string;
   user_id?: string;
-  name: string;
+  first_name: string;
+  last_name: string;
+  name: string; // Computed: first_name + " " + last_name
   email: string;
   phone?: string;
   department?: string;
+  department_id?: number;
+  department_name?: string;
   year_of_study?: number;
+  enrollment_date?: string;
   max_books: number;
   current_books: number;
   total_borrowed: number;
   total_fines: number;
   unpaid_fines: number;
   status: StudentStatus;
+  suspension_reason?: string;
+  graduated_at?: string;
+  admin_notes?: string;
   created_at: string;
   updated_at: string;
 }
@@ -21,12 +29,15 @@ export type StudentStatus = "active" | "suspended" | "graduated" | "inactive";
 
 export interface StudentFormData {
   student_id: string;
-  name: string;
-  email: string;
+  first_name: string;
+  last_name: string;
+  email?: string; // Optional
   phone?: string;
-  department?: string;
+  department_id?: number;
   year_of_study?: number;
   max_books?: number;
+  enrollment_date?: string;
+  admin_notes?: string;
   password?: string;
 }
 
@@ -45,8 +56,9 @@ export interface StudentSearchParams {
 
 export interface StudentImportData {
   student_id: string;
-  name: string;
-  email: string;
+  first_name: string;
+  last_name: string;
+  email?: string;
   phone?: string;
   department?: string;
   year_of_study?: number;
@@ -78,21 +90,17 @@ export interface StudentAnalytics {
   }>;
 }
 
-export const DEPARTMENTS = [
-  "Computer Science",
-  "Engineering",
-  "Business",
-  "Arts",
-  "Sciences",
-  "Medicine",
-  "Law",
-  "Education",
-  "Social Sciences",
-  "Humanities",
-  "Other",
-] as const;
+export interface SuspendStudentRequest {
+  reason: string;
+}
 
-export type Department = (typeof DEPARTMENTS)[number];
+export interface GraduateStudentRequest {
+  graduated_at?: string;
+}
+
+export interface UpdateAdminNotesRequest {
+  admin_notes: string;
+}
 
 export const STUDENT_STATUSES: StudentStatus[] = [
   "active",
@@ -100,3 +108,18 @@ export const STUDENT_STATUSES: StudentStatus[] = [
   "graduated",
   "inactive",
 ];
+
+export const getStatusColor = (status: StudentStatus): string => {
+  switch (status) {
+    case "active":
+      return "bg-green-100 text-green-800";
+    case "suspended":
+      return "bg-red-100 text-red-800";
+    case "graduated":
+      return "bg-blue-100 text-blue-800";
+    case "inactive":
+      return "bg-gray-100 text-gray-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};

@@ -4,9 +4,15 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
+import { usePermissions } from "@/providers/permission-provider";
 import { useStudent } from "@/lib/hooks/use-students";
 import { studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
+import { SuspendDialog } from "@/components/students/suspend-dialog";
+import { GraduateDialog } from "@/components/students/graduate-dialog";
+import { AdminNotes } from "@/components/students/admin-notes";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import {
   ArrowLeft,
@@ -34,6 +41,7 @@ import {
   Ban,
   CheckCircle,
   Calendar,
+  Loader2,
 } from "lucide-react";
 import { formatDate, formatCurrency, getInitials } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -50,14 +58,19 @@ export default function StudentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { hasPermission } = usePermissions();
   const studentId = params.id as string;
 
   const { student, isLoading, error, refresh } = useStudent(studentId);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isSuspending, setIsSuspending] = useState(false);
   const [showSuspendDialog, setShowSuspendDialog] = useState(false);
+  const [showGraduateDialog, setShowGraduateDialog] = useState(false);
+  const [isReactivating, setIsReactivating] = useState(false);
+
+  const canSuspend = hasPermission(PermissionCodes.STUDENTS_SUSPEND);
+  const canGraduate = hasPermission(PermissionCodes.STUDENTS_GRADUATE);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -75,24 +88,18 @@ export default function StudentDetailPage() {
     }
   };
 
-  const handleSuspend = async () => {
-    setIsSuspending(true);
+  const handleReactivate = async () => {
+    setIsReactivating(true);
     try {
-      if (student?.status === "suspended") {
-        await studentsApi.activate(studentId);
-        toast.success("Student activated successfully");
-      } else {
-        await studentsApi.suspend(studentId, "Suspended by administrator");
-        toast.success("Student suspended successfully");
-      }
+      await studentsApi.reactivate(studentId);
+      toast.success("Student reactivated successfully");
       refresh();
     } catch (err) {
       toast.error(
-        err instanceof Error ? err.message : "Failed to update student status"
+        err instanceof Error ? err.message : "Failed to reactivate student"
       );
     } finally {
-      setIsSuspending(false);
-      setShowSuspendDialog(false);
+      setIsReactivating(false);
     }
   };
 
@@ -154,22 +161,46 @@ export default function StudentDetailPage() {
                 Edit
               </Link>
             </Button>
-            <Button
-              variant={student.status === "suspended" ? "default" : "secondary"}
-              onClick={() => setShowSuspendDialog(true)}
-            >
-              {student.status === "suspended" ? (
-                <>
+
+            {/* Status action buttons based on current status */}
+            {student.status === "active" && (
+              <>
+                {canSuspend && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowSuspendDialog(true)}
+                  >
+                    <Ban className="mr-2 h-4 w-4" />
+                    Suspend
+                  </Button>
+                )}
+                {canGraduate && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowGraduateDialog(true)}
+                  >
+                    <GraduationCap className="mr-2 h-4 w-4" />
+                    Graduate
+                  </Button>
+                )}
+              </>
+            )}
+
+            {(student.status === "suspended" || student.status === "inactive") && canSuspend && (
+              <Button
+                variant="default"
+                onClick={handleReactivate}
+                disabled={isReactivating}
+              >
+                {isReactivating ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Activate
-                </>
-              ) : (
-                <>
-                  <Ban className="mr-2 h-4 w-4" />
-                  Suspend
-                </>
-              )}
-            </Button>
+                )}
+                Reactivate
+              </Button>
+            )}
+
             {isAdmin && (
               <Button
                 variant="destructive"
@@ -181,6 +212,27 @@ export default function StudentDetailPage() {
             )}
           </div>
         </div>
+
+        {/* Suspension Alert */}
+        {student.status === "suspended" && student.suspension_reason && (
+          <Alert variant="destructive">
+            <Ban className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Suspension Reason:</strong> {student.suspension_reason}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Graduated Alert */}
+        {student.status === "graduated" && (
+          <Alert>
+            <GraduationCap className="h-4 w-4" />
+            <AlertDescription>
+              This student graduated on{" "}
+              <strong>{formatDate(student.graduated_at || student.updated_at)}</strong>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Student Details */}
         <div className="grid gap-6 lg:grid-cols-3">
@@ -206,13 +258,15 @@ export default function StudentDetailPage() {
               <Separator className="my-6" />
 
               <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="font-medium">{student.email}</p>
+                {student.email && (
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="font-medium">{student.email}</p>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {student.phone && (
                   <div className="flex items-center gap-3">
@@ -224,12 +278,12 @@ export default function StudentDetailPage() {
                   </div>
                 )}
 
-                {student.department && (
+                {(student.department || student.department_name) && (
                   <div className="flex items-center gap-3">
                     <Building2 className="h-5 w-5 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Department</p>
-                      <p className="font-medium">{student.department}</p>
+                      <p className="font-medium">{student.department_name || student.department}</p>
                     </div>
                   </div>
                 )}
@@ -240,6 +294,16 @@ export default function StudentDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Year of Study</p>
                       <p className="font-medium">Year {student.year_of_study}</p>
+                    </div>
+                  </div>
+                )}
+
+                {student.enrollment_date && (
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Enrolled</p>
+                      <p className="font-medium">{formatDate(student.enrollment_date)}</p>
                     </div>
                   </div>
                 )}
@@ -325,6 +389,9 @@ export default function StudentDetailPage() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Admin Notes */}
+            <AdminNotes student={student} onUpdate={() => refresh()} />
 
             {/* Tabs */}
             <Tabs defaultValue="analytics">
@@ -431,20 +498,20 @@ export default function StudentDetailPage() {
           isLoading={isDeleting}
         />
 
-        {/* Suspend/Activate Confirmation */}
-        <ConfirmDialog
+        {/* Suspend Dialog */}
+        <SuspendDialog
+          student={student}
           open={showSuspendDialog}
           onOpenChange={setShowSuspendDialog}
-          title={student.status === "suspended" ? "Activate Student" : "Suspend Student"}
-          description={
-            student.status === "suspended"
-              ? `Are you sure you want to reactivate "${student.name}"? They will be able to borrow books again.`
-              : `Are you sure you want to suspend "${student.name}"? They will not be able to borrow books until reactivated.`
-          }
-          confirmLabel={student.status === "suspended" ? "Activate" : "Suspend"}
-          onConfirm={handleSuspend}
-          isDestructive={student.status !== "suspended"}
-          isLoading={isSuspending}
+          onSuccess={refresh}
+        />
+
+        {/* Graduate Dialog */}
+        <GraduateDialog
+          student={student}
+          open={showGraduateDialog}
+          onOpenChange={setShowGraduateDialog}
+          onSuccess={refresh}
         />
       </div>
     </AuthGuard>

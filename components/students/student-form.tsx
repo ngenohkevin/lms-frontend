@@ -5,6 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { studentsApi } from "@/lib/api";
+import { useDepartments } from "@/lib/hooks/use-departments";
+import { useAcademicYears } from "@/lib/hooks/use-academic-years";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,20 +19,23 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { DEPARTMENTS } from "@/lib/types/student";
 import type { Student, StudentFormData } from "@/lib/types";
 import { toast } from "sonner";
 
 const studentSchema = z.object({
   student_id: z.string().min(1, "Student ID is required"),
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email address"),
+  first_name: z.string().min(1, "First name is required"),
+  last_name: z.string().min(1, "Last name is required"),
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().optional(),
-  department: z.string().optional(),
+  department_id: z.number().optional(),
   year_of_study: z.number().min(1).max(10).optional(),
   max_books: z.number().min(1).max(20).optional(),
-  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+  password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
+  enrollment_date: z.string().optional(),
 });
+
+type FormValues = z.infer<typeof studentSchema>;
 
 interface StudentFormProps {
   student?: Student;
@@ -42,6 +47,9 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { departments, isLoading: departmentsLoading } = useDepartments();
+  const { academicYears, isLoading: yearsLoading } = useAcademicYears();
+
   const isEditing = !!student;
 
   const {
@@ -50,17 +58,19 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
     setValue,
     watch,
     formState: { errors },
-  } = useForm<StudentFormData>({
+  } = useForm<FormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: student
       ? {
           student_id: student.student_id,
-          name: student.name,
-          email: student.email,
+          first_name: student.first_name || "",
+          last_name: student.last_name || "",
+          email: student.email || "",
           phone: student.phone || "",
-          department: student.department || "",
+          department_id: student.department_id,
           year_of_study: student.year_of_study || 1,
           max_books: student.max_books ?? 5,
+          enrollment_date: student.enrollment_date || "",
         }
       : {
           max_books: 5,
@@ -68,18 +78,32 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
         },
   });
 
-  const onSubmit = async (data: StudentFormData) => {
+  const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // Transform form data to API format
+      const apiData: StudentFormData = {
+        student_id: data.student_id,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        email: data.email || undefined,
+        phone: data.phone || undefined,
+        department_id: data.department_id,
+        year_of_study: data.year_of_study,
+        max_books: data.max_books,
+        password: data.password || undefined,
+        enrollment_date: data.enrollment_date || undefined,
+      };
+
       let result: Student;
 
       if (isEditing) {
-        result = await studentsApi.update(student.id, data);
+        result = await studentsApi.update(student.id, apiData);
         toast.success("Student updated successfully");
       } else {
-        result = await studentsApi.create(data);
+        result = await studentsApi.create(apiData);
         toast.success("Student created successfully");
       }
 
@@ -118,19 +142,31 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name *</Label>
+          <Label htmlFor="first_name">First Name *</Label>
           <Input
-            id="name"
-            placeholder="John Doe"
-            {...register("name")}
+            id="first_name"
+            placeholder="John"
+            {...register("first_name")}
           />
-          {errors.name && (
-            <p className="text-sm text-destructive">{errors.name.message}</p>
+          {errors.first_name && (
+            <p className="text-sm text-destructive">{errors.first_name.message}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
+          <Label htmlFor="last_name">Last Name *</Label>
+          <Input
+            id="last_name"
+            placeholder="Doe"
+            {...register("last_name")}
+          />
+          {errors.last_name && (
+            <p className="text-sm text-destructive">{errors.last_name.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="email">Email (optional)</Label>
           <Input
             id="email"
             type="email"
@@ -152,18 +188,19 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="department">Department</Label>
+          <Label htmlFor="department_id">Department</Label>
           <Select
-            value={watch("department") || ""}
-            onValueChange={(value) => setValue("department", value)}
+            value={watch("department_id")?.toString() || ""}
+            onValueChange={(value) => setValue("department_id", value ? parseInt(value) : undefined)}
+            disabled={departmentsLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select department" />
+              <SelectValue placeholder={departmentsLoading ? "Loading..." : "Select department"} />
             </SelectTrigger>
             <SelectContent>
-              {DEPARTMENTS.map((dept) => (
-                <SelectItem key={dept} value={dept}>
-                  {dept}
+              {departments.map((dept) => (
+                <SelectItem key={dept.id} value={dept.id.toString()}>
+                  {dept.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -175,14 +212,15 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           <Select
             value={watch("year_of_study")?.toString() || ""}
             onValueChange={(value) => setValue("year_of_study", parseInt(value))}
+            disabled={yearsLoading}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select year" />
+              <SelectValue placeholder={yearsLoading ? "Loading..." : "Select year"} />
             </SelectTrigger>
             <SelectContent>
-              {[1, 2, 3, 4, 5, 6].map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  Year {year}
+              {academicYears.map((year) => (
+                <SelectItem key={year.id} value={year.level.toString()}>
+                  {year.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -202,6 +240,15 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           {errors.max_books && (
             <p className="text-sm text-destructive">{errors.max_books.message}</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="enrollment_date">Enrollment Date</Label>
+          <Input
+            id="enrollment_date"
+            type="date"
+            {...register("enrollment_date")}
+          />
         </div>
 
         {!isEditing && (
