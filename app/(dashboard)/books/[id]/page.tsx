@@ -139,15 +139,26 @@ export default function BookDetailPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Skeleton className="h-10 w-10" />
-          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-32" />
         </div>
-        <div className="grid gap-6 lg:grid-cols-4">
-          <Skeleton className="aspect-[3/4] rounded-lg max-w-[200px] lg:max-w-none" />
-          <div className="lg:col-span-3 space-y-4">
+        <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
+          <div className="md:col-span-1 flex justify-center md:justify-start">
+            <Skeleton className="aspect-[2/3] w-full max-w-[280px] md:max-w-none rounded-lg" />
+          </div>
+          <div className="md:col-span-2 lg:col-span-3 space-y-4">
             <Skeleton className="h-10 w-3/4" />
             <Skeleton className="h-6 w-1/2" />
-            <Skeleton className="h-24 w-full" />
+            <div className="flex gap-2">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-6 w-20" />
+            </div>
+            <Skeleton className="h-10 w-40" />
+            <Skeleton className="h-px w-full" />
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -220,28 +231,31 @@ export default function BookDetailPage() {
       </div>
 
       {/* Book Details */}
-      <div className="grid gap-6 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-3 lg:grid-cols-4">
         {/* Cover Image */}
-        <Card className="overflow-hidden lg:col-span-1 max-w-[200px] lg:max-w-none mx-auto lg:mx-0">
-          <div className="relative aspect-[3/4] bg-muted">
-            {book.cover_url ? (
-              <Image
-                src={book.cover_url}
-                alt={book.title}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center">
-                <FormatIcon className="h-12 w-12 text-muted-foreground/50" />
-              </div>
-            )}
-          </div>
-        </Card>
+        <div className="md:col-span-1 flex justify-center md:justify-start">
+          <Card className="overflow-hidden w-full max-w-[280px] md:max-w-none">
+            <div className="relative aspect-[2/3] bg-muted">
+              {book.cover_url ? (
+                <Image
+                  src={book.cover_url}
+                  alt={book.title}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 768px) 280px, (max-width: 1024px) 200px, 250px"
+                  priority
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center bg-muted">
+                  <FormatIcon className="h-16 w-16 text-muted-foreground/30" />
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
 
         {/* Book Info */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="md:col-span-2 lg:col-span-3 space-y-6">
           <div>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
