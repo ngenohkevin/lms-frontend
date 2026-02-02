@@ -93,7 +93,11 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE}/transactions/borrow`, async ({ request }) => {
-    const body = await request.json();
+    const body = (await request.json()) as {
+      book_id: string | number;
+      student_id: string | number;
+      copy_id?: number;
+    };
     return HttpResponse.json(
       {
         success: true,
