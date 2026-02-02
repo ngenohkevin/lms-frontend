@@ -203,30 +203,32 @@ export default function BookDetailPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="sm:size-auto sm:px-3"
               onClick={handleDownloadQR}
               disabled={isDownloadingQR}
             >
               {isDownloadingQR ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
               ) : (
-                <QrCode className="mr-2 h-4 w-4" />
+                <QrCode className="h-4 w-4 sm:mr-2" />
               )}
               <span className="hidden sm:inline">QR Code</span>
             </Button>
-            <Button variant="outline" size="sm" asChild>
+            <Button variant="outline" size="icon" className="sm:size-auto sm:px-3" asChild>
               <Link href={`/books/${book.id}/edit`}>
-                <Edit className="mr-2 h-4 w-4" />
+                <Edit className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Edit</span>
               </Link>
             </Button>
             {isAdmin && (
               <Button
                 variant="destructive"
-                size="sm"
+                size="icon"
+                className="sm:size-auto sm:px-3"
                 onClick={() => setShowDeleteDialog(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
+                <Trash2 className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">Delete</span>
               </Button>
             )}
