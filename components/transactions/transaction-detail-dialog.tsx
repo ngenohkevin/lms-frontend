@@ -7,7 +7,6 @@ import { useRenewalEligibility } from "@/lib/hooks/use-transactions";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -38,8 +37,6 @@ import {
   CheckCircle,
   Clock,
   DollarSign,
-  Hash,
-  ScanLine,
   XCircle,
   AlertOctagon,
 } from "lucide-react";
@@ -68,39 +65,11 @@ function getStatusColor(status: string): string {
   }
 }
 
-function getConditionColor(condition: string): string {
-  switch (condition) {
-    case "excellent":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-    case "good":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-    case "fair":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-    case "poor":
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
-    case "damaged":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
-  }
-}
-
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
-    weekday: "short",
-    year: "numeric",
     month: "short",
     day: "numeric",
-  });
-}
-
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString("en-US", {
     year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 
@@ -117,7 +86,6 @@ function calculateDaysOverdue(dueDate: string): number {
 function calculateNewDueDate(currentDueDate: string, days: number = 14): string {
   const due = new Date(currentDueDate);
   const today = new Date();
-  // If already overdue, calculate from today instead
   const baseDate = due > today ? due : today;
   const newDue = new Date(baseDate);
   newDue.setDate(newDue.getDate() + days);
@@ -135,17 +103,14 @@ export function TransactionDetailDialog({
   const [renewalSuccess, setRenewalSuccess] = useState(false);
   const [extensionDays, setExtensionDays] = useState<number | undefined>(undefined);
 
-  // Cancel transaction state
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
 
-  // Mark as lost state
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState("");
   const [isMarkingLost, setIsMarkingLost] = useState(false);
 
-  // Only check renewal eligibility for active transactions
   const isActiveTransaction =
     transaction?.status === "active" || transaction?.status === "overdue";
   const {
@@ -159,7 +124,6 @@ export function TransactionDetailDialog({
 
   if (!transaction) return null;
 
-  // Check if transaction can be cancelled (within 1 hour of creation)
   const canCancel = () => {
     if (transaction.status !== "active") return false;
     const createdAt = new Date(transaction.created_at);
@@ -168,7 +132,6 @@ export function TransactionDetailDialog({
     return hoursSinceCreation <= 1;
   };
 
-  // Check if transaction can be marked as lost
   const canMarkAsLost = () => {
     return transaction.status === "active" || transaction.status === "overdue";
   };
@@ -182,22 +145,18 @@ export function TransactionDetailDialog({
 
   const handleRenew = async () => {
     if (!transaction || !user) return;
-
     setIsRenewing(true);
     try {
       await transactionsApi.renew(transaction.id, {
         librarian_id: user.id,
         extension_days: extensionDays,
       });
-
       setRenewalSuccess(true);
       toast.success("Book renewed successfully");
       refreshRenewalStatus();
       onRefresh?.();
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to renew book"
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to renew book");
     } finally {
       setIsRenewing(false);
     }
@@ -205,7 +164,6 @@ export function TransactionDetailDialog({
 
   const handleCancel = async () => {
     if (!transaction || !cancelReason.trim()) return;
-
     setIsCancelling(true);
     try {
       await transactionsApi.cancel(transaction.id, cancelReason.trim());
@@ -215,9 +173,7 @@ export function TransactionDetailDialog({
       onRefresh?.();
       onOpenChange(false);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to cancel transaction"
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to cancel transaction");
     } finally {
       setIsCancelling(false);
     }
@@ -225,7 +181,6 @@ export function TransactionDetailDialog({
 
   const handleMarkAsLost = async () => {
     if (!transaction || !lostReason.trim()) return;
-
     setIsMarkingLost(true);
     try {
       await transactionsApi.markAsLost(transaction.id, lostReason.trim());
@@ -235,322 +190,245 @@ export function TransactionDetailDialog({
       onRefresh?.();
       onOpenChange(false);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to mark as lost"
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to mark as lost");
     } finally {
       setIsMarkingLost(false);
     }
   };
 
-  // Calculate time remaining for cancellation
   const getCancelTimeRemaining = () => {
     if (!transaction) return null;
     const createdAt = new Date(transaction.created_at);
-    const deadline = new Date(createdAt.getTime() + 60 * 60 * 1000); // 1 hour
+    const deadline = new Date(createdAt.getTime() + 60 * 60 * 1000);
     const now = new Date();
     const remaining = deadline.getTime() - now.getTime();
     if (remaining <= 0) return null;
     const minutes = Math.floor(remaining / (1000 * 60));
-    return `${minutes} min remaining`;
+    return `${minutes}m left`;
   };
+
+  const renewalCount = transaction.renewal_count ?? transaction.renewed_count ?? 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Transaction Details
-            <Badge variant="outline" className={getStatusColor(transaction.status)}>
-              {transaction.status}
-            </Badge>
+      <DialogContent className="max-w-md">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              Transaction #{transaction.id}
+              <Badge variant="outline" className={getStatusColor(transaction.status)}>
+                {transaction.status}
+              </Badge>
+            </span>
           </DialogTitle>
-          <DialogDescription>
-            Transaction #{transaction.id}
-          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Book Info */}
-          <div className="rounded-lg border p-4">
-            <div className="flex items-start gap-4">
-              <div className="h-14 w-11 rounded bg-muted flex items-center justify-center">
-                <BookOpen className="h-6 w-6 text-muted-foreground" />
+        <div className="space-y-3 text-sm">
+          {/* Book & Student - Compact */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="text-xs">Book</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium">{transaction.book?.title || "Unknown Book"}</p>
-                <p className="text-sm text-muted-foreground">
-                  {transaction.book?.author || "Unknown Author"}
-                </p>
-                {transaction.book?.isbn && (
-                  <p className="text-xs text-muted-foreground font-mono mt-1">
-                    ISBN: {transaction.book.isbn}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {/* Copy Details */}
-            {(transaction.copy_id || transaction.copy_barcode) && (
-              <div className="mt-3 pt-3 border-t">
-                <div className="flex items-center gap-4 text-sm">
-                  {transaction.copy_number && (
-                    <div className="flex items-center gap-1">
-                      <Hash className="h-4 w-4 text-muted-foreground" />
-                      <span>Copy {transaction.copy_number}</span>
-                    </div>
-                  )}
-                  {transaction.copy_barcode && (
-                    <div className="flex items-center gap-1">
-                      <ScanLine className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-mono">{transaction.copy_barcode}</span>
-                    </div>
-                  )}
-                  {transaction.copy_condition && (
-                    <Badge
-                      variant="outline"
-                      className={getConditionColor(transaction.copy_condition)}
-                    >
-                      {transaction.copy_condition}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Student Info */}
-          <div className="rounded-lg border p-4">
-            <div className="flex items-center gap-4">
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">
-                  {transaction.student?.name || "Unknown Student"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {transaction.student?.student_id}
-                  {transaction.student?.email && ` • ${transaction.student.email}`}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <Calendar className="h-4 w-4" />
-                Borrowed
-              </div>
-              <p className="font-medium text-sm">
-                {formatDateTime(transaction.borrowed_at)}
+              <p className="font-medium leading-tight line-clamp-2">
+                {transaction.book?.title || "Unknown"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {transaction.book?.author}
               </p>
             </div>
-            <div className="rounded-lg border p-3">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                <Clock className="h-4 w-4" />
-                Due Date
+            <div className="space-y-1">
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <User className="h-3.5 w-3.5" />
+                <span className="text-xs">Student</span>
               </div>
-              <p className={`font-medium text-sm ${isOverdue ? "text-destructive" : ""}`}>
+              <p className="font-medium leading-tight">
+                {transaction.student?.name || "Unknown"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {transaction.student?.student_id}
+              </p>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Dates - Compact Row */}
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
+                <Calendar className="h-3 w-3" />
+                <span className="text-xs">Borrowed</span>
+              </div>
+              <p className="font-medium text-xs">
+                {formatDate(transaction.borrowed_at)}
+              </p>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
+                <Clock className="h-3 w-3" />
+                <span className="text-xs">Due</span>
+              </div>
+              <p className={`font-medium text-xs ${isOverdue ? "text-destructive" : ""}`}>
                 {formatDate(transaction.due_date)}
-                {isOverdue && (
-                  <span className="block text-xs mt-1">
-                    {daysOverdue} days overdue
-                  </span>
-                )}
               </p>
             </div>
+            {transaction.returned_at ? (
+              <div>
+                <div className="flex items-center gap-1 text-green-600 mb-0.5">
+                  <CheckCircle className="h-3 w-3" />
+                  <span className="text-xs">Returned</span>
+                </div>
+                <p className="font-medium text-xs text-green-600">
+                  {formatDate(transaction.returned_at)}
+                </p>
+              </div>
+            ) : isOverdue ? (
+              <div>
+                <div className="flex items-center gap-1 text-destructive mb-0.5">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span className="text-xs">Overdue</span>
+                </div>
+                <p className="font-medium text-xs text-destructive">
+                  {daysOverdue} days
+                </p>
+              </div>
+            ) : renewalCount > 0 ? (
+              <div>
+                <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
+                  <RefreshCw className="h-3 w-3" />
+                  <span className="text-xs">Renewed</span>
+                </div>
+                <p className="font-medium text-xs">
+                  {renewalCount}x
+                </p>
+              </div>
+            ) : null}
           </div>
 
-          {/* Return Info (if returned) */}
-          {transaction.returned_at && (
-            <div className="rounded-lg border p-3 bg-green-50 dark:bg-green-950">
-              <div className="flex items-center gap-2 text-sm text-green-800 dark:text-green-200 mb-1">
-                <CheckCircle className="h-4 w-4" />
-                Returned
-              </div>
-              <p className="font-medium text-sm text-green-800 dark:text-green-200">
-                {formatDateTime(transaction.returned_at)}
-              </p>
-            </div>
-          )}
-
-          {/* Fine Info */}
+          {/* Fine Info - Compact */}
           {(transaction.fine_amount > 0 || (isOverdue && !transaction.returned_at)) && (
-            <div className="rounded-lg border p-3 bg-amber-50 dark:bg-amber-950">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
-                  <DollarSign className="h-4 w-4" />
-                  Fine
-                </div>
-                <div className="text-right">
-                  {transaction.fine_amount > 0 ? (
-                    <>
-                      <p className="font-medium text-amber-800 dark:text-amber-200">
-                        ${transaction.fine_amount.toFixed(2)}
-                      </p>
-                      <Badge
-                        variant={transaction.fine_paid ? "outline" : "destructive"}
-                        className="mt-1"
-                      >
-                        {transaction.fine_paid ? "Paid" : "Unpaid"}
-                      </Badge>
-                    </>
-                  ) : (
-                    <p className="font-medium text-amber-800 dark:text-amber-200">
-                      Est. ${estimatedFine.toFixed(2)}
-                    </p>
-                  )}
-                </div>
+            <div className="flex items-center justify-between rounded-md bg-amber-50 dark:bg-amber-950 px-3 py-2">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                <DollarSign className="h-4 w-4" />
+                <span>Fine</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="font-semibold text-amber-800 dark:text-amber-200">
+                  ${(transaction.fine_amount || estimatedFine).toFixed(2)}
+                </span>
+                {transaction.fine_amount > 0 && (
+                  <Badge variant={transaction.fine_paid ? "outline" : "destructive"} className="text-xs">
+                    {transaction.fine_paid ? "Paid" : "Unpaid"}
+                  </Badge>
+                )}
               </div>
             </div>
           )}
 
-          {/* Renewal Section (only for active transactions) */}
+          {/* Renewal Section - Only for active */}
           {isActiveTransaction && (
             <>
               <Separator />
-              <div className="space-y-3">
-                <h4 className="font-medium flex items-center gap-2">
-                  <RefreshCw className="h-4 w-4" />
-                  Renewal
-                </h4>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-medium flex items-center gap-1.5">
+                    <RefreshCw className="h-4 w-4" />
+                    Renew Book
+                  </h4>
+                  {renewalCount > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      Renewed {renewalCount}x
+                    </span>
+                  )}
+                </div>
 
                 {isCheckingRenewal ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Checking renewal eligibility...
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Checking eligibility...
                   </div>
                 ) : renewalSuccess ? (
-                  <Alert className="bg-green-50 dark:bg-green-950 border-green-200">
+                  <Alert className="bg-green-50 dark:bg-green-950 border-green-200 py-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
-                    <AlertDescription className="text-green-800 dark:text-green-200">
-                      Renewal successful! New due date:{" "}
-                      {formatDate(calculateNewDueDate(transaction.due_date))}
+                    <AlertDescription className="text-green-800 dark:text-green-200 text-xs">
+                      Renewed! New due: {formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
                     </AlertDescription>
                   </Alert>
                 ) : canRenew ? (
-                  <div className="space-y-3">
-                    <div className="rounded-lg border p-3 bg-muted/30">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">New Due Date:</span>
-                        <span className="font-medium">
-                          {formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
-                        </span>
-                      </div>
-                      {(transaction.renewal_count ?? transaction.renewed_count ?? 0) > 0 && (
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-muted-foreground">
-                            Times Renewed:
-                          </span>
-                          <span>{transaction.renewal_count ?? transaction.renewed_count}</span>
-                        </div>
-                      )}
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 flex-1">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={90}
+                        placeholder="14"
+                        value={extensionDays ?? ""}
+                        onChange={(e) => setExtensionDays(e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                        className="w-16 h-8 text-sm"
+                      />
+                      <span className="text-xs text-muted-foreground">days</span>
+                      <span className="text-xs text-muted-foreground mx-1">→</span>
+                      <span className="text-xs font-medium">
+                        {formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
+                      </span>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="extension-days" className="text-sm">
-                        Extension Period (optional)
-                      </Label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          id="extension-days"
-                          type="number"
-                          min={1}
-                          max={90}
-                          placeholder="Default (14 days)"
-                          value={extensionDays ?? ""}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setExtensionDays(val ? parseInt(val, 10) : undefined);
-                          }}
-                          className="w-32"
-                        />
-                        <span className="text-sm text-muted-foreground">days</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Leave blank to use default period based on student year
-                      </p>
-                    </div>
-                    <Button
-                      className="w-full"
-                      onClick={handleRenew}
-                      disabled={isRenewing}
-                    >
-                      {isRenewing ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Renewing...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Renew Book
-                        </>
-                      )}
+                    <Button size="sm" onClick={handleRenew} disabled={isRenewing} className="h-8">
+                      {isRenewing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Renew"}
                     </Button>
                   </div>
                 ) : (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{renewalReason || "Cannot renew"}</AlertDescription>
-                  </Alert>
+                  <p className="text-xs text-destructive py-1">
+                    {renewalReason || "Cannot renew this book"}
+                  </p>
                 )}
               </div>
             </>
           )}
 
-          {/* Notes */}
+          {/* Notes - Compact */}
           {transaction.notes && (
             <>
               <Separator />
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Notes</p>
-                <p className="text-sm">{transaction.notes}</p>
+                <p className="text-xs text-muted-foreground mb-0.5">Notes</p>
+                <p className="text-xs">{transaction.notes}</p>
               </div>
             </>
           )}
 
-          {/* Actions Section */}
+          {/* Actions - Compact Row */}
           {isActiveTransaction && (
             <>
               <Separator />
-              <div className="space-y-3">
-                <h4 className="font-medium">Actions</h4>
-                <div className="flex flex-wrap gap-2">
-                  {canCancel() && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowCancelDialog(true)}
-                      className="text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-950"
-                    >
-                      <XCircle className="mr-2 h-4 w-4" />
-                      Cancel Transaction
-                      {getCancelTimeRemaining() && (
-                        <span className="ml-2 text-xs opacity-70">
-                          ({getCancelTimeRemaining()})
-                        </span>
-                      )}
-                    </Button>
-                  )}
-                  {canMarkAsLost() && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowLostDialog(true)}
-                      className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
-                    >
-                      <AlertOctagon className="mr-2 h-4 w-4" />
-                      Mark as Lost
-                    </Button>
-                  )}
-                </div>
-                {!canCancel() && transaction.status === "active" && (
-                  <p className="text-xs text-muted-foreground">
-                    Cancel period expired (1 hour after creation)
-                  </p>
+              <div className="flex items-center gap-2">
+                {canCancel() ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCancelDialog(true)}
+                    className="h-8 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800"
+                  >
+                    <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                    Cancel
+                    <span className="ml-1 text-xs opacity-70">({getCancelTimeRemaining()})</span>
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">
+                    Cancel period expired
+                  </span>
+                )}
+                {canMarkAsLost() && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowLostDialog(true)}
+                    className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 ml-auto"
+                  >
+                    <AlertOctagon className="mr-1.5 h-3.5 w-3.5" />
+                    Mark Lost
+                  </Button>
                 )}
               </div>
             </>
@@ -558,7 +436,7 @@ export function TransactionDetailDialog({
         </div>
       </DialogContent>
 
-      {/* Cancel Transaction Dialog */}
+      {/* Cancel Dialog */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -568,92 +446,64 @@ export function TransactionDetailDialog({
             </AlertDialogTitle>
             <AlertDialogDescription>
               This will cancel the borrowing of &quot;{transaction.book?.title}&quot; and
-              return the book to available status. This action cannot be undone.
+              return the book to available status.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="cancel-reason">Reason for cancellation *</Label>
-              <Textarea
-                id="cancel-reason"
-                placeholder="Enter the reason for cancelling this transaction..."
-                value={cancelReason}
-                onChange={(e) => setCancelReason(e.target.value)}
-                rows={3}
-              />
-            </div>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="cancel-reason">Reason *</Label>
+            <Textarea
+              id="cancel-reason"
+              placeholder="Enter reason..."
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={2}
+            />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isCancelling}>
-              Keep Transaction
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isCancelling}>Keep</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancel}
               disabled={isCancelling || !cancelReason.trim()}
               className="bg-orange-600 hover:bg-orange-700"
             >
-              {isCancelling ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Cancelling...
-                </>
-              ) : (
-                "Cancel Transaction"
-              )}
+              {isCancelling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Cancel Transaction
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Mark as Lost Dialog */}
+      {/* Lost Dialog */}
       <AlertDialog open={showLostDialog} onOpenChange={setShowLostDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertOctagon className="h-5 w-5 text-red-500" />
-              Mark Book as Lost
+              Mark as Lost
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Marking &quot;{transaction.book?.title}&quot; as lost will apply a replacement
-              fine to the student&apos;s account. The book will be removed from circulation.
+              A replacement fine will be applied to the student&apos;s account.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-4 py-4">
-            <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              <AlertDescription className="text-amber-800 dark:text-amber-200">
-                A replacement fine will be applied to the student&apos;s account.
-                Make sure to verify the book is truly lost before proceeding.
-              </AlertDescription>
-            </Alert>
-            <div className="space-y-2">
-              <Label htmlFor="lost-reason">Reason / Notes *</Label>
-              <Textarea
-                id="lost-reason"
-                placeholder="Describe the circumstances (e.g., student reported loss, never returned after multiple reminders)..."
-                value={lostReason}
-                onChange={(e) => setLostReason(e.target.value)}
-                rows={3}
-              />
-            </div>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="lost-reason">Reason *</Label>
+            <Textarea
+              id="lost-reason"
+              placeholder="Describe circumstances..."
+              value={lostReason}
+              onChange={(e) => setLostReason(e.target.value)}
+              rows={2}
+            />
           </div>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isMarkingLost}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={isMarkingLost}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleMarkAsLost}
               disabled={isMarkingLost || !lostReason.trim()}
               className="bg-red-600 hover:bg-red-700"
             >
-              {isMarkingLost ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                "Mark as Lost"
-              )}
+              {isMarkingLost ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Mark as Lost
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

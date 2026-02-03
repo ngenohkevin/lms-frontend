@@ -20,7 +20,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
-  DollarSign,
+  Banknote,
   Loader2,
   ArrowLeft,
   Save,
@@ -50,9 +50,9 @@ export default function FineSettingsPage() {
   // Initialize form with current settings
   useEffect(() => {
     if (fineSettings) {
-      setFinePerDay(fineSettings.fine_per_day.toFixed(2));
-      setLostBookFine(fineSettings.lost_book_fine.toFixed(2));
-      setMaxFineAmount(fineSettings.max_fine_amount.toFixed(2));
+      setFinePerDay(Math.round(fineSettings.fine_per_day).toString());
+      setLostBookFine(Math.round(fineSettings.lost_book_fine).toString());
+      setMaxFineAmount(Math.round(fineSettings.max_fine_amount).toString());
       setGracePeriodDays(fineSettings.fine_grace_period_days.toString());
     }
   }, [fineSettings]);
@@ -76,16 +76,16 @@ export default function FineSettingsPage() {
     const maxFineAmountVal = parseFloat(maxFineAmount);
     const gracePeriodDaysVal = parseInt(gracePeriodDays);
 
-    if (isNaN(finePerDayVal) || finePerDayVal < 0 || finePerDayVal > 10) {
-      toast.error("Fine per day must be between $0.00 and $10.00");
+    if (isNaN(finePerDayVal) || finePerDayVal < 0 || finePerDayVal > 1000) {
+      toast.error("Fine per day must be between KSH 0 and KSH 1,000");
       return;
     }
-    if (isNaN(lostBookFineVal) || lostBookFineVal < 1 || lostBookFineVal > 500) {
-      toast.error("Lost book fine must be between $1.00 and $500.00");
+    if (isNaN(lostBookFineVal) || lostBookFineVal < 100 || lostBookFineVal > 50000) {
+      toast.error("Lost book fine must be between KSH 100 and KSH 50,000");
       return;
     }
-    if (isNaN(maxFineAmountVal) || maxFineAmountVal < 10 || maxFineAmountVal > 1000) {
-      toast.error("Maximum fine amount must be between $10.00 and $1000.00");
+    if (isNaN(maxFineAmountVal) || maxFineAmountVal < 1000 || maxFineAmountVal > 100000) {
+      toast.error("Maximum fine amount must be between KSH 1,000 and KSH 100,000");
       return;
     }
     if (isNaN(gracePeriodDaysVal) || gracePeriodDaysVal < 0 || gracePeriodDaysVal > 7) {
@@ -110,9 +110,9 @@ export default function FineSettingsPage() {
 
   const handleReset = () => {
     if (fineSettings) {
-      setFinePerDay(fineSettings.fine_per_day.toFixed(2));
-      setLostBookFine(fineSettings.lost_book_fine.toFixed(2));
-      setMaxFineAmount(fineSettings.max_fine_amount.toFixed(2));
+      setFinePerDay(Math.round(fineSettings.fine_per_day).toString());
+      setLostBookFine(Math.round(fineSettings.lost_book_fine).toString());
+      setMaxFineAmount(Math.round(fineSettings.max_fine_amount).toString());
       setGracePeriodDays(fineSettings.fine_grace_period_days.toString());
     }
   };
@@ -159,7 +159,7 @@ export default function FineSettingsPage() {
             </Button>
 
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2 mt-2">
-              <DollarSign className="h-6 w-6" />
+              <Banknote className="h-6 w-6" />
               Fine Settings
             </h1>
             <p className="text-muted-foreground">
@@ -225,20 +225,20 @@ export default function FineSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="finePerDay">Amount ($0.00 - $10.00)</Label>
+                  <Label htmlFor="finePerDay">Amount (KSH 0 - 1,000)</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      $
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      KSH
                     </span>
                     <Input
                       id="finePerDay"
                       type="number"
-                      step="0.01"
+                      step="1"
                       min="0"
-                      max="10"
+                      max="1000"
                       value={finePerDay}
                       onChange={(e) => setFinePerDay(e.target.value)}
-                      className="pl-7"
+                      className="pl-12"
                       disabled={!canManage}
                     />
                   </div>
@@ -268,20 +268,20 @@ export default function FineSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="lostBookFine">Amount ($1.00 - $500.00)</Label>
+                  <Label htmlFor="lostBookFine">Amount (KSH 100 - 50,000)</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      $
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      KSH
                     </span>
                     <Input
                       id="lostBookFine"
                       type="number"
-                      step="0.01"
-                      min="1"
-                      max="500"
+                      step="1"
+                      min="100"
+                      max="50000"
                       value={lostBookFine}
                       onChange={(e) => setLostBookFine(e.target.value)}
-                      className="pl-7"
+                      className="pl-12"
                       disabled={!canManage}
                     />
                   </div>
@@ -311,20 +311,20 @@ export default function FineSettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  <Label htmlFor="maxFineAmount">Amount ($10.00 - $1000.00)</Label>
+                  <Label htmlFor="maxFineAmount">Amount (KSH 1,000 - 100,000)</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      $
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      KSH
                     </span>
                     <Input
                       id="maxFineAmount"
                       type="number"
-                      step="0.01"
-                      min="10"
-                      max="1000"
+                      step="1"
+                      min="1000"
+                      max="100000"
                       value={maxFineAmount}
                       onChange={(e) => setMaxFineAmount(e.target.value)}
-                      className="pl-7"
+                      className="pl-12"
                       disabled={!canManage}
                     />
                   </div>
