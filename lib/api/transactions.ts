@@ -316,6 +316,15 @@ export const transactionsApi = {
     return response.data;
   },
 
+  // Cancel a renewal and set a new due date
+  cancelRenewal: async (id: string, newDueDate: string): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(
+      `${TRANSACTIONS_PREFIX}/${id}/cancel-renewal`,
+      { new_due_date: newDueDate }
+    );
+    return response.data;
+  },
+
   // Cancel a transaction (within grace period)
   cancel: async (id: string, reason: string): Promise<Transaction> => {
     const response = await apiClient.post<ApiResponse<Transaction>>(

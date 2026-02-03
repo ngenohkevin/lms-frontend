@@ -132,6 +132,10 @@ export function TransactionDetailDialog({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [showCancelRenewalDialog, setShowCancelRenewalDialog] = useState(false);
+  const [cancelRenewalDate, setCancelRenewalDate] = useState("");
+  const [isCancellingRenewal, setIsCancellingRenewal] = useState(false);
+
   const isActiveTransaction =
     transaction?.status === "active" || transaction?.status === "overdue";
   const {
@@ -183,6 +187,25 @@ export function TransactionDetailDialog({
       toast.error(err instanceof Error ? err.message : "Failed to renew book");
     } finally {
       setIsRenewing(false);
+    }
+  };
+
+  const handleCancelRenewal = async () => {
+    if (!transaction || !cancelRenewalDate) return;
+    setIsCancellingRenewal(true);
+    try {
+      await transactionsApi.cancelRenewal(transaction.id, cancelRenewalDate);
+      toast.success("Renewal cancelled successfully");
+      setShowCancelRenewalDialog(false);
+      setCancelRenewalDate("");
+      setRenewalSuccess(false);
+      setNewDueDate(null);
+      await invalidateRelatedCaches();
+      onRefresh?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to cancel renewal");
+    } finally {
+      setIsCancellingRenewal(false);
     }
   };
 
@@ -393,15 +416,25 @@ export function TransactionDetailDialog({
                     Renew Book
                   </h4>
                   {renewalCount > 0 && (
-                    <div className="text-right">
-                      <span className="text-xs text-muted-foreground">
-                        Renewed {renewalCount}x
-                      </span>
-                      {transaction.last_renewed_at && (
-                        <p className="text-xs text-muted-foreground">
-                          Last: {formatDate(transaction.last_renewed_at)}
-                        </p>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <span className="text-xs text-muted-foreground">
+                          Renewed {renewalCount}x
+                        </span>
+                        {transaction.last_renewed_at && (
+                          <p className="text-xs text-muted-foreground">
+                            Last: {formatDate(transaction.last_renewed_at)}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowCancelRenewalDialog(true)}
+                        className="h-6 px-2 text-xs text-orange-600 hover:text-orange-700"
+                      >
+                        Undo
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -606,6 +639,42 @@ export function TransactionDetailDialog({
             >
               {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Renewal Dialog */}
+      <AlertDialog open={showCancelRenewalDialog} onOpenChange={setShowCancelRenewalDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-orange-500" />
+              Cancel Renewal
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will undo the last renewal and set a new due date for &quot;{transaction.book?.title}&quot;.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="new-due-date">New Due Date *</Label>
+            <Input
+              id="new-due-date"
+              type="date"
+              value={cancelRenewalDate}
+              onChange={(e) => setCancelRenewalDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancellingRenewal}>Keep Renewal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelRenewal}
+              disabled={isCancellingRenewal || !cancelRenewalDate}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isCancellingRenewal ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Cancel Renewal
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
