@@ -16,6 +16,7 @@ import {
   User,
   Calendar,
   ArrowRightCircle,
+  ArrowLeftCircle,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -125,8 +126,10 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
   const [editingCopy, setEditingCopy] = useState<BookCopy | null>(null);
   const [deletingCopy, setDeletingCopy] = useState<BookCopy | null>(null);
   const [viewingHistoryCopy, setViewingHistoryCopy] = useState<BookCopy | null>(null);
+  const [returningCopy, setReturningCopy] = useState<BookCopy | null>(null);
   const [copyBorrowerInfo, setCopyBorrowerInfo] = useState<Map<number, BarcodeScanResult>>(new Map());
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isReturning, setIsReturning] = useState(false);
   const [isLoadingBorrowerInfo, setIsLoadingBorrowerInfo] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -257,6 +260,34 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       toast.error("Failed to generate copies");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!returningCopy) return;
+    const borrowerInfo = copyBorrowerInfo.get(returningCopy.id);
+    if (!borrowerInfo?.current_borrower?.transaction_id) {
+      toast.error("Cannot find active transaction for this copy");
+      setReturningCopy(null);
+      return;
+    }
+
+    setIsReturning(true);
+    try {
+      await transactionsApi.return(String(borrowerInfo.current_borrower.transaction_id));
+      toast.success("Book returned successfully");
+      setReturningCopy(null);
+      // Clear borrower info for this copy
+      setCopyBorrowerInfo((prev) => {
+        const newMap = new Map(prev);
+        newMap.delete(returningCopy.id);
+        return newMap;
+      });
+      refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to return book");
+    } finally {
+      setIsReturning(false);
     }
   };
 
@@ -436,6 +467,14 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                                   </Link>
                                 </DropdownMenuItem>
                               )}
+                              {copy.status === "borrowed" && copyBorrowerInfo.get(copy.id)?.current_borrower && (
+                                <DropdownMenuItem
+                                  onClick={() => setReturningCopy(copy)}
+                                >
+                                  <ArrowLeftCircle className="mr-2 h-4 w-4" />
+                                  Return Book
+                                </DropdownMenuItem>
+                              )}
                               <DropdownMenuItem
                                 onClick={() => setViewingHistoryCopy(copy)}
                               >
@@ -492,6 +531,12 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                                 <ArrowRightCircle className="mr-2 h-4 w-4" />
                                 Checkout
                               </Link>
+                            </DropdownMenuItem>
+                          )}
+                          {copy.status === "borrowed" && copyBorrowerInfo.get(copy.id)?.current_borrower && (
+                            <DropdownMenuItem onClick={() => setReturningCopy(copy)}>
+                              <ArrowLeftCircle className="mr-2 h-4 w-4" />
+                              Return Book
                             </DropdownMenuItem>
                           )}
                           <DropdownMenuItem onClick={() => setViewingHistoryCopy(copy)}>
@@ -638,6 +683,32 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Return Confirmation */}
+      <AlertDialog open={!!returningCopy} onOpenChange={() => setReturningCopy(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Return Book?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Return copy "{returningCopy?.copy_number}" borrowed by{" "}
+              {copyBorrowerInfo.get(returningCopy?.id || 0)?.current_borrower?.student_name}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isReturning}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReturn}
+              disabled={isReturning}
+            >
+              {isReturning ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Return Book"
               )}
             </AlertDialogAction>
           </AlertDialogFooter>

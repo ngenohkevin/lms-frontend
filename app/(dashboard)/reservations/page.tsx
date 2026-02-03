@@ -21,7 +21,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle, Bell, Loader2, Plus, Search, User } from "lucide-react";
+import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle, Bell, Loader2, Plus, Search, User, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Reservation, ReservationSearchParams, ReservationStatus, PaginatedResponse, Book, Student } from "@/lib/types";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
@@ -258,6 +258,16 @@ export default function ReservationsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      await reservationsApi.delete(id);
+      mutate();
+      toast.success("Reservation deleted");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete reservation");
+    }
+  };
+
   const handlePageChange = (page: number) => {
     setParams((prev) => ({ ...prev, page }));
   };
@@ -369,6 +379,19 @@ export default function ReservationsPage() {
               }}
             >
               Cancel
+            </Button>
+          )}
+          {canManage && (res.status === "cancelled" || res.status === "expired" || res.status === "fulfilled") && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(res.id);
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
             </Button>
           )}
         </div>

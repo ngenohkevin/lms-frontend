@@ -211,6 +211,11 @@ export const reservationsApi = {
     const response = await apiClient.post<ApiResponse<Reservation>>(`${RESERVATIONS_PREFIX}/${id}/ready`);
     return response.data;
   },
+
+  // Delete a reservation permanently
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${RESERVATIONS_PREFIX}/${id}`);
+  },
 };
 
 export default reservationsApi;
