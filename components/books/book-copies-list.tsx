@@ -133,7 +133,10 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
   // Pagination calculations
   const totalPages = Math.ceil(copies.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedCopies = copies.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  const paginatedCopies = React.useMemo(
+    () => copies.slice(startIndex, startIndex + ITEMS_PER_PAGE),
+    [copies, startIndex]
+  );
 
   // Reset to page 1 when search changes
   React.useEffect(() => {
@@ -149,34 +152,53 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
   }, [searchQuery]);
 
   // Fetch borrower info for borrowed copies (only for current page)
+  // Track which copies we need to fetch - only fetch if not already in cache
+  const borrowedCopyIds = React.useMemo(() => {
+    return paginatedCopies
+      .filter((copy) => copy.status === "borrowed" && copy.barcode)
+      .map((copy) => copy.id)
+      .sort()
+      .join(",");
+  }, [paginatedCopies]);
+
   React.useEffect(() => {
+    if (!borrowedCopyIds) {
+      setIsLoadingBorrowerInfo(false);
+      return;
+    }
+
     const fetchBorrowerInfo = async () => {
       const borrowedCopies = paginatedCopies.filter(
-        (copy) => copy.status === "borrowed" && copy.barcode
+        (copy) => copy.status === "borrowed" && copy.barcode && !copyBorrowerInfo.has(copy.id)
       );
-      if (borrowedCopies.length === 0) return;
+      if (borrowedCopies.length === 0) {
+        setIsLoadingBorrowerInfo(false);
+        return;
+      }
 
       setIsLoadingBorrowerInfo(true);
-      const infoMap = new Map<number, BarcodeScanResult>();
+      const newInfoMap = new Map(copyBorrowerInfo);
 
       await Promise.all(
         borrowedCopies.map(async (copy) => {
           if (!copy.barcode) return;
           try {
             const result = await transactionsApi.scanBarcode(copy.barcode);
-            infoMap.set(copy.id, result);
+            newInfoMap.set(copy.id, result);
           } catch {
-            // Ignore errors for individual copies
+            // Mark as fetched even on error to prevent infinite retries
+            newInfoMap.set(copy.id, {} as BarcodeScanResult);
           }
         })
       );
 
-      setCopyBorrowerInfo(infoMap);
+      setCopyBorrowerInfo(newInfoMap);
       setIsLoadingBorrowerInfo(false);
     };
 
     fetchBorrowerInfo();
-  }, [paginatedCopies]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [borrowedCopyIds]);
 
   const handleCreate = async (data: BookCopyFormData) => {
     setIsSubmitting(true);
