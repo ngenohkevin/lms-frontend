@@ -141,10 +141,14 @@ export const finesApi = {
   },
 
   // Waive a fine (admin/librarian only)
-  waive: async (id: string, reason?: string): Promise<Fine> => {
+  // Note: reason is required by the backend
+  waive: async (id: string, reason: string): Promise<Fine> => {
+    if (!reason || !reason.trim()) {
+      throw new Error("Reason is required to waive a fine");
+    }
     const response = await apiClient.post<ApiResponse<BackendFine>>(
       `${FINES_PREFIX}/${id}/waive`,
-      { reason }
+      { reason: reason.trim() }
     );
     return transformFine(response.data);
   },

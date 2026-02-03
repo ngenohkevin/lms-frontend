@@ -175,6 +175,10 @@ export const PermissionCodes = {
   SERIES_CREATE: "series.create",
   SERIES_UPDATE: "series.update",
   SERIES_DELETE: "series.delete",
+
+  // Settings
+  SETTINGS_VIEW: "settings.view",
+  SETTINGS_FINES: "settings.fines",
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];
@@ -197,4 +201,5 @@ export const PermissionCategoryNames: Record<string, string> = {
   authors: "Authors",
   languages: "Languages",
   series: "Series",
+  settings: "Settings",
 };

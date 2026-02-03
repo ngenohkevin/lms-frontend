@@ -21,6 +21,7 @@ import {
   Library,
   Building2,
   GraduationCap,
+  DollarSign,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -32,6 +33,13 @@ interface SettingsLink {
 }
 
 const settingsLinks: SettingsLink[] = [
+  {
+    title: "Fine Settings",
+    description: "Configure fine rates, grace periods, and maximum fine amounts",
+    href: "/settings/fines",
+    icon: DollarSign,
+    permission: PermissionCodes.FINES_VIEW,
+  },
   {
     title: "Permissions",
     description: "Manage role-based permissions and user access controls",

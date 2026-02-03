@@ -136,6 +136,10 @@ interface BackendTransactionRowWithCopy extends BackendTransactionRow {
   copy_number?: string;
   copy_barcode?: string;
   copy_condition?: string;
+  // Renewal tracking fields
+  renewal_count?: number;
+  last_renewed_at?: string;
+  last_renewed_by?: number;
 }
 
 // Transform backend transaction to frontend format
@@ -188,6 +192,10 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
     copy_number: txWithCopy.copy_number,
     copy_barcode: txWithCopy.copy_barcode,
     copy_condition: txWithCopy.copy_condition,
+    // Renewal tracking fields
+    renewal_count: txWithCopy.renewal_count ?? 0,
+    last_renewed_at: txWithCopy.last_renewed_at,
+    last_renewed_by: txWithCopy.last_renewed_by,
     created_at: tx.created_at,
     updated_at: tx.updated_at,
   };
@@ -401,10 +409,14 @@ export const transactionsApi = {
     },
 
     // Waive a fine (admin only)
-    waive: async (id: string, reason?: string): Promise<Fine> => {
+    // Note: reason is required by the backend
+    waive: async (id: string, reason: string): Promise<Fine> => {
+      if (!reason || !reason.trim()) {
+        throw new Error("Reason is required to waive a fine");
+      }
       const response = await apiClient.post<ApiResponse<Fine>>(
         `${FINES_PREFIX}/${id}/waive`,
-        { reason }
+        { reason: reason.trim() }
       );
       return response.data;
     },

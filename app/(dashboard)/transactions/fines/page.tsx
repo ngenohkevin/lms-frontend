@@ -22,6 +22,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   ArrowLeft,
   DollarSign,
@@ -43,6 +45,7 @@ export default function FinesPage() {
   const [actionFine, setActionFine] = useState<Fine | null>(null);
   const [actionType, setActionType] = useState<"pay" | "waive" | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [waiveReason, setWaiveReason] = useState("");
 
   const { fines, pagination, isLoading, refresh } = useFines({
     page,
@@ -73,11 +76,11 @@ export default function FinesPage() {
   };
 
   const handleWaiveFine = async () => {
-    if (!actionFine) return;
+    if (!actionFine || !waiveReason.trim()) return;
 
     setIsProcessing(true);
     try {
-      await transactionsApi.fines.waive(actionFine.id);
+      await transactionsApi.fines.waive(actionFine.id, waiveReason.trim());
       toast.success("Fine waived successfully");
       refresh();
     } catch (err) {
@@ -86,6 +89,7 @@ export default function FinesPage() {
       setIsProcessing(false);
       setActionFine(null);
       setActionType(null);
+      setWaiveReason("");
     }
   };
 
@@ -353,6 +357,7 @@ export default function FinesPage() {
             if (!open) {
               setActionFine(null);
               setActionType(null);
+              setWaiveReason("");
             }
           }}
         >
@@ -365,11 +370,21 @@ export default function FinesPage() {
                 This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
+            <div className="py-4">
+              <Label htmlFor="waive-reason">Reason for waiving *</Label>
+              <Input
+                id="waive-reason"
+                placeholder="Enter reason for waiving this fine..."
+                value={waiveReason}
+                onChange={(e) => setWaiveReason(e.target.value)}
+                className="mt-2"
+              />
+            </div>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleWaiveFine}
-                disabled={isProcessing}
+                disabled={isProcessing || !waiveReason.trim()}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
                 {isProcessing ? (

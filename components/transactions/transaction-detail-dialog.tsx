@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   BookOpen,
   User,
@@ -132,6 +133,7 @@ export function TransactionDetailDialog({
   const { user } = useAuth();
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewalSuccess, setRenewalSuccess] = useState(false);
+  const [extensionDays, setExtensionDays] = useState<number | undefined>(undefined);
 
   // Cancel transaction state
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -185,6 +187,7 @@ export function TransactionDetailDialog({
     try {
       await transactionsApi.renew(transaction.id, {
         librarian_id: user.id,
+        extension_days: extensionDays,
       });
 
       setRenewalSuccess(true);
@@ -434,17 +437,41 @@ export function TransactionDetailDialog({
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">New Due Date:</span>
                         <span className="font-medium">
-                          {formatDate(calculateNewDueDate(transaction.due_date))}
+                          {formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
                         </span>
                       </div>
-                      {transaction.renewed_count > 0 && (
+                      {(transaction.renewal_count ?? transaction.renewed_count ?? 0) > 0 && (
                         <div className="flex justify-between text-sm mt-1">
                           <span className="text-muted-foreground">
                             Times Renewed:
                           </span>
-                          <span>{transaction.renewed_count}</span>
+                          <span>{transaction.renewal_count ?? transaction.renewed_count}</span>
                         </div>
                       )}
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="extension-days" className="text-sm">
+                        Extension Period (optional)
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="extension-days"
+                          type="number"
+                          min={1}
+                          max={90}
+                          placeholder="Default (14 days)"
+                          value={extensionDays ?? ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setExtensionDays(val ? parseInt(val, 10) : undefined);
+                          }}
+                          className="w-32"
+                        />
+                        <span className="text-sm text-muted-foreground">days</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Leave blank to use default period based on student year
+                      </p>
                     </div>
                     <Button
                       className="w-full"

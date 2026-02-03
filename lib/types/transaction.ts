@@ -33,6 +33,10 @@ export interface Transaction {
   // Return condition fields (populated after return)
   return_condition?: BookCondition;
   condition_notes?: string;
+  // Renewal tracking fields
+  renewal_count?: number;
+  last_renewed_at?: string;
+  last_renewed_by?: number;
   created_at: string;
   updated_at: string;
 }
@@ -97,7 +101,7 @@ export type BookCondition = "excellent" | "good" | "fair" | "poor" | "damaged";
 
 export interface RenewRequest {
   librarian_id: number;
-  days?: number;
+  extension_days?: number;
 }
 
 export interface RenewalEligibility {

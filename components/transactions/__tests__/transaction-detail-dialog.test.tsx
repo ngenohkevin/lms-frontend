@@ -85,6 +85,7 @@ describe("TransactionDetailDialog", () => {
       canRenew: true,
       reason: "Eligible for renewal",
       isLoading: false,
+      error: null,
       refresh: vi.fn(),
     });
     // Default mock for renew API
@@ -161,6 +162,7 @@ describe("TransactionDetailDialog", () => {
       canRenew: false,
       reason: "Book already returned",
       isLoading: false,
+      error: null,
       refresh: vi.fn(),
     });
 
@@ -256,6 +258,7 @@ describe("TransactionDetailDialog", () => {
       canRenew: false,
       reason: "",
       isLoading: true,
+      error: null,
       refresh: vi.fn(),
     });
 
@@ -276,6 +279,7 @@ describe("TransactionDetailDialog", () => {
       canRenew: false,
       reason: "Maximum renewals reached",
       isLoading: false,
+      error: null,
       refresh: vi.fn(),
     });
 
