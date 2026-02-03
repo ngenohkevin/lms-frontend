@@ -105,6 +105,7 @@ export function TransactionDetailDialog({
   const { mutate: globalMutate } = useSWRConfig();
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewalSuccess, setRenewalSuccess] = useState(false);
+  const [newDueDate, setNewDueDate] = useState<string | null>(null);
   const [extensionDays, setExtensionDays] = useState<number | undefined>(undefined);
 
   // Invalidate all transaction, book, and student caches to ensure data consistency
@@ -167,10 +168,12 @@ export function TransactionDetailDialog({
     if (!transaction || !user) return;
     setIsRenewing(true);
     try {
-      await transactionsApi.renew(transaction.id, {
+      const result = await transactionsApi.renew(transaction.id, {
         librarian_id: user.id,
         extension_days: extensionDays,
       });
+      // Store the actual new due date from the API response
+      setNewDueDate(result.due_date);
       setRenewalSuccess(true);
       toast.success("Book renewed successfully");
       refreshRenewalStatus();
@@ -248,8 +251,10 @@ export function TransactionDetailDialog({
   };
 
   const getCancelExpiredMessage = () => {
-    if (!transaction) return "Cancel period expired";
+    if (!transaction?.created_at) return "Cancel period expired";
     const createdAt = new Date(transaction.created_at);
+    // Check for invalid date
+    if (isNaN(createdAt.getTime())) return "Cancel period expired";
     const hoursAgo = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60));
     if (hoursAgo < 24) {
       return `Cancel period expired (${hoursAgo}h ago)`;
@@ -410,7 +415,7 @@ export function TransactionDetailDialog({
                   <Alert className="bg-green-50 dark:bg-green-950 border-green-200 py-2">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800 dark:text-green-200 text-xs">
-                      Renewed! New due: {formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
+                      Renewed! New due: {newDueDate ? formatDate(newDueDate) : formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
                     </AlertDescription>
                   </Alert>
                 ) : canRenew ? (
