@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useSWRConfig } from "swr";
 import { transactionsApi, booksApi, studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/providers/auth-provider";
@@ -72,6 +73,7 @@ function BorrowContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { mutate: globalMutate } = useSWRConfig();
 
   // Book lookup
   const [bookSearch, setBookSearch] = useState("");
@@ -355,6 +357,17 @@ function BorrowContent() {
 
       setSuccess(true);
       toast.success("Book borrowed successfully");
+
+      // Invalidate related caches so other views refresh
+      globalMutate(
+        (key) =>
+          typeof key === "string" &&
+          (key.startsWith("/api/v1/transactions") ||
+            key.startsWith("/api/v1/books") ||
+            key.startsWith("/api/v1/students")),
+        undefined,
+        { revalidate: true }
+      );
     } catch (err) {
       if (abortController.signal.aborted) {
         return;
