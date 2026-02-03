@@ -67,7 +67,7 @@ export default function OverdueTransactionsPage() {
   // Calculate summary stats
   const totalOverdue = pagination?.total || overdueTransactions.length;
   const totalEstimatedFines = overdueTransactions.reduce(
-    (sum, tx) => sum + (tx.calculated_fine || tx.days_overdue * 0.5),
+    (sum, tx) => sum + (tx.calculated_fine || tx.days_overdue * 50),
     0
   );
   const criticalCount = overdueTransactions.filter(
@@ -147,7 +147,7 @@ export default function OverdueTransactionsPage() {
       header: "Est. Fine",
       render: (tx: OverdueTransaction) => (
         <span className="font-medium text-amber-600 dark:text-amber-400">
-          {formatCurrency(tx.calculated_fine || tx.days_overdue * 0.5)}
+          {formatCurrency(tx.calculated_fine || tx.days_overdue * 50)}
         </span>
       ),
     },

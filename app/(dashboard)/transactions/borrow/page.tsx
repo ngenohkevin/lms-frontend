@@ -232,7 +232,7 @@ function BorrowContent() {
     } else if (student.unpaid_fines > 0) {
       // Block selection for students with unpaid fines - they must pay fines first
       setError(
-        `Student has unpaid fines of $${student.unpaid_fines.toFixed(2)}. Fines must be paid before borrowing.`
+        `Student has unpaid fines of KSH ${Math.round(student.unpaid_fines).toLocaleString()}. Fines must be paid before borrowing.`
       );
       setSelectedStudent(null);
     } else {
@@ -303,7 +303,7 @@ function BorrowContent() {
         return;
       }
       if (revalidatedStudent.unpaid_fines > 0) {
-        setError(`Student has unpaid fines of $${revalidatedStudent.unpaid_fines.toFixed(2)}. Fines must be paid before borrowing.`);
+        setError(`Student has unpaid fines of KSH ${Math.round(revalidatedStudent.unpaid_fines).toLocaleString()}. Fines must be paid before borrowing.`);
         setSelectedStudent(null);
         return;
       }
@@ -625,7 +625,7 @@ function BorrowContent() {
                             </Badge>
                             {student.unpaid_fines > 0 && (
                               <Badge variant="destructive" className="text-xs">
-                                ${student.unpaid_fines.toFixed(2)} fine
+                                KSH {Math.round(student.unpaid_fines).toLocaleString()} fine
                               </Badge>
                             )}
                           </div>
@@ -664,7 +664,7 @@ function BorrowContent() {
                     </Badge>
                     {selectedStudent.unpaid_fines > 0 && (
                       <Badge variant="destructive">
-                        ${selectedStudent.unpaid_fines.toFixed(2)} unpaid
+                        KSH {Math.round(selectedStudent.unpaid_fines).toLocaleString()} unpaid
                       </Badge>
                     )}
                   </div>

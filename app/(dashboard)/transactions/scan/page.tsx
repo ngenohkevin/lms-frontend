@@ -309,7 +309,7 @@ export default function QuickScanPage() {
     scanResult?.current_borrower && mode === "return"
       ? calculateDaysOverdue(scanResult.current_borrower.due_date)
       : 0;
-  const estimatedFine = daysOverdue * 0.5;
+  const estimatedFine = daysOverdue * 50; // KSH 50 per day
 
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
@@ -639,7 +639,7 @@ export default function QuickScanPage() {
                       <Alert variant="destructive">
                         <AlertTriangle className="h-4 w-4" />
                         <AlertDescription>
-                          Fine: <strong>${estimatedFine.toFixed(2)}</strong> ({daysOverdue}{" "}
+                          Fine: <strong>KSH {estimatedFine.toLocaleString()}</strong> ({daysOverdue}{" "}
                           days overdue)
                         </AlertDescription>
                       </Alert>

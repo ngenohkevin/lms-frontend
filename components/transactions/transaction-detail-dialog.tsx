@@ -36,10 +36,12 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  DollarSign,
+  Banknote,
   XCircle,
   AlertOctagon,
+  Trash2,
 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils/format";
 import { toast } from "sonner";
 import type { Transaction } from "@/lib/types";
 
@@ -110,6 +112,9 @@ export function TransactionDetailDialog({
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState("");
   const [isMarkingLost, setIsMarkingLost] = useState(false);
+
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const isActiveTransaction =
     transaction?.status === "active" || transaction?.status === "overdue";
@@ -193,6 +198,22 @@ export function TransactionDetailDialog({
       toast.error(err instanceof Error ? err.message : "Failed to mark as lost");
     } finally {
       setIsMarkingLost(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!transaction) return;
+    setIsDeleting(true);
+    try {
+      await transactionsApi.delete(transaction.id);
+      toast.success("Transaction deleted successfully");
+      setShowDeleteDialog(false);
+      onRefresh?.();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to delete transaction");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -311,12 +332,12 @@ export function TransactionDetailDialog({
           {(transaction.fine_amount > 0 || (isOverdue && !transaction.returned_at)) && (
             <div className="flex items-center justify-between rounded-md bg-amber-50 dark:bg-amber-950 px-3 py-2">
               <div className="flex items-center gap-2 text-amber-800 dark:text-amber-200">
-                <DollarSign className="h-4 w-4" />
+                <Banknote className="h-4 w-4" />
                 <span>Fine</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-amber-800 dark:text-amber-200">
-                  ${(transaction.fine_amount || estimatedFine).toFixed(2)}
+                  {formatCurrency(transaction.fine_amount || estimatedFine)}
                 </span>
                 {transaction.fine_amount > 0 && (
                   <Badge variant={transaction.fine_paid ? "outline" : "destructive"} className="text-xs">
@@ -399,10 +420,10 @@ export function TransactionDetailDialog({
           )}
 
           {/* Actions - Compact Row */}
-          {isActiveTransaction && (
-            <>
-              <Separator />
-              <div className="flex items-center gap-2">
+          <Separator />
+          <div className="flex items-center gap-2">
+            {isActiveTransaction && (
+              <>
                 {canCancel() ? (
                   <Button
                     variant="outline"
@@ -424,15 +445,24 @@ export function TransactionDetailDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowLostDialog(true)}
-                    className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 ml-auto"
+                    className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
                   >
                     <AlertOctagon className="mr-1.5 h-3.5 w-3.5" />
                     Mark Lost
                   </Button>
                 )}
-              </div>
-            </>
-          )}
+              </>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 ml-auto"
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
         </div>
       </DialogContent>
 
@@ -504,6 +534,37 @@ export function TransactionDetailDialog({
             >
               {isMarkingLost ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Mark as Lost
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-500" />
+              Delete Transaction
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this transaction? This action cannot be undone.
+              {transaction.fine_amount > 0 && !transaction.fine_paid && (
+                <span className="block mt-2 text-amber-600">
+                  Note: This transaction has an unpaid fine of {formatCurrency(transaction.fine_amount)}.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

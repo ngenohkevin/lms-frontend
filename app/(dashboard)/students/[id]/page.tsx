@@ -426,12 +426,12 @@ export default function StudentDetailPage() {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Total fines:</span>
-                            <span className="font-medium">${(student?.total_fines ?? 0).toFixed(2)}</span>
+                            <span className="font-medium">{formatCurrency(student?.total_fines ?? 0)}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-muted-foreground">Unpaid fines:</span>
                             <span className={`font-medium ${(student?.unpaid_fines ?? 0) > 0 ? "text-red-600" : ""}`}>
-                              ${(student?.unpaid_fines ?? 0).toFixed(2)}
+                              {formatCurrency(student?.unpaid_fines ?? 0)}
                             </span>
                           </div>
                         </div>

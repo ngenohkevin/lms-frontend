@@ -332,6 +332,11 @@ export const transactionsApi = {
     return response.data;
   },
 
+  // Delete a transaction
+  delete: async (id: string): Promise<void> => {
+    await apiClient.delete(`${TRANSACTIONS_PREFIX}/${id}`);
+  },
+
   // Get overdue transactions
   getOverdue: async (params?: {
     page?: number;

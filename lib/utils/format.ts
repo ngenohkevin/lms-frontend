@@ -26,11 +26,11 @@ export function daysUntilDue(dueDate: string | Date): number {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
-export function formatCurrency(amount: number, currency = "USD"): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency,
-  }).format(amount);
+export function formatCurrency(amount: number): string {
+  return `KSH ${new Intl.NumberFormat("en-KE", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount))}`;
 }
 
 export function formatNumber(num: number): string {

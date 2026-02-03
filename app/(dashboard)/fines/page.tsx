@@ -66,7 +66,7 @@ export default function FinesPage() {
   // Fetch students with high fines
   const { data: highFineStudents } = useSWR<StudentWithHighFines[]>(
     "/api/v1/fines/high-fines",
-    () => finesApi.getStudentsWithHighFines(50) // $50 threshold
+    () => finesApi.getStudentsWithHighFines(5000) // KSH 5000 threshold
   );
 
   const fines = finesData?.data || [];
@@ -331,7 +331,7 @@ export default function FinesPage() {
               Students with High Fines
             </CardTitle>
             <CardDescription>
-              {highFineStudents.length} student(s) have unpaid fines exceeding $50
+              {highFineStudents.length} student(s) have unpaid fines exceeding KSH 5,000
             </CardDescription>
           </CardHeader>
           <CardContent>

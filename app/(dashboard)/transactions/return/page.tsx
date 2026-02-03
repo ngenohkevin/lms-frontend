@@ -172,7 +172,7 @@ export default function ReturnPage() {
   const daysOverdue = scanResult?.current_borrower
     ? calculateDaysOverdue(scanResult.current_borrower.due_date)
     : 0;
-  const estimatedFine = daysOverdue * 0.5; // $0.50 per day
+  const estimatedFine = daysOverdue * 50; // KSH 50 per day
 
   if (success) {
     return (
@@ -189,7 +189,7 @@ export default function ReturnPage() {
           </p>
           {daysOverdue > 0 && (
             <p className="text-amber-600 dark:text-amber-400 mb-4">
-              Fine of ${estimatedFine.toFixed(2)} has been recorded ({daysOverdue} days overdue).
+              Fine of KSH {estimatedFine.toLocaleString()} has been recorded ({daysOverdue} days overdue).
             </p>
           )}
           <div className="flex justify-center gap-4 mt-6">
@@ -326,8 +326,8 @@ export default function ReturnPage() {
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription>
                         This book is {daysOverdue} days overdue. A fine of{" "}
-                        <strong>${estimatedFine.toFixed(2)}</strong> will be applied
-                        ($0.50/day).
+                        <strong>KSH {estimatedFine.toLocaleString()}</strong> will be applied
+                        (KSH 50/day).
                       </AlertDescription>
                     </Alert>
                   )}
@@ -402,7 +402,7 @@ export default function ReturnPage() {
                         </span>
                         <span className="text-muted-foreground">Fine:</span>
                         <span className="text-destructive font-medium">
-                          ${estimatedFine.toFixed(2)}
+                          KSH {estimatedFine.toLocaleString()}
                         </span>
                       </>
                     )}
