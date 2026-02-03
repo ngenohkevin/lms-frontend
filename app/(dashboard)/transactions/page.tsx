@@ -29,6 +29,7 @@ const statusColors: Record<TransactionStatus, string> = {
   returned: "bg-green-500/10 text-green-700 border-green-500/20",
   overdue: "bg-red-500/10 text-red-700 border-red-500/20",
   lost: "bg-gray-500/10 text-gray-700 border-gray-500/20",
+  cancelled: "bg-orange-500/10 text-orange-700 border-orange-500/20",
 };
 
 export default function TransactionsPage() {

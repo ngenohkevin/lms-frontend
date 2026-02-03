@@ -22,6 +22,12 @@ import { Loader2 } from "lucide-react";
 import type { Student, StudentFormData } from "@/lib/types";
 import { toast } from "sonner";
 
+// Get today's date in YYYY-MM-DD format for validation
+const getTodayISO = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0];
+};
+
 const studentSchema = z.object({
   student_id: z.string().min(1, "Student ID is required"),
   first_name: z.string().min(1, "First name is required"),
@@ -32,7 +38,16 @@ const studentSchema = z.object({
   year_of_study: z.number().min(1).max(10).optional(),
   max_books: z.number().min(1).max(20).optional(),
   password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
-  enrollment_date: z.string().optional(),
+  enrollment_date: z.string().optional().refine(
+    (date) => {
+      if (!date) return true; // Allow empty
+      const inputDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return inputDate <= today;
+    },
+    { message: "Enrollment date cannot be in the future" }
+  ),
 });
 
 type FormValues = z.infer<typeof studentSchema>;
@@ -247,8 +262,12 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           <Input
             id="enrollment_date"
             type="date"
+            max={getTodayISO()}
             {...register("enrollment_date")}
           />
+          {errors.enrollment_date && (
+            <p className="text-sm text-destructive">{errors.enrollment_date.message}</p>
+          )}
         </div>
 
         {!isEditing && (

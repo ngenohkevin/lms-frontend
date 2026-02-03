@@ -11,10 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   BookOpen,
   User,
@@ -27,6 +39,8 @@ import {
   DollarSign,
   Hash,
   ScanLine,
+  XCircle,
+  AlertOctagon,
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Transaction } from "@/lib/types";
@@ -119,6 +133,16 @@ export function TransactionDetailDialog({
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewalSuccess, setRenewalSuccess] = useState(false);
 
+  // Cancel transaction state
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [cancelReason, setCancelReason] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  // Mark as lost state
+  const [showLostDialog, setShowLostDialog] = useState(false);
+  const [lostReason, setLostReason] = useState("");
+  const [isMarkingLost, setIsMarkingLost] = useState(false);
+
   // Only check renewal eligibility for active transactions
   const isActiveTransaction =
     transaction?.status === "active" || transaction?.status === "overdue";
@@ -132,6 +156,20 @@ export function TransactionDetailDialog({
   );
 
   if (!transaction) return null;
+
+  // Check if transaction can be cancelled (within 1 hour of creation)
+  const canCancel = () => {
+    if (transaction.status !== "active") return false;
+    const createdAt = new Date(transaction.created_at);
+    const now = new Date();
+    const hoursSinceCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+    return hoursSinceCreation <= 1;
+  };
+
+  // Check if transaction can be marked as lost
+  const canMarkAsLost = () => {
+    return transaction.status === "active" || transaction.status === "overdue";
+  };
 
   const daysOverdue =
     !transaction.returned_at && transaction.due_date
@@ -160,6 +198,58 @@ export function TransactionDetailDialog({
     } finally {
       setIsRenewing(false);
     }
+  };
+
+  const handleCancel = async () => {
+    if (!transaction || !cancelReason.trim()) return;
+
+    setIsCancelling(true);
+    try {
+      await transactionsApi.cancel(transaction.id, cancelReason.trim());
+      toast.success("Transaction cancelled successfully");
+      setShowCancelDialog(false);
+      setCancelReason("");
+      onRefresh?.();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to cancel transaction"
+      );
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleMarkAsLost = async () => {
+    if (!transaction || !lostReason.trim()) return;
+
+    setIsMarkingLost(true);
+    try {
+      await transactionsApi.markAsLost(transaction.id, lostReason.trim());
+      toast.success("Transaction marked as lost");
+      setShowLostDialog(false);
+      setLostReason("");
+      onRefresh?.();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to mark as lost"
+      );
+    } finally {
+      setIsMarkingLost(false);
+    }
+  };
+
+  // Calculate time remaining for cancellation
+  const getCancelTimeRemaining = () => {
+    if (!transaction) return null;
+    const createdAt = new Date(transaction.created_at);
+    const deadline = new Date(createdAt.getTime() + 60 * 60 * 1000); // 1 hour
+    const now = new Date();
+    const remaining = deadline.getTime() - now.getTime();
+    if (remaining <= 0) return null;
+    const minutes = Math.floor(remaining / (1000 * 60));
+    return `${minutes} min remaining`;
   };
 
   return (
@@ -394,8 +484,153 @@ export function TransactionDetailDialog({
               </div>
             </>
           )}
+
+          {/* Actions Section */}
+          {isActiveTransaction && (
+            <>
+              <Separator />
+              <div className="space-y-3">
+                <h4 className="font-medium">Actions</h4>
+                <div className="flex flex-wrap gap-2">
+                  {canCancel() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowCancelDialog(true)}
+                      className="text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-950"
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Cancel Transaction
+                      {getCancelTimeRemaining() && (
+                        <span className="ml-2 text-xs opacity-70">
+                          ({getCancelTimeRemaining()})
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                  {canMarkAsLost() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowLostDialog(true)}
+                      className="text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
+                    >
+                      <AlertOctagon className="mr-2 h-4 w-4" />
+                      Mark as Lost
+                    </Button>
+                  )}
+                </div>
+                {!canCancel() && transaction.status === "active" && (
+                  <p className="text-xs text-muted-foreground">
+                    Cancel period expired (1 hour after creation)
+                  </p>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </DialogContent>
+
+      {/* Cancel Transaction Dialog */}
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <XCircle className="h-5 w-5 text-orange-500" />
+              Cancel Transaction
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will cancel the borrowing of &quot;{transaction.book?.title}&quot; and
+              return the book to available status. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="cancel-reason">Reason for cancellation *</Label>
+              <Textarea
+                id="cancel-reason"
+                placeholder="Enter the reason for cancelling this transaction..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isCancelling}>
+              Keep Transaction
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancel}
+              disabled={isCancelling || !cancelReason.trim()}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Cancelling...
+                </>
+              ) : (
+                "Cancel Transaction"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Mark as Lost Dialog */}
+      <AlertDialog open={showLostDialog} onOpenChange={setShowLostDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertOctagon className="h-5 w-5 text-red-500" />
+              Mark Book as Lost
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Marking &quot;{transaction.book?.title}&quot; as lost will apply a replacement
+              fine to the student&apos;s account. The book will be removed from circulation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <Alert className="bg-amber-50 dark:bg-amber-950 border-amber-200">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 dark:text-amber-200">
+                A replacement fine will be applied to the student&apos;s account.
+                Make sure to verify the book is truly lost before proceeding.
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label htmlFor="lost-reason">Reason / Notes *</Label>
+              <Textarea
+                id="lost-reason"
+                placeholder="Describe the circumstances (e.g., student reported loss, never returned after multiple reminders)..."
+                value={lostReason}
+                onChange={(e) => setLostReason(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarkingLost}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleMarkAsLost}
+              disabled={isMarkingLost || !lostReason.trim()}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isMarkingLost ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                "Mark as Lost"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

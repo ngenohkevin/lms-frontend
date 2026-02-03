@@ -123,3 +123,24 @@ export const getStatusColor = (status: StudentStatus): string => {
       return "bg-gray-100 text-gray-800";
   }
 };
+
+// Bulk operation types
+export interface BulkStatusUpdateRequest {
+  student_ids: number[];
+  is_active: boolean;
+}
+
+export interface BulkStatusUpdateResponse {
+  updated: number;
+}
+
+export interface BulkDepartmentUpdateRequest {
+  student_ids: number[];
+  department_id: number;
+}
+
+export interface BulkDepartmentUpdateResponse {
+  updated: number;
+  requested: number;
+  department_id: number;
+}

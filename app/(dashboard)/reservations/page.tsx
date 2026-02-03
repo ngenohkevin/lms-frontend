@@ -1,19 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import useSWR from "swr";
 import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
 import { PermissionCodes } from "@/lib/types/permission";
-import { reservationsApi } from "@/lib/api";
+import { reservationsApi, booksApi, studentsApi } from "@/lib/api";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle, Bell } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle, Bell, Loader2, Plus, Search, User } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import type { Reservation, ReservationSearchParams, ReservationStatus, PaginatedResponse } from "@/lib/types";
+import type { Reservation, ReservationSearchParams, ReservationStatus, PaginatedResponse, Book, Student } from "@/lib/types";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { toast } from "sonner";
 
 const statusColors: Record<ReservationStatus, string> = {
@@ -33,6 +45,8 @@ const statusIcons: Record<ReservationStatus, React.ComponentType<{ className?: s
 };
 
 export default function ReservationsPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const { isStudent, user } = useAuth();
   const { hasPermission } = usePermissions();
   const canManage = hasPermission(PermissionCodes.RESERVATIONS_MANAGE);
@@ -43,6 +57,82 @@ export default function ReservationsPage() {
     student_id: !canViewAll && isStudent ? String(user?.id) : undefined,
   });
 
+  // Create reservation dialog state
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createBookId, setCreateBookId] = useState<string | null>(null);
+  const [createBook, setCreateBook] = useState<Book | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingBook, setIsLoadingBook] = useState(false);
+
+  // Student search state (for librarian)
+  const [studentSearch, setStudentSearch] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [studentResults, setStudentResults] = useState<Student[]>([]);
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [isSearchingStudent, setIsSearchingStudent] = useState(false);
+  const studentSearchRef = useRef<HTMLDivElement>(null);
+  const debouncedStudentSearch = useDebounce(studentSearch, 300);
+
+  // Student search effect
+  useEffect(() => {
+    if (!debouncedStudentSearch.trim() || selectedStudent || !showCreateDialog) {
+      setStudentResults([]);
+      setShowStudentDropdown(false);
+      return;
+    }
+
+    const searchStudents = async () => {
+      setIsSearchingStudent(true);
+      try {
+        const results = await studentsApi.search({ query: debouncedStudentSearch.trim(), per_page: 8 });
+        setStudentResults(results.data);
+        setShowStudentDropdown(results.data.length > 0);
+      } catch {
+        setStudentResults([]);
+        setShowStudentDropdown(false);
+      } finally {
+        setIsSearchingStudent(false);
+      }
+    };
+    searchStudents();
+  }, [debouncedStudentSearch, selectedStudent, showCreateDialog]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (studentSearchRef.current && !studentSearchRef.current.contains(event.target as Node)) {
+        setShowStudentDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Handle URL params for action=create
+  useEffect(() => {
+    const action = searchParams.get("action");
+    const bookId = searchParams.get("book_id");
+    if (action === "create" && bookId) {
+      setCreateBookId(bookId);
+      setShowCreateDialog(true);
+    }
+  }, [searchParams]);
+
+  // Fetch book details when dialog opens with book_id
+  useEffect(() => {
+    if (createBookId && showCreateDialog) {
+      setIsLoadingBook(true);
+      booksApi.get(createBookId)
+        .then((book) => setCreateBook(book))
+        .catch(() => {
+          toast.error("Failed to load book details");
+          setShowCreateDialog(false);
+        })
+        .finally(() => setIsLoadingBook(false));
+    }
+  }, [createBookId, showCreateDialog]);
+
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Reservation>>(
     ["/api/v1/reservations", params],
     () => reservationsApi.list(params)
@@ -50,6 +140,53 @@ export default function ReservationsPage() {
 
   const reservations = data?.data;
   const pagination = data?.pagination;
+
+  const handleCreateReservation = async () => {
+    if (!createBookId) return;
+
+    setIsCreating(true);
+    try {
+      // If librarian, they can select a student. If student, use their own ID
+      const studentId = canManage && selectedStudent ? selectedStudent.id : user?.id ? String(user.id) : undefined;
+
+      if (!studentId) {
+        toast.error("Student ID is required");
+        return;
+      }
+
+      await reservationsApi.create({
+        book_id: createBookId,
+        student_id: studentId,
+      });
+
+      toast.success("Book reserved successfully");
+      handleCloseCreateDialog();
+      mutate();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create reservation");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleCloseCreateDialog = () => {
+    setShowCreateDialog(false);
+    setCreateBookId(null);
+    setCreateBook(null);
+    setSelectedStudent(null);
+    setStudentSearch("");
+    setStudentResults([]);
+    setShowStudentDropdown(false);
+    // Clear URL params
+    router.replace("/reservations");
+  };
+
+  const handleSelectStudent = (student: Student) => {
+    setSelectedStudent(student);
+    setStudentSearch("");
+    setStudentResults([]);
+    setShowStudentDropdown(false);
+  };
 
   const handleCancel = async (id: string) => {
     try {
@@ -231,6 +368,141 @@ export default function ReservationsPage() {
         isLoading={isLoading}
         emptyMessage="No reservations found."
       />
+
+      {/* Create Reservation Dialog */}
+      <Dialog open={showCreateDialog} onOpenChange={(open) => !open && handleCloseCreateDialog()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reserve Book</DialogTitle>
+            <DialogDescription>
+              Reserve this book to be notified when it becomes available.
+            </DialogDescription>
+          </DialogHeader>
+
+          {isLoadingBook ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : createBook ? (
+            <div className="space-y-4 py-4">
+              {/* Book Info */}
+              <div className="rounded-lg border p-4">
+                <div className="flex items-start gap-4">
+                  <div className="h-14 w-11 rounded bg-muted flex items-center justify-center shrink-0">
+                    <BookOpen className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium">{createBook.title}</p>
+                    <p className="text-sm text-muted-foreground">
+                      by {createBook.author}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {createBook.available_copies} of {createBook.total_copies} available
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Selection (librarian only) */}
+              {canManage && (
+                <div className="space-y-2">
+                  <Label>Reserve for Student</Label>
+                  {selectedStudent ? (
+                    <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                        <User className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{selectedStudent.name}</p>
+                        <p className="text-sm text-muted-foreground">{selectedStudent.student_id}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedStudent(null)}
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="relative" ref={studentSearchRef}>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Search by name or student ID..."
+                          value={studentSearch}
+                          onChange={(e) => setStudentSearch(e.target.value)}
+                          className="pl-10"
+                        />
+                        {isSearchingStudent && (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+                      {showStudentDropdown && studentResults.length > 0 && (
+                        <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                          {studentResults.map((student) => (
+                            <button
+                              key={student.id}
+                              type="button"
+                              className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-3"
+                              onClick={() => handleSelectStudent(student)}
+                            >
+                              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                <User className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">{student.name}</p>
+                                <p className="text-xs text-muted-foreground">{student.student_id}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Info for students */}
+              {!canManage && (
+                <Alert>
+                  <Bell className="h-4 w-4" />
+                  <AlertDescription>
+                    You will be notified when this book becomes available.
+                    Your position in the queue will be shown after reservation.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">
+              Book not found
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseCreateDialog}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateReservation}
+              disabled={isCreating || isLoadingBook || !createBook || (canManage && !selectedStudent)}
+            >
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Reserving...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Reserve Book
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

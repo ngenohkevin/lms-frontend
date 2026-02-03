@@ -6,6 +6,10 @@ import type {
   StudentImportResult,
   StudentAnalytics,
   PaginatedResponse,
+  BulkStatusUpdateRequest,
+  BulkStatusUpdateResponse,
+  BulkDepartmentUpdateRequest,
+  BulkDepartmentUpdateResponse,
 } from "@/lib/types";
 
 const STUDENTS_PREFIX = "/api/v1/students";
@@ -309,6 +313,24 @@ export const studentsApi = {
     const response = await apiClient.post<ApiResponse<{ message: string }>>(
       `${STUDENTS_PREFIX}/${id}/reset-password`,
       { password: newPassword }
+    );
+    return response.data;
+  },
+
+  // Bulk update student status
+  bulkUpdateStatus: async (data: BulkStatusUpdateRequest): Promise<BulkStatusUpdateResponse> => {
+    const response = await apiClient.put<ApiResponse<BulkStatusUpdateResponse>>(
+      `${STUDENTS_PREFIX}/status/bulk`,
+      data
+    );
+    return response.data;
+  },
+
+  // Bulk update student department
+  bulkUpdateDepartment: async (data: BulkDepartmentUpdateRequest): Promise<BulkDepartmentUpdateResponse> => {
+    const response = await apiClient.put<ApiResponse<BulkDepartmentUpdateResponse>>(
+      `${STUDENTS_PREFIX}/department/bulk`,
+      data
     );
     return response.data;
   },

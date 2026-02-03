@@ -30,12 +30,19 @@ export interface Transaction {
   copy_number?: string;
   copy_barcode?: string;
   copy_condition?: string;
+  // Return condition fields (populated after return)
+  return_condition?: BookCondition;
+  condition_notes?: string;
   created_at: string;
   updated_at: string;
 }
 
 export type TransactionType = "borrow" | "return" | "renew";
-export type TransactionStatus = "active" | "returned" | "overdue" | "lost";
+export type TransactionStatus = "active" | "returned" | "overdue" | "lost" | "cancelled";
+
+export interface CancelTransactionRequest {
+  reason: string;
+}
 
 export interface BorrowRequest {
   book_id: string;
@@ -141,4 +148,27 @@ export interface TransactionStats {
   total_returned_today: number;
   total_borrowed_today: number;
   total_unpaid_fines: number;
+}
+
+// Bulk operation types
+export interface BulkPayFinesRequest {
+  transaction_ids: number[];
+}
+
+export interface BulkPayFinesResponse {
+  paid_count: number;
+  requested: number;
+  already_paid: number;
+}
+
+export interface BulkWaiveFinesRequest {
+  transaction_ids: number[];
+  reason: string;
+}
+
+export interface BulkWaiveFinesResponse {
+  waived_count: number;
+  requested: number;
+  already_waived: number;
+  reason: string;
 }

@@ -14,6 +14,10 @@ import type {
   OverdueTransaction,
   TransactionStats,
   PaginatedResponse,
+  BulkPayFinesRequest,
+  BulkPayFinesResponse,
+  BulkWaiveFinesRequest,
+  BulkWaiveFinesResponse,
 } from "@/lib/types";
 
 const TRANSACTIONS_PREFIX = "/api/v1/transactions";
@@ -51,14 +55,22 @@ interface BackendTransactionRow {
   updated_at: string;
   return_condition?: string;
   condition_notes?: string;
-  // Joined student fields
-  first_name: string;
-  last_name: string;
-  student_id_2: string; // The student's ID string (like "STU001")
-  // Joined book fields
-  title: string;
-  author: string;
-  book_id_2: string; // The book's ID string (like "ISBN-123")
+  // Joined student fields (from history endpoint)
+  first_name?: string;
+  last_name?: string;
+  student_id_2?: string; // The student's ID string (like "STU001")
+  // Joined book fields (from history endpoint)
+  title?: string;
+  author?: string;
+  book_id_2?: string; // The book's ID string (like "ISBN-123")
+  // Search endpoint returns different field names
+  student_name?: string;
+  student_code?: string;
+  book_title?: string;
+  book_author?: string;
+  book_code?: string;
+  status?: string;
+  days_overdue?: number;
 }
 
 // Backend paginated response structures
@@ -129,13 +141,29 @@ interface BackendTransactionRowWithCopy extends BackendTransactionRow {
 // Transform backend transaction to frontend format
 function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowWithCopy): Transaction {
   const txWithCopy = tx as BackendTransactionRowWithCopy;
+
+  // Handle both field name formats from different endpoints
+  // History endpoint: first_name, last_name, title, author, student_id_2, book_id_2
+  // Search endpoint: student_name, student_code, book_title, book_author, book_code
+  const bookTitle = tx.book_title || tx.title || "Unknown";
+  const bookAuthor = tx.book_author || tx.author || "Unknown";
+  const bookCode = tx.book_code || tx.book_id_2 || "";
+  const studentName = tx.student_name ||
+    `${tx.first_name || ""} ${tx.last_name || ""}`.trim() ||
+    "Unknown";
+  const studentCode = tx.student_code || tx.student_id_2 || "";
+
+  // Use status from backend if available (search endpoint), otherwise compute it
+  const status = (tx.status as "active" | "returned" | "overdue" | "lost") ||
+    mapTransactionStatus(tx.transaction_type, tx.returned_date);
+
   return {
     id: String(tx.id),
     book_id: String(tx.book_id),
     student_id: String(tx.student_id),
     librarian_id: tx.librarian_id ? String(tx.librarian_id) : undefined,
     type: tx.transaction_type as "borrow" | "return" | "renew",
-    status: mapTransactionStatus(tx.transaction_type, tx.returned_date),
+    status,
     borrowed_at: tx.transaction_date,
     due_date: tx.due_date,
     returned_at: tx.returned_date,
@@ -145,14 +173,14 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
     notes: tx.notes,
     book: {
       id: String(tx.book_id),
-      title: tx.title || "Unknown",
-      author: tx.author || "Unknown",
-      isbn: tx.book_id_2 || "",
+      title: bookTitle,
+      author: bookAuthor,
+      isbn: bookCode,
     },
     student: {
       id: String(tx.student_id),
-      student_id: tx.student_id_2 || "",
-      name: `${tx.first_name || ""} ${tx.last_name || ""}`.trim() || "Unknown",
+      student_id: studentCode,
+      name: studentName,
       email: "", // Not available in this query
     },
     // Copy-level tracking fields
@@ -278,6 +306,24 @@ export const transactionsApi = {
     return response.data;
   },
 
+  // Cancel a transaction (within grace period)
+  cancel: async (id: string, reason: string): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(
+      `${TRANSACTIONS_PREFIX}/${id}/cancel`,
+      { reason }
+    );
+    return response.data;
+  },
+
+  // Mark a transaction as lost (applies replacement fine)
+  markAsLost: async (id: string, reason: string): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(
+      `${TRANSACTIONS_PREFIX}/${id}/lost`,
+      { reason }
+    );
+    return response.data;
+  },
+
   // Get overdue transactions
   getOverdue: async (params?: {
     page?: number;
@@ -377,6 +423,24 @@ export const transactionsApi = {
         `${FINES_PREFIX}/statistics`
       );
       return response.data || { statistics: {}, fine_per_day: 0.5 };
+    },
+
+    // Bulk pay multiple fines
+    bulkPay: async (data: BulkPayFinesRequest): Promise<BulkPayFinesResponse> => {
+      const response = await apiClient.post<ApiResponse<BulkPayFinesResponse>>(
+        `${FINES_PREFIX}/bulk-pay`,
+        data
+      );
+      return response.data;
+    },
+
+    // Bulk waive multiple fines
+    bulkWaive: async (data: BulkWaiveFinesRequest): Promise<BulkWaiveFinesResponse> => {
+      const response = await apiClient.post<ApiResponse<BulkWaiveFinesResponse>>(
+        `${FINES_PREFIX}/bulk-waive`,
+        data
+      );
+      return response.data;
     },
   },
 };
