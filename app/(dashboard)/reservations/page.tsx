@@ -64,6 +64,14 @@ export default function ReservationsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isLoadingBook, setIsLoadingBook] = useState(false);
 
+  // Book search state (for manual reservation creation)
+  const [bookSearch, setBookSearch] = useState("");
+  const [bookResults, setBookResults] = useState<Book[]>([]);
+  const [showBookDropdown, setShowBookDropdown] = useState(false);
+  const [isSearchingBook, setIsSearchingBook] = useState(false);
+  const bookSearchRef = useRef<HTMLDivElement>(null);
+  const debouncedBookSearch = useDebounce(bookSearch, 300);
+
   // Student search state (for librarian)
   const [studentSearch, setStudentSearch] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -72,6 +80,30 @@ export default function ReservationsPage() {
   const [isSearchingStudent, setIsSearchingStudent] = useState(false);
   const studentSearchRef = useRef<HTMLDivElement>(null);
   const debouncedStudentSearch = useDebounce(studentSearch, 300);
+
+  // Book search effect
+  useEffect(() => {
+    if (!debouncedBookSearch.trim() || createBook || !showCreateDialog) {
+      setBookResults([]);
+      setShowBookDropdown(false);
+      return;
+    }
+
+    const searchBooks = async () => {
+      setIsSearchingBook(true);
+      try {
+        const results = await booksApi.search({ query: debouncedBookSearch.trim(), per_page: 8 });
+        setBookResults(results.data);
+        setShowBookDropdown(results.data.length > 0);
+      } catch {
+        setBookResults([]);
+        setShowBookDropdown(false);
+      } finally {
+        setIsSearchingBook(false);
+      }
+    };
+    searchBooks();
+  }, [debouncedBookSearch, createBook, showCreateDialog]);
 
   // Student search effect
   useEffect(() => {
@@ -97,11 +129,14 @@ export default function ReservationsPage() {
     searchStudents();
   }, [debouncedStudentSearch, selectedStudent, showCreateDialog]);
 
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (studentSearchRef.current && !studentSearchRef.current.contains(event.target as Node)) {
         setShowStudentDropdown(false);
+      }
+      if (bookSearchRef.current && !bookSearchRef.current.contains(event.target as Node)) {
+        setShowBookDropdown(false);
       }
     };
 
@@ -177,8 +212,23 @@ export default function ReservationsPage() {
     setStudentSearch("");
     setStudentResults([]);
     setShowStudentDropdown(false);
+    setBookSearch("");
+    setBookResults([]);
+    setShowBookDropdown(false);
     // Clear URL params
     router.replace("/reservations");
+  };
+
+  const handleSelectBook = (book: Book) => {
+    setCreateBook(book);
+    setCreateBookId(book.id);
+    setBookSearch("");
+    setBookResults([]);
+    setShowBookDropdown(false);
+  };
+
+  const handleOpenNewReservation = () => {
+    setShowCreateDialog(true);
   };
 
   const handleSelectStudent = (student: Student) => {
@@ -342,6 +392,10 @@ export default function ReservationsPage() {
               : "View your book reservations"}
           </p>
         </div>
+        <Button onClick={handleOpenNewReservation}>
+          <Plus className="mr-2 h-4 w-4" />
+          New Reservation
+        </Button>
       </div>
 
       {/* Ready for Pickup Banner */}
@@ -400,6 +454,17 @@ export default function ReservationsPage() {
                       {createBook.available_copies} of {createBook.total_copies} available
                     </p>
                   </div>
+                  {/* Allow changing book selection */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setCreateBook(null);
+                      setCreateBookId(null);
+                    }}
+                  >
+                    <XCircle className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
 
@@ -475,8 +540,48 @@ export default function ReservationsPage() {
               )}
             </div>
           ) : (
-            <div className="py-8 text-center text-muted-foreground">
-              Book not found
+            <div className="space-y-4 py-4">
+              {/* Book Search */}
+              <div className="space-y-2">
+                <Label>Search for a Book</Label>
+                <div className="relative" ref={bookSearchRef}>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by title, author, or ISBN..."
+                      value={bookSearch}
+                      onChange={(e) => setBookSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                    {isSearchingBook && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                    )}
+                  </div>
+                  {showBookDropdown && bookResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-auto">
+                      {bookResults.map((book) => (
+                        <button
+                          key={book.id}
+                          type="button"
+                          className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-3"
+                          onClick={() => handleSelectBook(book)}
+                        >
+                          <div className="h-10 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                            <BookOpen className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{book.title}</p>
+                            <p className="text-xs text-muted-foreground">by {book.author}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {book.available_copies} of {book.total_copies} available
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
