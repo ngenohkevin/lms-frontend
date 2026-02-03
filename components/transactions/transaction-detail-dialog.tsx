@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { useSWRConfig } from "swr";
 import { transactionsApi } from "@/lib/api";
 import { useAuth } from "@/providers/auth-provider";
 import { useRenewalEligibility } from "@/lib/hooks/use-transactions";
@@ -101,9 +102,23 @@ export function TransactionDetailDialog({
   onRefresh,
 }: TransactionDetailDialogProps) {
   const { user } = useAuth();
+  const { mutate: globalMutate } = useSWRConfig();
   const [isRenewing, setIsRenewing] = useState(false);
   const [renewalSuccess, setRenewalSuccess] = useState(false);
   const [extensionDays, setExtensionDays] = useState<number | undefined>(undefined);
+
+  // Invalidate all transaction, book, and student caches to ensure data consistency
+  const invalidateRelatedCaches = useCallback(async () => {
+    await globalMutate(
+      (key) =>
+        typeof key === "string" &&
+        (key.startsWith("/api/v1/transactions") ||
+          key.startsWith("/api/v1/books") ||
+          key.startsWith("/api/v1/students")),
+      undefined,
+      { revalidate: true }
+    );
+  }, [globalMutate]);
 
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
@@ -159,6 +174,7 @@ export function TransactionDetailDialog({
       setRenewalSuccess(true);
       toast.success("Book renewed successfully");
       refreshRenewalStatus();
+      await invalidateRelatedCaches();
       onRefresh?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to renew book");
@@ -175,6 +191,7 @@ export function TransactionDetailDialog({
       toast.success("Transaction cancelled successfully");
       setShowCancelDialog(false);
       setCancelReason("");
+      await invalidateRelatedCaches();
       onRefresh?.();
       onOpenChange(false);
     } catch (err) {
@@ -192,6 +209,7 @@ export function TransactionDetailDialog({
       toast.success("Transaction marked as lost");
       setShowLostDialog(false);
       setLostReason("");
+      await invalidateRelatedCaches();
       onRefresh?.();
       onOpenChange(false);
     } catch (err) {
@@ -208,6 +226,7 @@ export function TransactionDetailDialog({
       await transactionsApi.delete(transaction.id);
       toast.success("Transaction deleted successfully");
       setShowDeleteDialog(false);
+      await invalidateRelatedCaches();
       onRefresh?.();
       onOpenChange(false);
     } catch (err) {
@@ -226,6 +245,16 @@ export function TransactionDetailDialog({
     if (remaining <= 0) return null;
     const minutes = Math.floor(remaining / (1000 * 60));
     return `${minutes}m left`;
+  };
+
+  const getCancelExpiredMessage = () => {
+    if (!transaction) return "Cancel period expired";
+    const createdAt = new Date(transaction.created_at);
+    const hoursAgo = Math.floor((Date.now() - createdAt.getTime()) / (1000 * 60 * 60));
+    if (hoursAgo < 24) {
+      return `Cancel period expired (${hoursAgo}h ago)`;
+    }
+    return `Cancel period expired (${Math.floor(hoursAgo / 24)}d ago)`;
   };
 
   const renewalCount = transaction.renewal_count ?? transaction.renewed_count ?? 0;
@@ -359,9 +388,16 @@ export function TransactionDetailDialog({
                     Renew Book
                   </h4>
                   {renewalCount > 0 && (
-                    <span className="text-xs text-muted-foreground">
-                      Renewed {renewalCount}x
-                    </span>
+                    <div className="text-right">
+                      <span className="text-xs text-muted-foreground">
+                        Renewed {renewalCount}x
+                      </span>
+                      {transaction.last_renewed_at && (
+                        <p className="text-xs text-muted-foreground">
+                          Last: {formatDate(transaction.last_renewed_at)}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -437,7 +473,7 @@ export function TransactionDetailDialog({
                   </Button>
                 ) : (
                   <span className="text-xs text-muted-foreground">
-                    Cancel period expired
+                    {getCancelExpiredMessage()}
                   </span>
                 )}
                 {canMarkAsLost() && (

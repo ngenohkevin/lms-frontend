@@ -163,44 +163,67 @@ function BorrowContent() {
     };
   }, []);
 
-  // Search for book by ISBN or ID
+  // Check if search term looks like a direct ID (numeric, ISBN, or book code)
+  const isDirectIdPattern = (term: string): boolean => {
+    // Pure numeric ID
+    if (/^\d+$/.test(term)) return true;
+    // ISBN pattern (10 or 13 digits, with optional hyphens)
+    if (/^[\d-]{10,17}$/.test(term) && /\d{10,13}/.test(term.replace(/-/g, ""))) return true;
+    // Book codes like "BK-001", "BK001", "ISBN-123"
+    if (/^[A-Z]{1,4}-?\d+$/i.test(term)) return true;
+    return false;
+  };
+
+  // Search for book by ISBN, ID, or title
   const handleBookSearch = async () => {
-    if (!bookSearch.trim()) return;
+    const searchTerm = bookSearch.trim();
+    if (!searchTerm) return;
 
     setIsSearchingBook(true);
     setError(null);
 
-    try {
-      const book = await booksApi.get(bookSearch.trim());
+    // Helper to handle book selection
+    const handleBookResult = (book: Book) => {
       if (book.available_copies < 1) {
         setError("This book is not available for borrowing");
         setSelectedBook(null);
       } else {
         setSelectedBook(book);
       }
-    } catch (err) {
-      try {
-        // Try searching by ISBN
-        const results = await booksApi.search({ query: bookSearch.trim() });
-        if (results.data.length === 1) {
-          const book = results.data[0];
-          if (book.available_copies < 1) {
-            setError("This book is not available for borrowing");
-            setSelectedBook(null);
-          } else {
-            setSelectedBook(book);
-          }
-        } else if (results.data.length > 1) {
-          setError("Multiple books found. Please use the exact book ID.");
-          setSelectedBook(null);
-        } else {
-          setError("Book not found");
-          setSelectedBook(null);
-        }
-      } catch {
+    };
+
+    // Helper to handle search results
+    const handleSearchResults = (results: { data: Book[] }) => {
+      if (results.data.length === 1) {
+        handleBookResult(results.data[0]);
+      } else if (results.data.length > 1) {
+        setError("Multiple books found. Please use the exact book ID or be more specific.");
+        setSelectedBook(null);
+      } else {
         setError("Book not found");
         setSelectedBook(null);
       }
+    };
+
+    try {
+      if (isDirectIdPattern(searchTerm)) {
+        // Try direct lookup first for ID-like patterns
+        try {
+          const book = await booksApi.get(searchTerm);
+          handleBookResult(book);
+        } catch {
+          // Fall back to search if direct lookup fails
+          const results = await booksApi.search({ query: searchTerm });
+          handleSearchResults(results);
+        }
+      } else {
+        // Go straight to search for text queries (avoid 404s)
+        const results = await booksApi.search({ query: searchTerm });
+        handleSearchResults(results);
+      }
+    } catch {
+      setError("Book not found");
+      setSelectedBook(null);
     } finally {
       setIsSearchingBook(false);
     }
@@ -326,6 +349,7 @@ function BorrowContent() {
         student_id: selectedStudent.id,
         librarian_id: user?.id || 0,
         copy_id: selectedCopy.id,
+        due_days: data.due_days,
         notes: data.notes,
       });
 

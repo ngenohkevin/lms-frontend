@@ -125,8 +125,9 @@ function extractFinePaid(finePaid: BackendTransactionRow["fine_paid"]): boolean 
 
 // Map transaction type to status
 function mapTransactionStatus(type: string, returnedDate?: string): "active" | "returned" | "overdue" | "lost" {
-  if (returnedDate) return "returned";
+  // Check for lost status first (lost transactions have both type='lost' AND returned_date set)
   if (type === "lost") return "lost";
+  if (returnedDate) return "returned";
   return "active"; // Default to active, overdue would need date check
 }
 
@@ -256,6 +257,7 @@ export const transactionsApi = {
       librarian_id: data.librarian_id,
       copy_id: data.copy_id,
       barcode: data.barcode,
+      due_days: data.due_days,
       notes: data.notes || "",
     };
     const response = await apiClient.post<ApiResponse<Transaction>>(`${TRANSACTIONS_PREFIX}/borrow`, backendData);

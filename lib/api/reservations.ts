@@ -149,7 +149,12 @@ export const reservationsApi = {
 
   // Create a new reservation
   create: async (data: CreateReservationRequest): Promise<Reservation> => {
-    const response = await apiClient.post<ApiResponse<Reservation>>(RESERVATIONS_PREFIX, data);
+    // Convert string IDs to numbers for backend
+    const backendData = {
+      book_id: parseInt(data.book_id, 10),
+      student_id: data.student_id ? parseInt(data.student_id, 10) : undefined,
+    };
+    const response = await apiClient.post<ApiResponse<Reservation>>(RESERVATIONS_PREFIX, backendData);
     return response.data;
   },
 
