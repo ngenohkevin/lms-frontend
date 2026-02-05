@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   DollarSign,
   Undo2,
+  BookCopy,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
@@ -116,6 +117,12 @@ const transactionNavItems: NavItem[] = [
     href: "/transactions/scan",
     icon: ScanLine,
     permission: PermissionCodes.TRANSACTIONS_BORROW,
+  },
+  {
+    title: "Add Copy",
+    href: "/transactions/add-copy",
+    icon: BookCopy,
+    permission: PermissionCodes.BOOKS_CREATE,
   },
   {
     title: "Return Book",
