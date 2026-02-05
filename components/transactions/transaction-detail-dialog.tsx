@@ -41,6 +41,8 @@ import {
   XCircle,
   AlertOctagon,
   Trash2,
+  Hash,
+  Barcode,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -319,6 +321,23 @@ export function TransactionDetailDialog({
               <p className="text-xs text-muted-foreground">
                 {transaction.book?.author}
               </p>
+              {/* Copy Information */}
+              {(transaction.copy_number || transaction.copy_barcode) && (
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {transaction.copy_number && (
+                    <span className="inline-flex items-center gap-1 text-xs bg-muted px-1.5 py-0.5 rounded">
+                      <Hash className="h-3 w-3" />
+                      Copy {transaction.copy_number}
+                    </span>
+                  )}
+                  {transaction.copy_barcode && (
+                    <span className="inline-flex items-center gap-1 text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                      <Barcode className="h-3 w-3" />
+                      {transaction.copy_barcode}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -449,12 +468,27 @@ export function TransactionDetailDialog({
                     Checking eligibility...
                   </div>
                 ) : renewalSuccess ? (
-                  <Alert className="bg-green-50 dark:bg-green-950 border-green-200 py-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
-                    <AlertDescription className="text-green-800 dark:text-green-200 text-xs">
-                      Renewed! Extended by {appliedExtensionDays} {appliedExtensionDays === 1 ? "day" : "days"}. New due: {newDueDate ? formatDate(newDueDate) : formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
-                    </AlertDescription>
-                  </Alert>
+                  <div className="space-y-2">
+                    <Alert className="bg-green-50 dark:bg-green-950 border-green-200 py-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertDescription className="text-green-800 dark:text-green-200 text-xs">
+                        Renewed! Extended by {appliedExtensionDays} {appliedExtensionDays === 1 ? "day" : "days"}. New due: {newDueDate ? formatDate(newDueDate) : formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRenewalSuccess(false);
+                        setExtensionDays(undefined);
+                        refreshRenewalStatus();
+                      }}
+                      className="h-7 text-xs"
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Renew Again
+                    </Button>
+                  </div>
                 ) : canRenew ? (
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1.5 flex-1">

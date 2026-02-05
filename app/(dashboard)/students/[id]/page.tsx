@@ -47,6 +47,7 @@ import {
   RefreshCw,
   XCircle,
   RotateCcw,
+  Hash,
 } from "lucide-react";
 import { formatDate, formatCurrency, getInitials } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -529,6 +530,22 @@ export default function StudentDetailPage() {
                                       <p className="text-xs text-muted-foreground">
                                         {tx.book?.author}
                                       </p>
+                                      {/* Copy Information */}
+                                      {(tx.copy_number || tx.copy_barcode) && (
+                                        <div className="flex items-center gap-2 mt-0.5">
+                                          {tx.copy_number && (
+                                            <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
+                                              <Hash className="h-3 w-3" />
+                                              Copy {tx.copy_number}
+                                            </span>
+                                          )}
+                                          {tx.copy_barcode && (
+                                            <span className="text-xs text-muted-foreground font-mono">
+                                              ({tx.copy_barcode})
+                                            </span>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
                                     <Badge variant="outline" className={`text-xs shrink-0 ${config.color}`}>
                                       {tx.status}
