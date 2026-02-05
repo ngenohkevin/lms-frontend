@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
 import { useStudent } from "@/lib/hooks/use-students";
+import { useStudentTransactionHistory } from "@/lib/hooks/use-transactions";
 import { studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { PermissionGuard } from "@/components/auth/permission-guard";
@@ -42,6 +43,10 @@ import {
   CheckCircle,
   Calendar,
   Loader2,
+  Clock,
+  RefreshCw,
+  XCircle,
+  RotateCcw,
 } from "lucide-react";
 import { formatDate, formatCurrency, getInitials } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -62,6 +67,10 @@ export default function StudentDetailPage() {
   const studentId = params.id as string;
 
   const { student, isLoading, error, refresh } = useStudent(studentId);
+  const {
+    transactions: transactionHistory,
+    isLoading: isLoadingHistory
+  } = useStudentTransactionHistory(studentId);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -443,15 +452,138 @@ export default function StudentDetailPage() {
               <TabsContent value="activity" className="mt-4">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Recent Activity</CardTitle>
+                    <CardTitle>Transaction History</CardTitle>
                     <CardDescription>
-                      Latest borrowing and return transactions
+                      All borrowing, returns, and renewals
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-center text-muted-foreground py-8">
-                      Activity history coming soon
-                    </p>
+                    {isLoadingHistory ? (
+                      <div className="flex items-center justify-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : transactionHistory.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-8">
+                        No transactions found for this student
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {/* Summary Stats */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-muted/50 rounded-lg mb-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {transactionHistory.filter(t => t.status === "active" || t.status === "overdue").length}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Currently Borrowed</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold">
+                              {transactionHistory.filter(t => t.status === "returned").length}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Returned</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-amber-600">
+                              {transactionHistory.filter(t => t.status === "overdue").length}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Overdue</div>
+                          </div>
+                          <div className="text-center">
+                            <div className="text-2xl font-bold text-red-600">
+                              {transactionHistory.filter(t => t.fine_amount > 0).length}
+                            </div>
+                            <div className="text-xs text-muted-foreground">With Fines</div>
+                          </div>
+                        </div>
+
+                        {/* Transaction List */}
+                        <div className="space-y-3">
+                          {transactionHistory.slice(0, 20).map((tx) => {
+                            const statusConfig: Record<string, { color: string; icon: typeof BookOpen }> = {
+                              active: { color: "bg-blue-500/10 text-blue-700 border-blue-500/20", icon: BookOpen },
+                              returned: { color: "bg-green-500/10 text-green-700 border-green-500/20", icon: CheckCircle },
+                              overdue: { color: "bg-red-500/10 text-red-700 border-red-500/20", icon: AlertTriangle },
+                              lost: { color: "bg-gray-500/10 text-gray-700 border-gray-500/20", icon: XCircle },
+                              cancelled: { color: "bg-orange-500/10 text-orange-700 border-orange-500/20", icon: XCircle },
+                            };
+                            const config = statusConfig[tx.status] ?? statusConfig.active;
+                            const StatusIcon = config.icon;
+
+                            // Check if this was a late return
+                            const wasLateReturn = tx.status === "returned" && tx.fine_amount > 0;
+
+                            return (
+                              <div
+                                key={tx.id}
+                                className="flex items-start gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors"
+                              >
+                                <div className={`p-2 rounded-full ${config.color}`}>
+                                  <StatusIcon className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <p className="font-medium text-sm truncate">
+                                        {tx.book?.title || "Unknown Book"}
+                                      </p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {tx.book?.author}
+                                      </p>
+                                    </div>
+                                    <Badge variant="outline" className={`text-xs shrink-0 ${config.color}`}>
+                                      {tx.status}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="h-3 w-3" />
+                                      Borrowed: {formatDate(tx.borrowed_at)}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      Due: {formatDate(tx.due_date)}
+                                    </span>
+                                    {tx.returned_at && (
+                                      <span className="flex items-center gap-1">
+                                        <RotateCcw className="h-3 w-3" />
+                                        Returned: {formatDate(tx.returned_at)}
+                                      </span>
+                                    )}
+                                    {(tx.renewal_count ?? 0) > 0 && (
+                                      <span className="flex items-center gap-1 text-blue-600">
+                                        <RefreshCw className="h-3 w-3" />
+                                        Renewed {tx.renewal_count}x
+                                      </span>
+                                    )}
+                                  </div>
+                                  {/* Fine info */}
+                                  {tx.fine_amount > 0 && (
+                                    <div className="mt-2 flex items-center gap-2">
+                                      <span className={`text-xs px-2 py-0.5 rounded ${tx.fine_paid ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                                        Fine: {formatCurrency(tx.fine_amount)} {tx.fine_paid ? "(Paid)" : "(Unpaid)"}
+                                      </span>
+                                      {wasLateReturn && (
+                                        <span className="text-xs text-amber-600">Late return</span>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {transactionHistory.length > 20 && (
+                          <div className="text-center pt-2">
+                            <Button variant="outline" size="sm" asChild>
+                              <Link href={`/transactions?student_id=${student?.id}`}>
+                                View All {transactionHistory.length} Transactions
+                              </Link>
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>

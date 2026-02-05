@@ -136,6 +136,28 @@ export function useStudentActiveTransactions(studentId: string | null) {
   };
 }
 
+export function useStudentTransactionHistory(studentId: string | null) {
+  const { data, error, isLoading, mutate } = useSWR<Transaction[]>(
+    studentId ? `/api/v1/transactions/history/${studentId}/full` : null,
+    async () => {
+      if (!studentId) return [];
+      return transactionsApi.getHistory(studentId);
+    },
+    {
+      onError: (err) => handleApiError(err, "Load student transaction history"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    transactions: data || [],
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
 export function useFines(params?: {
   student_id?: string;
   paid?: boolean;
