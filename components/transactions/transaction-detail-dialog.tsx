@@ -110,6 +110,9 @@ export function TransactionDetailDialog({
   const [newDueDate, setNewDueDate] = useState<string | null>(null);
   const [extensionDays, setExtensionDays] = useState<number | undefined>(undefined);
   const [appliedExtensionDays, setAppliedExtensionDays] = useState<number>(14);
+  // Track renewal count locally (updated after each renewal)
+  const [localRenewalCount, setLocalRenewalCount] = useState<number | null>(null);
+  const [localLastRenewedAt, setLocalLastRenewedAt] = useState<string | null>(null);
 
   // Invalidate all transaction, book, and student caches to ensure data consistency
   const invalidateRelatedCaches = useCallback(async () => {
@@ -183,6 +186,9 @@ export function TransactionDetailDialog({
       // Store the actual new due date and extension days from the API response
       setNewDueDate(result.due_date);
       setAppliedExtensionDays(daysToExtend);
+      // Update local renewal tracking
+      setLocalRenewalCount(result.renewal_count ?? (localRenewalCount ?? 0) + 1);
+      setLocalLastRenewedAt(result.last_renewed_at ?? new Date().toISOString());
       setRenewalSuccess(true);
       toast.success("Book renewed successfully");
       refreshRenewalStatus();
@@ -206,6 +212,9 @@ export function TransactionDetailDialog({
       setRenewalSuccess(false);
       setNewDueDate(null);
       setAppliedExtensionDays(14);
+      // Decrement local renewal count
+      setLocalRenewalCount(prev => prev !== null ? Math.max(0, prev - 1) : null);
+      setLocalLastRenewedAt(null);
       await invalidateRelatedCaches();
       onRefresh?.();
     } catch (err) {
@@ -291,7 +300,9 @@ export function TransactionDetailDialog({
     return `Cancel period expired (${Math.floor(hoursAgo / 24)}d ago)`;
   };
 
-  const renewalCount = transaction.renewal_count ?? transaction.renewed_count ?? 0;
+  // Use local state if updated, otherwise fall back to transaction prop
+  const renewalCount = localRenewalCount ?? transaction.renewal_count ?? transaction.renewed_count ?? 0;
+  const lastRenewedAt = localLastRenewedAt ?? transaction.last_renewed_at;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -432,35 +443,42 @@ export function TransactionDetailDialog({
           {isActiveTransaction && (
             <>
               <Separator />
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="font-medium flex items-center gap-1.5">
                     <RefreshCw className="h-4 w-4" />
                     Renew Book
                   </h4>
-                  {renewalCount > 0 && (
-                    <div className="flex items-center gap-2">
-                      <div className="text-right">
-                        <span className="text-xs text-muted-foreground">
-                          Renewed {renewalCount}x
-                        </span>
-                        {transaction.last_renewed_at && (
-                          <p className="text-xs text-muted-foreground">
-                            Last: {formatDate(transaction.last_renewed_at)}
+                </div>
+
+                {/* Renewal History Badge - Show if renewed */}
+                {renewalCount > 0 && (
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900">
+                        <RefreshCw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                          Renewed {renewalCount} {renewalCount === 1 ? "time" : "times"}
+                        </p>
+                        {lastRenewedAt && (
+                          <p className="text-xs text-blue-600 dark:text-blue-400">
+                            Last renewed: {formatDate(lastRenewedAt)}
                           </p>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setShowCancelRenewalDialog(true)}
-                        className="h-6 px-2 text-xs text-orange-600 hover:text-orange-700"
-                      >
-                        Undo
-                      </Button>
                     </div>
-                  )}
-                </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowCancelRenewalDialog(true)}
+                      className="h-7 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                    >
+                      Undo
+                    </Button>
+                  </div>
+                )}
 
                 {isCheckingRenewal ? (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
