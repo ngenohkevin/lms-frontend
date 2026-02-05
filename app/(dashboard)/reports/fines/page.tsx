@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { DollarSign, Users, TrendingUp, AlertCircle, Percent, Building, GraduationCap, Receipt } from "lucide-react";
+import { ArrowLeft, Users, TrendingUp, AlertCircle, Percent, Building, GraduationCap, Receipt, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +29,7 @@ import { useFinesCollectionReport } from "@/lib/hooks/use-reports";
 import type { FinesCollectionReportRequest } from "@/lib/types";
 
 export default function FinesCollectionReportPage() {
+  const router = useRouter();
   const [params, setParams] = useState<FinesCollectionReportRequest>({
     interval: "month",
     limit: 50,
@@ -62,6 +65,14 @@ export default function FinesCollectionReportPage() {
       subtitle="Outstanding fines and collection metrics"
     >
       <div className="space-y-6">
+        {/* Back button */}
+        <div className="no-print">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Reports
+          </Button>
+        </div>
+
         <ReportHeader
           title="Fines Collection Report"
           description="Track fine generation, collection rates, and outstanding balances"
@@ -88,19 +99,19 @@ export default function FinesCollectionReportPage() {
               <SummaryGrid columns={4}>
                 <SummaryCard
                   title="Total Fines Generated"
-                  value={`$${report.summary.total_fines_generated}`}
+                  value={`KSH ${report.summary.total_fines_generated}`}
                   icon={<DollarSign className="h-4 w-4" />}
                   subtitle={`${report.summary.total_fine_records} records`}
                 />
                 <SummaryCard
                   title="Total Collected"
-                  value={`$${report.summary.total_collected}`}
+                  value={`KSH ${report.summary.total_collected}`}
                   icon={<DollarSign className="h-4 w-4" />}
                   valueClassName="text-green-600"
                 />
                 <SummaryCard
                   title="Outstanding"
-                  value={`$${report.summary.total_outstanding}`}
+                  value={`KSH ${report.summary.total_outstanding}`}
                   icon={<AlertCircle className="h-4 w-4" />}
                   subtitle={`${report.summary.students_with_outstanding} students`}
                   valueClassName={parseFloat(report.summary.total_outstanding) > 0 ? "text-destructive" : ""}
@@ -118,13 +129,13 @@ export default function FinesCollectionReportPage() {
             <SummaryGrid columns={2}>
               <SummaryCard
                 title="Total Waived"
-                value={`$${report.summary.total_waived}`}
+                value={`KSH ${report.summary.total_waived}`}
                 icon={<Receipt className="h-4 w-4" />}
                 subtitle="Fines waived by librarians"
               />
               <SummaryCard
                 title="Average Fine Amount"
-                value={`$${report.summary.average_fine}`}
+                value={`KSH ${report.summary.average_fine}`}
                 icon={<DollarSign className="h-4 w-4" />}
               />
             </SummaryGrid>
@@ -157,9 +168,9 @@ export default function FinesCollectionReportPage() {
                             <TableCell className="font-medium">Year {year.year_of_study}</TableCell>
                             <TableCell className="text-right">{year.fine_count}</TableCell>
                             <TableCell className="text-right">{year.students_affected}</TableCell>
-                            <TableCell className="text-right">${year.total_fines}</TableCell>
-                            <TableCell className="text-right text-green-600">${year.paid_amount}</TableCell>
-                            <TableCell className="text-right text-destructive">${year.outstanding_amount}</TableCell>
+                            <TableCell className="text-right">KSH {year.total_fines}</TableCell>
+                            <TableCell className="text-right text-green-600">KSH {year.paid_amount}</TableCell>
+                            <TableCell className="text-right text-destructive">KSH {year.outstanding_amount}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -197,9 +208,9 @@ export default function FinesCollectionReportPage() {
                             <TableCell className="font-medium">{dept.department || "Unknown"}</TableCell>
                             <TableCell className="text-right">{dept.fine_count}</TableCell>
                             <TableCell className="text-right">{dept.students_affected}</TableCell>
-                            <TableCell className="text-right">${dept.total_fines}</TableCell>
-                            <TableCell className="text-right text-green-600">${dept.paid_amount}</TableCell>
-                            <TableCell className="text-right text-destructive">${dept.outstanding_amount}</TableCell>
+                            <TableCell className="text-right">KSH {dept.total_fines}</TableCell>
+                            <TableCell className="text-right text-green-600">KSH {dept.paid_amount}</TableCell>
+                            <TableCell className="text-right text-destructive">KSH {dept.outstanding_amount}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -235,9 +246,9 @@ export default function FinesCollectionReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">{trend.period}</TableCell>
                             <TableCell className="text-right">{trend.fine_count}</TableCell>
-                            <TableCell className="text-right">${trend.generated}</TableCell>
-                            <TableCell className="text-right text-green-600">${trend.collected}</TableCell>
-                            <TableCell className="text-right text-destructive">${trend.outstanding}</TableCell>
+                            <TableCell className="text-right">KSH {trend.generated}</TableCell>
+                            <TableCell className="text-right text-green-600">KSH {trend.collected}</TableCell>
+                            <TableCell className="text-right text-destructive">KSH {trend.outstanding}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -287,7 +298,7 @@ export default function FinesCollectionReportPage() {
                             <TableCell>{student.department || "N/A"}</TableCell>
                             <TableCell>Year {student.year_of_study}</TableCell>
                             <TableCell className="text-right">{student.fine_count}</TableCell>
-                            <TableCell className="text-right">${student.total_fines}</TableCell>
+                            <TableCell className="text-right">KSH {student.total_fines}</TableCell>
                             <TableCell className="text-right font-medium text-destructive">
                               ${student.outstanding_fines}
                             </TableCell>
@@ -343,7 +354,7 @@ export default function FinesCollectionReportPage() {
                                 : "N/A"}
                             </TableCell>
                             <TableCell className="text-right">{fine.days_overdue}</TableCell>
-                            <TableCell className="text-right font-medium">${fine.fine_amount}</TableCell>
+                            <TableCell className="text-right font-medium">KSH {fine.fine_amount}</TableCell>
                             <TableCell>
                               {fine.fine_waived ? (
                                 <Badge variant="secondary">Waived</Badge>

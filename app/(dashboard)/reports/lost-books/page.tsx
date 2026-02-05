@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { BookX, DollarSign, Users, TrendingDown, AlertCircle } from "lucide-react";
+import { ArrowLeft, BookX, Users, TrendingDown, AlertCircle, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +29,7 @@ import { useLostBooksReport } from "@/lib/hooks/use-reports";
 import type { LostBooksReportRequest } from "@/lib/types";
 
 export default function LostBooksReportPage() {
+  const router = useRouter();
   const [params, setParams] = useState<LostBooksReportRequest>({
     interval: "month",
   });
@@ -61,6 +64,14 @@ export default function LostBooksReportPage() {
       subtitle="Analysis of lost library inventory and financial impact"
     >
       <div className="space-y-6">
+        {/* Back button */}
+        <div className="no-print">
+          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Reports
+          </Button>
+        </div>
+
         <ReportHeader
           title="Lost Books Report"
           description="Track lost books, replacement costs, and recovery status"
@@ -93,12 +104,12 @@ export default function LostBooksReportPage() {
                 />
                 <SummaryCard
                   title="Total Replacement Value"
-                  value={`$${report.summary.total_replacement_value}`}
+                  value={`KSH ${report.summary.total_replacement_value}`}
                   icon={<DollarSign className="h-4 w-4" />}
                 />
                 <SummaryCard
                   title="Outstanding Amount"
-                  value={`$${report.summary.total_outstanding}`}
+                  value={`KSH ${report.summary.total_outstanding}`}
                   icon={<DollarSign className="h-4 w-4" />}
                   subtitle={`Paid: $${report.summary.total_paid}`}
                   valueClassName={parseFloat(report.summary.total_outstanding) > 0 ? "text-destructive" : ""}
@@ -131,8 +142,8 @@ export default function LostBooksReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">{cat.genre || "Unknown"}</TableCell>
                             <TableCell className="text-right">{cat.lost_count}</TableCell>
-                            <TableCell className="text-right">${cat.replacement_value}</TableCell>
-                            <TableCell className="text-right">${cat.avg_replacement_cost}</TableCell>
+                            <TableCell className="text-right">KSH {cat.replacement_value}</TableCell>
+                            <TableCell className="text-right">KSH {cat.avg_replacement_cost}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -161,7 +172,7 @@ export default function LostBooksReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">{dept.department || "Unknown"}</TableCell>
                             <TableCell className="text-right">{dept.lost_count}</TableCell>
-                            <TableCell className="text-right">${dept.replacement_value}</TableCell>
+                            <TableCell className="text-right">KSH {dept.replacement_value}</TableCell>
                             <TableCell className="text-right">{dept.students_affected}</TableCell>
                           </TableRow>
                         ))}
@@ -197,7 +208,7 @@ export default function LostBooksReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">{trend.period}</TableCell>
                             <TableCell className="text-right">{trend.lost_count}</TableCell>
-                            <TableCell className="text-right">${trend.replacement_value}</TableCell>
+                            <TableCell className="text-right">KSH {trend.replacement_value}</TableCell>
                             <TableCell className="text-right">{trend.recovered}</TableCell>
                           </TableRow>
                         ))}

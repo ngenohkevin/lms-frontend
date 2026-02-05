@@ -152,7 +152,7 @@ export default function StudentReportPage({ params }: PageProps) {
             />
             <SummaryCard
               title="Outstanding Fines"
-              value={`$${fines_summary.outstanding_fines}`}
+              value={`KSH ${fines_summary.outstanding_fines}`}
               icon={<DollarSign className="h-4 w-4" />}
               subtitle={`Paid: $${fines_summary.total_fines_paid}`}
               valueClassName={parseFloat(fines_summary.outstanding_fines) > 0 ? "text-destructive" : ""}
@@ -208,7 +208,7 @@ export default function StudentReportPage({ params }: PageProps) {
                         <TableCell className="font-medium">{activity.month}</TableCell>
                         <TableCell className="text-right">{activity.borrowed}</TableCell>
                         <TableCell className="text-right">{activity.returned}</TableCell>
-                        <TableCell className="text-right">${activity.fines_incurred}</TableCell>
+                        <TableCell className="text-right">KSH {activity.fines_incurred}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
