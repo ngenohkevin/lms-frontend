@@ -51,6 +51,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { booksApi } from "@/lib/api/books";
 import { bookCopiesApi } from "@/lib/api/book-copies";
+import { PermissionGuard } from "@/components/auth/permission-guard";
+import { PermissionCodes } from "@/lib/types/permission";
 import type { Book, CopyCondition } from "@/lib/types/book";
 
 const CONDITIONS: { value: CopyCondition; label: string; description: string }[] = [
@@ -217,15 +219,31 @@ export default function AddCopyPage() {
   };
 
   return (
-    <div className="container max-w-2xl py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Add Book Copy</h1>
-        <p className="text-muted-foreground mt-2">
-          Scan a barcode and assign it to a book in your collection
-        </p>
-      </div>
+    <PermissionGuard
+      permission={PermissionCodes.BOOKS_CREATE}
+      deniedFallback={
+        <div className="container max-w-2xl py-8">
+          <div className="flex flex-col items-center justify-center gap-4 py-16">
+            <div className="p-4 rounded-full bg-muted">
+              <Barcode className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold">Permission Required</h2>
+            <p className="text-muted-foreground text-center max-w-md">
+              You don&apos;t have permission to add book copies. Contact an administrator if you need access.
+            </p>
+          </div>
+        </div>
+      }
+    >
+      <div className="container max-w-2xl py-8">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Add Book Copy</h1>
+          <p className="text-muted-foreground mt-2">
+            Scan a barcode and assign it to a book in your collection
+          </p>
+        </div>
 
-      <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
         <div className="space-y-6">
           {/* Barcode Scanner Card */}
           <Card>
@@ -495,5 +513,6 @@ export default function AddCopyPage() {
         </div>
       </form>
     </div>
+    </PermissionGuard>
   );
 }

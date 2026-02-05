@@ -120,7 +120,7 @@ const transactionNavItems: NavItem[] = [
   },
   {
     title: "Add Copy",
-    href: "/transactions/add-copy",
+    href: "/books/add-copy",
     icon: BookCopy,
     permission: PermissionCodes.BOOKS_CREATE,
   },
