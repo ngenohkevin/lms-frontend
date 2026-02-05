@@ -110,3 +110,235 @@ export interface ReportParams extends ReportDateRange {
   category?: string;
   department?: string;
 }
+
+// ============================================
+// Individual Student Report Types
+// ============================================
+
+export interface StudentProfile {
+  id: number;
+  student_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  year_of_study: number;
+  department: string;
+  max_books: number;
+  is_active: boolean;
+  member_since: string;
+}
+
+export interface StudentTransactionStats {
+  total_books_borrowed: number;
+  currently_borrowed: number;
+  overdue_count: number;
+}
+
+export interface StudentFinesSummary {
+  outstanding_fines: string;
+  total_fines_paid: string;
+}
+
+export interface ReadingStatsByGenre {
+  genre: string;
+  books_read: number;
+  avg_days_held: string;
+}
+
+export interface MonthlyActivityData {
+  month: string;
+  borrowed: number;
+  returned: number;
+  fines_incurred: string;
+}
+
+export interface TransactionHistoryItem {
+  transaction_id: number;
+  transaction_type: string;
+  book_code: string;
+  book_title: string;
+  book_author: string;
+  genre: string;
+  transaction_date: string;
+  due_date: string;
+  returned_date?: string;
+  status: string;
+  fine_amount: string;
+  fine_paid: boolean;
+  days_overdue: number;
+  renewal_count: number;
+}
+
+export interface IndividualStudentReport {
+  profile: StudentProfile;
+  transaction_stats: StudentTransactionStats;
+  fines_summary: StudentFinesSummary;
+  reading_stats: ReadingStatsByGenre[];
+  monthly_activity: MonthlyActivityData[];
+  recent_history: TransactionHistoryItem[];
+  generated_at: string;
+}
+
+export interface IndividualStudentReportRequest {
+  limit?: number;
+  start_date?: string;
+  end_date?: string;
+}
+
+// ============================================
+// Lost Books Report Types
+// ============================================
+
+export interface LostBookDetail {
+  transaction_id: number;
+  book_id: number;
+  book_code: string;
+  book_title: string;
+  book_author: string;
+  genre: string;
+  student_id: number;
+  student_code: string;
+  student_name: string;
+  department: string;
+  lost_date: string;
+  replacement_cost: string;
+  fine_paid: boolean;
+  notes: string;
+}
+
+export interface LostBooksSummary {
+  total_lost: number;
+  total_replacement_value: string;
+  recovered_count: number;
+  pending_payment_count: number;
+  total_paid: string;
+  total_outstanding: string;
+}
+
+export interface LostBooksTrendItem {
+  period: string;
+  lost_count: number;
+  replacement_value: string;
+  recovered: number;
+}
+
+export interface LostBooksByCategory {
+  genre: string;
+  lost_count: number;
+  replacement_value: string;
+  avg_replacement_cost: string;
+}
+
+export interface LostBooksByDepartment {
+  department: string;
+  lost_count: number;
+  replacement_value: string;
+  students_affected: number;
+}
+
+export interface LostBooksReport {
+  summary: LostBooksSummary;
+  lost_books: LostBookDetail[];
+  trends: LostBooksTrendItem[];
+  by_category: LostBooksByCategory[];
+  by_department: LostBooksByDepartment[];
+  generated_at: string;
+}
+
+export interface LostBooksReportRequest {
+  start_date?: string;
+  end_date?: string;
+  department?: string;
+  genre?: string;
+  interval?: string;
+}
+
+// ============================================
+// Fines Collection Report Types
+// ============================================
+
+export interface FinesCollectionSummary {
+  total_fine_records: number;
+  students_with_outstanding: number;
+  total_fines_generated: string;
+  total_collected: string;
+  total_outstanding: string;
+  total_waived: string;
+  average_fine: string;
+  collection_rate: string;
+}
+
+export interface FinesByYearItem {
+  year_of_study: number;
+  fine_count: number;
+  students_affected: number;
+  total_fines: string;
+  paid_amount: string;
+  outstanding_amount: string;
+}
+
+export interface FinesByDepartmentItem {
+  department: string;
+  fine_count: number;
+  students_affected: number;
+  total_fines: string;
+  paid_amount: string;
+  outstanding_amount: string;
+}
+
+export interface FinesCollectionTrend {
+  period: string;
+  fine_count: number;
+  generated: string;
+  collected: string;
+  outstanding: string;
+}
+
+export interface FineDefaulterItem {
+  student_id: number;
+  student_code: string;
+  student_name: string;
+  email: string;
+  department: string;
+  year_of_study: number;
+  fine_count: number;
+  total_fines: string;
+  outstanding_fines: string;
+}
+
+export interface FinePaymentHistoryItem {
+  transaction_id: number;
+  fine_amount: string;
+  fine_paid: boolean;
+  fine_paid_at?: string;
+  fine_waived: boolean;
+  fine_waived_at?: string;
+  fine_waived_reason: string;
+  due_date: string;
+  returned_date?: string;
+  days_overdue: number;
+  student_code: string;
+  student_name: string;
+  department: string;
+  book_code: string;
+  book_title: string;
+}
+
+export interface FinesCollectionReport {
+  summary: FinesCollectionSummary;
+  by_year_of_study: FinesByYearItem[];
+  by_department: FinesByDepartmentItem[];
+  trends: FinesCollectionTrend[];
+  top_defaulters: FineDefaulterItem[];
+  recent_fines: FinePaymentHistoryItem[];
+  generated_at: string;
+}
+
+export interface FinesCollectionReportRequest {
+  start_date?: string;
+  end_date?: string;
+  interval?: string;
+  paid_only?: boolean;
+  limit?: number;
+}

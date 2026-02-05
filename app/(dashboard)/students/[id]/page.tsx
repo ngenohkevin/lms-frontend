@@ -48,6 +48,7 @@ import {
   XCircle,
   RotateCcw,
   Hash,
+  FileText,
 } from "lucide-react";
 import { formatDate, formatCurrency, getInitials } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -165,6 +166,12 @@ export default function StudentDetailPage() {
             </Link>
           </Button>
           <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <Link href={`/students/${student.id}/report`}>
+                <FileText className="mr-2 h-4 w-4" />
+                Report
+              </Link>
+            </Button>
             <Button variant="outline" asChild>
               <Link href={`/students/${student.id}/edit`}>
                 <Edit className="mr-2 h-4 w-4" />

@@ -11,6 +11,12 @@ import type {
   BorrowingTrend,
   OverdueReport,
   ReportParams,
+  IndividualStudentReport,
+  IndividualStudentReportRequest,
+  LostBooksReport,
+  LostBooksReportRequest,
+  FinesCollectionReport,
+  FinesCollectionReportRequest,
 } from "@/lib/types";
 
 const REPORTS_PREFIX = "/api/v1/reports";
@@ -250,6 +256,67 @@ export const reportsApi = {
       credentials: "include",
     });
     return response.blob();
+  },
+
+  // ============================================
+  // New Report Endpoints
+  // ============================================
+
+  // Individual Student Report - GET /api/v1/reports/individual-student/:id
+  getIndividualStudentReport: async (
+    studentId: number,
+    params?: IndividualStudentReportRequest
+  ): Promise<IndividualStudentReport> => {
+    const queryParams = new URLSearchParams();
+    if (params?.limit) {
+      queryParams.append("limit", String(params.limit));
+    }
+    if (params?.start_date) {
+      queryParams.append("start_date", params.start_date);
+    }
+    if (params?.end_date) {
+      queryParams.append("end_date", params.end_date);
+    }
+    const queryString = queryParams.toString();
+    const url = `${REPORTS_PREFIX}/individual-student/${studentId}${queryString ? `?${queryString}` : ""}`;
+    const response = await apiClient.get<ApiResponse<IndividualStudentReport>>(url);
+    return response.data;
+  },
+
+  // Lost Books Report - POST /api/v1/reports/lost-books
+  getLostBooksReport: async (
+    params?: LostBooksReportRequest
+  ): Promise<LostBooksReport> => {
+    const defaultDates = getDefaultDateRange();
+    const response = await apiClient.post<ApiResponse<LostBooksReport>>(
+      `${REPORTS_PREFIX}/lost-books`,
+      {
+        start_date: params?.start_date || defaultDates.start_date,
+        end_date: params?.end_date || defaultDates.end_date,
+        department: params?.department,
+        genre: params?.genre,
+        interval: params?.interval || "month",
+      }
+    );
+    return response.data;
+  },
+
+  // Fines Collection Report - POST /api/v1/reports/fines-collection
+  getFinesCollectionReport: async (
+    params?: FinesCollectionReportRequest
+  ): Promise<FinesCollectionReport> => {
+    const defaultDates = getDefaultDateRange();
+    const response = await apiClient.post<ApiResponse<FinesCollectionReport>>(
+      `${REPORTS_PREFIX}/fines-collection`,
+      {
+        start_date: params?.start_date || defaultDates.start_date,
+        end_date: params?.end_date || defaultDates.end_date,
+        interval: params?.interval || "month",
+        paid_only: params?.paid_only,
+        limit: params?.limit || 50,
+      }
+    );
+    return response.data;
   },
 };
 

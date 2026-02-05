@@ -10,6 +10,12 @@ import type {
   BorrowingTrend,
   OverdueReport,
   ReportParams,
+  IndividualStudentReport,
+  IndividualStudentReportRequest,
+  LostBooksReport,
+  LostBooksReportRequest,
+  FinesCollectionReport,
+  FinesCollectionReportRequest,
 } from "@/lib/types";
 
 // Helper to handle API errors consistently
@@ -165,6 +171,82 @@ export function useOverdueReport(params?: { department?: string }) {
     () => reportsApi.getOverdueReport(params),
     {
       onError: (err) => handleApiError(err, "Load overdue report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    report: data,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
+// ============================================
+// New Report Hooks
+// ============================================
+
+export function useIndividualStudentReport(
+  studentId: number | null,
+  params?: IndividualStudentReportRequest
+) {
+  const key = studentId
+    ? ["/api/v1/reports/individual-student", studentId, params]
+    : null;
+
+  const { data, error, isLoading, mutate } = useSWR<IndividualStudentReport>(
+    key,
+    () => (studentId ? reportsApi.getIndividualStudentReport(studentId, params) : Promise.reject()),
+    {
+      onError: (err) => handleApiError(err, "Load student report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    report: data,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
+export function useLostBooksReport(params?: LostBooksReportRequest) {
+  const key = params
+    ? ["/api/v1/reports/lost-books", params]
+    : "/api/v1/reports/lost-books";
+
+  const { data, error, isLoading, mutate } = useSWR<LostBooksReport>(
+    key,
+    () => reportsApi.getLostBooksReport(params),
+    {
+      onError: (err) => handleApiError(err, "Load lost books report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    report: data,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
+export function useFinesCollectionReport(params?: FinesCollectionReportRequest) {
+  const key = params
+    ? ["/api/v1/reports/fines-collection", params]
+    : "/api/v1/reports/fines-collection";
+
+  const { data, error, isLoading, mutate } = useSWR<FinesCollectionReport>(
+    key,
+    () => reportsApi.getFinesCollectionReport(params),
+    {
+      onError: (err) => handleApiError(err, "Load fines collection report"),
       shouldRetryOnError: true,
       errorRetryCount: 2,
     }

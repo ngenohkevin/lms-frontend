@@ -32,18 +32,13 @@ import {
   YAxis,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
 } from "recharts";
 import {
   Download,
-  TrendingUp,
-  BookOpen,
-  Users,
-  Library,
-  Star,
+  BookX,
+  DollarSign,
+  FileText,
+  ArrowRight,
 } from "lucide-react";
 import { formatDate, formatNumber, formatCurrency } from "@/lib/utils/format";
 
@@ -94,6 +89,56 @@ export default function ReportsPage() {
               </Button>
             </div>
           </PermissionGuard>
+        </div>
+
+        {/* Quick Reports Links */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Link href="/reports/lost-books">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Lost Books Report</CardTitle>
+                <BookX className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Track lost inventory, replacement costs, and recovery status
+                </p>
+                <div className="flex items-center text-sm text-primary">
+                  View Report <ArrowRight className="ml-1 h-4 w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/reports/fines">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Fines Collection Report</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Outstanding fines, collection rates, and top defaulters
+                </p>
+                <div className="flex items-center text-sm text-primary">
+                  View Report <ArrowRight className="ml-1 h-4 w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Card className="bg-muted/30">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Individual Student Reports</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground mb-2">
+                Access from the student detail page
+              </p>
+              <Link href="/students" className="flex items-center text-sm text-primary">
+                Go to Students <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Summary Metrics */}
