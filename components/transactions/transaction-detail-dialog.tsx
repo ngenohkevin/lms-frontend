@@ -314,6 +314,12 @@ export function TransactionDetailDialog({
               <Badge variant="outline" className={getStatusColor(transaction.status)}>
                 {transaction.status}
               </Badge>
+              {renewalCount > 0 && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  {renewalCount}x renewed
+                </Badge>
+              )}
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -406,14 +412,14 @@ export function TransactionDetailDialog({
                   {daysOverdue} days
                 </p>
               </div>
-            ) : renewalCount > 0 ? (
+            ) : lastRenewedAt ? (
               <div>
-                <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
+                <div className="flex items-center gap-1 text-blue-600 dark:text-blue-400 mb-0.5">
                   <RefreshCw className="h-3 w-3" />
-                  <span className="text-xs">Renewed</span>
+                  <span className="text-xs">Last Renewed</span>
                 </div>
-                <p className="font-medium text-xs">
-                  {renewalCount}x
+                <p className="font-medium text-xs text-blue-600 dark:text-blue-400">
+                  {formatDate(lastRenewedAt)}
                 </p>
               </div>
             ) : null}
@@ -451,32 +457,36 @@ export function TransactionDetailDialog({
                   </h4>
                 </div>
 
-                {/* Renewal History Badge - Show if renewed */}
+                {/* Renewal History Card - Show if renewed */}
                 {renewalCount > 0 && (
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900">
-                        <RefreshCw className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                          Renewed {renewalCount} {renewalCount === 1 ? "time" : "times"}
-                        </p>
-                        {lastRenewedAt && (
-                          <p className="text-xs text-blue-600 dark:text-blue-400">
-                            Last renewed: {formatDate(lastRenewedAt)}
-                          </p>
-                        )}
+                  <div className="rounded-lg border border-blue-200 dark:border-blue-800 overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 px-3 py-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-500 dark:bg-blue-600">
+                            <RefreshCw className="h-3.5 w-3.5 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                              {renewalCount} {renewalCount === 1 ? "Renewal" : "Renewals"}
+                            </p>
+                            {lastRenewedAt && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400">
+                                Last: {formatDate(lastRenewedAt)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowCancelRenewalDialog(true)}
+                          className="h-7 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-100 dark:hover:bg-orange-900/30"
+                        >
+                          Undo Last
+                        </Button>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setShowCancelRenewalDialog(true)}
-                      className="h-7 px-2 text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50"
-                    >
-                      Undo
-                    </Button>
                   </div>
                 )}
 
@@ -487,12 +497,23 @@ export function TransactionDetailDialog({
                   </div>
                 ) : renewalSuccess ? (
                   <div className="space-y-2">
-                    <Alert className="bg-green-50 dark:bg-green-950 border-green-200 py-2">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <AlertDescription className="text-green-800 dark:text-green-200 text-xs">
-                        Renewed! Extended by {appliedExtensionDays} {appliedExtensionDays === 1 ? "day" : "days"}. New due: {newDueDate ? formatDate(newDueDate) : formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
-                      </AlertDescription>
-                    </Alert>
+                    <div className="rounded-lg border border-green-200 dark:border-green-800 overflow-hidden">
+                      <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950 px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-green-500">
+                            <CheckCircle className="h-4 w-4 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-green-800 dark:text-green-200">
+                              Extended by {appliedExtensionDays} {appliedExtensionDays === 1 ? "day" : "days"}
+                            </p>
+                            <p className="text-xs text-green-600 dark:text-green-400">
+                              New due date: {newDueDate ? formatDate(newDueDate) : formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <Button
                       variant="outline"
                       size="sm"
@@ -501,7 +522,7 @@ export function TransactionDetailDialog({
                         setExtensionDays(undefined);
                         refreshRenewalStatus();
                       }}
-                      className="h-7 text-xs"
+                      className="h-7 text-xs border-blue-200 text-blue-700 hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-950"
                     >
                       <RefreshCw className="h-3 w-3 mr-1" />
                       Renew Again
