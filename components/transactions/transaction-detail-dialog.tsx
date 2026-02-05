@@ -40,7 +40,6 @@ import {
   XCircle,
   AlertOctagon,
   Trash2,
-  Hash,
   Barcode,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
@@ -338,20 +337,12 @@ export function TransactionDetailDialog({
                 {transaction.book?.author}
               </p>
               {/* Copy Information */}
-              {(transaction.copy_number || transaction.copy_barcode) && (
+              {transaction.copy_barcode && (
                 <div className="flex flex-wrap gap-2 mt-1">
-                  {transaction.copy_number && (
-                    <span className="inline-flex items-center gap-1 text-xs bg-muted px-1.5 py-0.5 rounded">
-                      <Hash className="h-3 w-3" />
-                      Copy {transaction.copy_number}
-                    </span>
-                  )}
-                  {transaction.copy_barcode && (
-                    <span className="inline-flex items-center gap-1 text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
-                      <Barcode className="h-3 w-3" />
-                      {transaction.copy_barcode}
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 text-xs bg-muted px-1.5 py-0.5 rounded font-mono">
+                    <Barcode className="h-3 w-3" />
+                    {transaction.copy_barcode}
+                  </span>
                 </div>
               )}
             </div>

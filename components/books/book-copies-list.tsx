@@ -338,7 +338,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search by copy number, barcode, or notes..."
+                placeholder="Search by barcode or notes..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-9 pr-9"
@@ -390,7 +390,6 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Copy #</TableHead>
                       <TableHead>Barcode</TableHead>
                       <TableHead>Condition</TableHead>
                       <TableHead>Status</TableHead>
@@ -401,11 +400,8 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                   <TableBody>
                     {paginatedCopies.map((copy) => (
                       <TableRow key={copy.id}>
-                        <TableCell className="font-medium">
-                          {copy.copy_number}
-                        </TableCell>
-                        <TableCell className="font-mono text-sm">
-                          {copy.barcode || "-"}
+                        <TableCell className="font-medium font-mono text-sm">
+                          {copy.barcode}
                         </TableCell>
                         <TableCell>
                           <Badge className={getConditionColor(copy.condition)}>
@@ -513,10 +509,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                     {/* Header row - always same height */}
                     <div className="flex items-center justify-between h-10">
                       <div className="flex flex-col">
-                        <span className="font-medium">{copy.copy_number}</span>
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {copy.barcode || "No barcode"}
-                        </span>
+                        <span className="font-medium font-mono text-sm">{copy.barcode}</span>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -648,7 +641,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           <DialogHeader>
             <DialogTitle>Edit Copy</DialogTitle>
             <DialogDescription>
-              Update copy information for {editingCopy?.copy_number}
+              Update copy information for {editingCopy?.barcode}
             </DialogDescription>
           </DialogHeader>
           {editingCopy && (
@@ -668,7 +661,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Copy?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete copy &quot;{deletingCopy?.copy_number}&quot;?
+              Are you sure you want to delete copy &quot;{deletingCopy?.barcode}&quot;?
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -695,7 +688,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           <AlertDialogHeader>
             <AlertDialogTitle>Return Book?</AlertDialogTitle>
             <AlertDialogDescription>
-              Return copy &quot;{returningCopy?.copy_number}&quot; borrowed by{" "}
+              Return copy &quot;{returningCopy?.barcode}&quot; borrowed by{" "}
               {copyBorrowerInfo.get(returningCopy?.id || 0)?.current_borrower?.student_name}?
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -770,8 +763,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           <DialogHeader>
             <DialogTitle>Copy History</DialogTitle>
             <DialogDescription>
-              Borrowing history for {viewingHistoryCopy?.copy_number}
-              {viewingHistoryCopy?.barcode && ` (${viewingHistoryCopy.barcode})`}
+              Borrowing history for {viewingHistoryCopy?.barcode}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

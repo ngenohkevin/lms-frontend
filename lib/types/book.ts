@@ -1,9 +1,9 @@
 // Book type enum
 export type BookType = "textbook" | "storybook";
 
-export const BOOK_TYPES: { value: BookType; label: string; description: string }[] = [
-  { value: "textbook", label: "Textbook", description: "Academic materials - 1 year loan" },
-  { value: "storybook", label: "Storybook", description: "Fiction/Non-fiction - loan based on student year" },
+export const BOOK_TYPES: { value: BookType; label: string }[] = [
+  { value: "textbook", label: "Textbook" },
+  { value: "storybook", label: "Storybook" },
 ];
 
 export interface Book {
@@ -183,8 +183,7 @@ export type CopyStatus = "available" | "borrowed" | "reserved" | "maintenance" |
 export interface BookCopy {
   id: number;
   book_id: number;
-  copy_number: string;
-  barcode?: string;
+  barcode: string;
   condition: CopyCondition;
   status: CopyStatus;
   acquisition_date?: string;
@@ -210,8 +209,7 @@ export interface CopyBorrowingHistoryEntry {
 }
 
 export interface BookCopyFormData {
-  copy_number: string;
-  barcode?: string;
+  barcode: string;
   condition?: CopyCondition;
   status?: CopyStatus;
   acquisition_date?: string;

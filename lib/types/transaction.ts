@@ -27,7 +27,6 @@ export interface Transaction {
   };
   // Copy-level tracking fields
   copy_id?: number;
-  copy_number?: string;
   copy_barcode?: string;
   copy_condition?: string;
   // Return condition fields (populated after return)
@@ -73,7 +72,6 @@ export interface ReturnByBarcodeRequest {
 
 export interface BarcodeScanResult {
   copy_id: number;
-  copy_number: string;
   barcode: string;
   condition: string;
   status: string;

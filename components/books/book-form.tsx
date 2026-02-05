@@ -360,10 +360,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
             <SelectContent>
               {BOOK_TYPES.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
-                  <div className="flex flex-col">
-                    <span>{type.label}</span>
-                    <span className="text-xs text-muted-foreground">{type.description}</span>
-                  </div>
+                  {type.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -371,9 +368,6 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           {errors.book_type && (
             <p className="text-sm text-destructive">{errors.book_type.message}</p>
           )}
-          <p className="text-xs text-muted-foreground">
-            Textbooks have 1-year loan period, storybooks vary by student year
-          </p>
         </div>
 
         <div className="space-y-2">

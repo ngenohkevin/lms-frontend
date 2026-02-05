@@ -23,7 +23,7 @@ export function BookCard({
   const isAvailable = book.available_copies > 0;
 
   return (
-    <Card className="group overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1">
+    <Card className="group overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
       <Link href={`/books/${book.id}`} className="block">
         <div className="relative aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
           {book.cover_url ? (
@@ -84,7 +84,7 @@ export function BookCard({
         </div>
       </Link>
 
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex-1">
         <Link href={`/books/${book.id}`} className="block group/title">
           <h3
             className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] group-hover/title:text-primary transition-colors"

@@ -122,12 +122,7 @@ export function CopySelector({
         >
           {selectedCopy ? (
             <span className="flex items-center gap-2 truncate">
-              <span className="font-medium">{selectedCopy.copy_number}</span>
-              {selectedCopy.barcode && (
-                <span className="text-xs text-muted-foreground font-mono">
-                  ({selectedCopy.barcode})
-                </span>
-              )}
+              <span className="font-medium">{selectedCopy.barcode}</span>
             </span>
           ) : filteredCopies.length === 0 ? (
             <span className="text-muted-foreground">No available copies</span>
@@ -139,14 +134,14 @@ export function CopySelector({
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search by copy number or barcode..." />
+          <CommandInput placeholder="Search by barcode..." />
           <CommandList>
             <CommandEmpty>No copies found.</CommandEmpty>
             <CommandGroup>
               {filteredCopies.map((copy) => (
                 <CommandItem
                   key={copy.id}
-                  value={`${copy.copy_number} ${copy.barcode || ""}`}
+                  value={copy.barcode}
                   onSelect={() => handleSelect(copy)}
                   className="flex items-center justify-between py-3"
                 >
@@ -158,12 +153,7 @@ export function CopySelector({
                           value === copy.id ? "opacity-100" : "opacity-0"
                         )}
                       />
-                      <span className="font-medium">{copy.copy_number}</span>
-                      {copy.barcode && (
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {copy.barcode}
-                        </span>
-                      )}
+                      <span className="font-medium">{copy.barcode}</span>
                     </div>
                     <div className="flex gap-2 ml-6">
                       <Badge

@@ -19,8 +19,7 @@ import {
 } from "@/components/ui/select";
 
 const bookCopySchema = z.object({
-  copy_number: z.string().min(1, "Copy number is required"),
-  barcode: z.string().optional(),
+  barcode: z.string().min(1, "Barcode is required"),
   condition: z.enum(["excellent", "good", "fair", "poor", "damaged"]).optional(),
   status: z
     .enum(["available", "borrowed", "reserved", "maintenance", "lost", "damaged"])
@@ -62,7 +61,6 @@ export function BookCopyForm({
   } = useForm<BookCopyFormValues>({
     resolver: zodResolver(bookCopySchema),
     defaultValues: {
-      copy_number: initialData?.copy_number || "",
       barcode: initialData?.barcode || "",
       condition: initialData?.condition || "good",
       status: initialData?.status || "available",
@@ -84,28 +82,18 @@ export function BookCopyForm({
     <form onSubmit={onFormSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="copy_number">Copy Number *</Label>
-          <Input
-            id="copy_number"
-            placeholder="e.g., COPY-001"
-            {...register("copy_number")}
-            disabled={isSubmitting}
-          />
-          {errors.copy_number && (
-            <p className="text-sm text-destructive">
-              {errors.copy_number.message}
-            </p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="barcode">Barcode</Label>
+          <Label htmlFor="barcode">Barcode *</Label>
           <Input
             id="barcode"
             placeholder="e.g., 9780123456789"
             {...register("barcode")}
             disabled={isSubmitting}
           />
+          {errors.barcode && (
+            <p className="text-sm text-destructive">
+              {errors.barcode.message}
+            </p>
+          )}
         </div>
       </div>
 

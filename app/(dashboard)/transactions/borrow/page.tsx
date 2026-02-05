@@ -544,12 +544,7 @@ function BorrowContent() {
                     <div className="mt-3 rounded-lg border p-3 bg-background">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium text-sm">Copy #{selectedCopy.copy_number}</p>
-                          {selectedCopy.barcode && (
-                            <p className="text-xs text-muted-foreground font-mono">
-                              Barcode: {selectedCopy.barcode}
-                            </p>
-                          )}
+                          <p className="font-medium text-sm font-mono">{selectedCopy.barcode}</p>
                         </div>
                         <Badge
                           variant="outline"

@@ -133,7 +133,6 @@ function mapTransactionStatus(type: string, returnedDate?: string): "active" | "
 // Backend transaction row with copy fields
 interface BackendTransactionRowWithCopy extends BackendTransactionRow {
   copy_id?: number;
-  copy_number?: string;
   copy_barcode?: string;
   copy_condition?: string;
   // Renewal tracking fields
@@ -189,7 +188,6 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
     },
     // Copy-level tracking fields
     copy_id: txWithCopy.copy_id,
-    copy_number: txWithCopy.copy_number,
     copy_barcode: txWithCopy.copy_barcode,
     copy_condition: txWithCopy.copy_condition,
     // Renewal tracking fields

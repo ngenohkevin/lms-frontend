@@ -280,7 +280,7 @@ export default function ReturnPage() {
                           {scanResult.book_author}
                         </p>
                         <p className="text-sm text-muted-foreground font-mono">
-                          Copy #{scanResult.copy_number} • {scanResult.barcode}
+                          {scanResult.barcode}
                         </p>
                         <Badge
                           variant="outline"

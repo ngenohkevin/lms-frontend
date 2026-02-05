@@ -70,7 +70,6 @@ export default function AddCopyPage() {
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
   const [condition, setCondition] = useState<CopyCondition>("good");
   const [notes, setNotes] = useState("");
-  const [copyNumber, setCopyNumber] = useState("");
 
   // UI state
   const [bookSearchOpen, setBookSearchOpen] = useState(false);
@@ -103,17 +102,6 @@ export default function AddCopyPage() {
     const debounce = setTimeout(searchBooks, 300);
     return () => clearTimeout(debounce);
   }, [bookSearchQuery]);
-
-  // Auto-generate copy number when book is selected
-  useEffect(() => {
-    if (selectedBook) {
-      const bookCode = selectedBook.book_id || `BK${selectedBook.id}`;
-      const timestamp = Date.now().toString(36).toUpperCase();
-      setCopyNumber(`${bookCode}-${timestamp}`);
-    } else {
-      setCopyNumber("");
-    }
-  }, [selectedBook]);
 
   // Check if barcode already exists
   const checkBarcode = useCallback(async (code: string) => {
@@ -163,11 +151,6 @@ export default function AddCopyPage() {
       return;
     }
 
-    if (!copyNumber.trim()) {
-      toast.error("Copy number is required");
-      return;
-    }
-
     if (barcodeStatus === "exists") {
       toast.error("This barcode is already in use");
       return;
@@ -180,7 +163,6 @@ export default function AddCopyPage() {
         : selectedBook.id;
 
       await bookCopiesApi.create(bookId, {
-        copy_number: copyNumber,
         barcode: barcode.trim(),
         condition,
         notes: notes.trim() || undefined,
@@ -211,7 +193,6 @@ export default function AddCopyPage() {
     setSelectedBook(null);
     setCondition("good");
     setNotes("");
-    setCopyNumber("");
     setBarcodeStatus("idle");
     barcodeInputRef.current?.focus();
   };
@@ -417,15 +398,6 @@ export default function AddCopyPage() {
                 </PopoverContent>
               </Popover>
 
-              {selectedBook && (
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm text-muted-foreground">Copy Number:</Label>
-                  <Badge variant="outline" className="font-mono">
-                    {copyNumber}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground">(auto-generated)</span>
-                </div>
-              )}
             </CardContent>
           </Card>
 

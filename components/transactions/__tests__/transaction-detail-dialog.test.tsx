@@ -41,7 +41,6 @@ const mockActiveTransaction: Transaction = {
   fine_amount: 0,
   fine_paid: false,
   copy_id: 1,
-  copy_number: "Copy-1",
   copy_barcode: "BC001",
   copy_condition: "good",
   book: {

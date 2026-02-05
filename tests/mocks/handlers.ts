@@ -16,7 +16,6 @@ const mockTransaction = {
   fine_amount: 0,
   fine_paid: false,
   copy_id: 1,
-  copy_number: "Copy-1",
   copy_barcode: "BC001",
   copy_condition: "good",
   book: {
@@ -37,7 +36,6 @@ const mockTransaction = {
 
 const mockScanResult = {
   copy_id: 1,
-  copy_number: "Copy-1",
   barcode: "BC001",
   condition: "good",
   status: "available",
@@ -288,7 +286,6 @@ export const handlers = [
         {
           id: 1,
           book_id: 1,
-          copy_number: "Copy-1",
           barcode: "BC001",
           condition: "excellent",
           status: "available",
@@ -296,7 +293,6 @@ export const handlers = [
         {
           id: 2,
           book_id: 1,
-          copy_number: "Copy-2",
           barcode: "BC002",
           condition: "good",
           status: "available",
@@ -304,7 +300,6 @@ export const handlers = [
         {
           id: 3,
           book_id: 1,
-          copy_number: "Copy-3",
           barcode: "BC003",
           condition: "fair",
           status: "borrowed",

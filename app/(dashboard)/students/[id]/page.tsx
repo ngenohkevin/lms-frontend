@@ -45,7 +45,6 @@ import {
   RefreshCw,
   XCircle,
   RotateCcw,
-  Hash,
   FileText,
 } from "lucide-react";
 import { formatDate, formatCurrency, getInitials } from "@/lib/utils/format";
@@ -526,19 +525,11 @@ export default function StudentDetailPage() {
                                         {tx.book?.author}
                                       </p>
                                       {/* Copy Information */}
-                                      {(tx.copy_number || tx.copy_barcode) && (
+                                      {tx.copy_barcode && (
                                         <div className="flex items-center gap-2 mt-0.5">
-                                          {tx.copy_number && (
-                                            <span className="inline-flex items-center gap-0.5 text-xs text-muted-foreground">
-                                              <Hash className="h-3 w-3" />
-                                              Copy {tx.copy_number}
-                                            </span>
-                                          )}
-                                          {tx.copy_barcode && (
-                                            <span className="text-xs text-muted-foreground font-mono">
-                                              ({tx.copy_barcode})
-                                            </span>
-                                          )}
+                                          <span className="text-xs text-muted-foreground font-mono">
+                                            {tx.copy_barcode}
+                                          </span>
                                         </div>
                                       )}
                                     </div>

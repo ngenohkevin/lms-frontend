@@ -426,7 +426,7 @@ export default function QuickScanPage() {
                           {scanResult.book_author}
                         </p>
                         <p className="text-xs text-muted-foreground font-mono mt-1">
-                          Copy #{scanResult.copy_number}
+                          {scanResult.barcode}
                         </p>
                       </div>
                       <Badge
