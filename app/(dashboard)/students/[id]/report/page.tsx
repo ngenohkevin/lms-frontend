@@ -64,9 +64,9 @@ export default function StudentReportPage({ params }: PageProps) {
       <div className="space-y-6">
         {/* Header with back button */}
         <div className="no-print">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Student
+          <Button variant="ghost" className="-ml-2" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
         </div>
 
@@ -154,7 +154,7 @@ export default function StudentReportPage({ params }: PageProps) {
               title="Outstanding Fines"
               value={`KSH ${fines_summary.outstanding_fines}`}
               icon={<DollarSign className="h-4 w-4" />}
-              subtitle={`Paid: $${fines_summary.total_fines_paid}`}
+              subtitle={`Paid: KSH ${fines_summary.total_fines_paid}`}
               valueClassName={parseFloat(fines_summary.outstanding_fines) > 0 ? "text-destructive" : ""}
             />
           </SummaryGrid>
@@ -224,7 +224,7 @@ export default function StudentReportPage({ params }: PageProps) {
                     { key: "month", label: "Month" },
                     { key: "borrowed", label: "Borrowed" },
                     { key: "returned", label: "Returned" },
-                    { key: "fines", label: "Fines", format: (v) => `$${v}` },
+                    { key: "fines", label: "Fines", format: (v) => `KSH ${v}` },
                   ]}
                 />
               </CardContent>
@@ -293,7 +293,7 @@ export default function StudentReportPage({ params }: PageProps) {
                         <TableCell className="text-right">
                           {parseFloat(tx.fine_amount) > 0 ? (
                             <span className={tx.fine_paid ? "" : "text-destructive"}>
-                              ${tx.fine_amount}
+                              KSH {tx.fine_amount}
                               {tx.fine_paid && (
                                 <span className="text-xs text-muted-foreground ml-1">(paid)</span>
                               )}

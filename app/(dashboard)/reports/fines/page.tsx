@@ -67,9 +67,9 @@ export default function FinesCollectionReportPage() {
       <div className="space-y-6">
         {/* Back button */}
         <div className="no-print">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Reports
+          <Button variant="ghost" className="-ml-2" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
         </div>
 
@@ -120,7 +120,7 @@ export default function FinesCollectionReportPage() {
                   title="Collection Rate"
                   value={`${report.summary.collection_rate}%`}
                   icon={<Percent className="h-4 w-4" />}
-                  subtitle={`Avg fine: $${report.summary.average_fine}`}
+                  subtitle={`Avg fine: KSH ${report.summary.average_fine}`}
                 />
               </SummaryGrid>
             </PrintSection>
@@ -300,7 +300,7 @@ export default function FinesCollectionReportPage() {
                             <TableCell className="text-right">{student.fine_count}</TableCell>
                             <TableCell className="text-right">KSH {student.total_fines}</TableCell>
                             <TableCell className="text-right font-medium text-destructive">
-                              ${student.outstanding_fines}
+                              KSH {student.outstanding_fines}
                             </TableCell>
                           </TableRow>
                         ))}

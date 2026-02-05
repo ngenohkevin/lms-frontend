@@ -66,9 +66,9 @@ export default function LostBooksReportPage() {
       <div className="space-y-6">
         {/* Back button */}
         <div className="no-print">
-          <Button variant="ghost" size="sm" onClick={() => router.back()} className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Reports
+          <Button variant="ghost" className="-ml-2" onClick={() => router.back()}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back
           </Button>
         </div>
 
@@ -111,7 +111,7 @@ export default function LostBooksReportPage() {
                   title="Outstanding Amount"
                   value={`KSH ${report.summary.total_outstanding}`}
                   icon={<DollarSign className="h-4 w-4" />}
-                  subtitle={`Paid: $${report.summary.total_paid}`}
+                  subtitle={`Paid: KSH ${report.summary.total_paid}`}
                   valueClassName={parseFloat(report.summary.total_outstanding) > 0 ? "text-destructive" : ""}
                 />
                 <SummaryCard
