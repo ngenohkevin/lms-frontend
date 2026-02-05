@@ -30,7 +30,7 @@ export default function StudentsPage() {
     per_page: 20,
   });
 
-  const { students, pagination, isLoading, refresh } = useStudents(params);
+  const { students, pagination, isLoading } = useStudents(params);
 
   const handleSearch = (searchParams: Record<string, string | boolean | number | undefined>) => {
     setParams((prev) => ({
@@ -77,10 +77,10 @@ export default function StudentsPage() {
       ),
     },
     {
-      key: "department",
-      header: "Department",
+      key: "year_of_study",
+      header: "Year",
       render: (student: Student) => (
-        <span className="text-sm">{student.department || "-"}</span>
+        <span className="text-sm">{student.year_of_study ? `Year ${student.year_of_study}` : "-"}</span>
       ),
     },
     {

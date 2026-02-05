@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { PermissionGuard } from "@/components/auth/permission-guard";
@@ -45,28 +45,27 @@ export default function FineSettingsPage() {
   const [lostBookFine, setLostBookFine] = useState<string>("");
   const [maxFineAmount, setMaxFineAmount] = useState<string>("");
   const [gracePeriodDays, setGracePeriodDays] = useState<string>("");
-  const [hasChanges, setHasChanges] = useState(false);
-
   // Initialize form with current settings
   useEffect(() => {
     if (fineSettings) {
+      /* eslint-disable react-hooks/set-state-in-effect -- syncing server state to form */
       setFinePerDay(Math.round(fineSettings.fine_per_day).toString());
       setLostBookFine(Math.round(fineSettings.lost_book_fine).toString());
       setMaxFineAmount(Math.round(fineSettings.max_fine_amount).toString());
       setGracePeriodDays(fineSettings.fine_grace_period_days.toString());
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [fineSettings]);
 
-  // Track changes
-  useEffect(() => {
-    if (fineSettings) {
-      const changed =
-        parseFloat(finePerDay) !== fineSettings.fine_per_day ||
-        parseFloat(lostBookFine) !== fineSettings.lost_book_fine ||
-        parseFloat(maxFineAmount) !== fineSettings.max_fine_amount ||
-        parseInt(gracePeriodDays) !== fineSettings.fine_grace_period_days;
-      setHasChanges(changed);
-    }
+  // Derive hasChanges from current form state vs server state
+  const hasChanges = useMemo(() => {
+    if (!fineSettings) return false;
+    return (
+      parseFloat(finePerDay) !== fineSettings.fine_per_day ||
+      parseFloat(lostBookFine) !== fineSettings.lost_book_fine ||
+      parseFloat(maxFineAmount) !== fineSettings.max_fine_amount ||
+      parseInt(gracePeriodDays) !== fineSettings.fine_grace_period_days
+    );
   }, [finePerDay, lostBookFine, maxFineAmount, gracePeriodDays, fineSettings]);
 
   const handleSave = async () => {

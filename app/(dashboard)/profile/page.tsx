@@ -1,9 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { useStudentActiveTransactions } from "@/lib/hooks/use-transactions";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -19,14 +17,13 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   User,
-  Mail,
   Shield,
   BookOpen,
   Calendar,
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { getInitials, formatDate, formatCurrency } from "@/lib/utils/format";
+import { getInitials, formatDate } from "@/lib/utils/format";
 
 export default function ProfilePage() {
   const { user, isStudent } = useAuth();

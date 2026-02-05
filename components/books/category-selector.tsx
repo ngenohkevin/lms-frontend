@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Check, ChevronsUpDown, Plus, Loader2, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -178,7 +178,7 @@ export function CategorySelector({
                       }}
                     >
                       <Plus className="mr-1 h-4 w-4" />
-                      Create "{search}"
+                      Create &quot;{search}&quot;
                     </Button>
                   </div>
                 </CommandEmpty>

@@ -460,26 +460,26 @@ export default function ReportsPage() {
                   </Card>
                 </div>
 
-                {overdueReport.overdue_by_department && (
+                {overdueReport.overdue_by_year_of_study && (
                   <Card>
                     <CardHeader>
-                      <CardTitle>Overdue by Department</CardTitle>
+                      <CardTitle>Overdue by Year of Study</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        {overdueReport.overdue_by_department.map((dept) => (
+                        {overdueReport.overdue_by_year_of_study.map((item) => (
                           <div
-                            key={dept.department}
+                            key={item.year_of_study}
                             className="flex items-center justify-between"
                           >
                             <div>
-                              <p className="font-medium">{dept.department}</p>
+                              <p className="font-medium">Year {item.year_of_study}</p>
                               <p className="text-sm text-muted-foreground">
-                                {dept.count} overdue items
+                                {item.count} overdue items
                               </p>
                             </div>
                             <Badge variant="destructive">
-                              {formatCurrency(dept.fine_amount)}
+                              {formatCurrency(item.fine_amount)}
                             </Badge>
                           </div>
                         ))}

@@ -40,7 +40,7 @@ export function useSeriesSearch(query: string, page: number = 1, limit: number =
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Series>>(
     key,
-    () => (query ? seriesApi.search(query, page, limit) : Promise.resolve({ data: [], pagination: {} as any })),
+    () => (query ? seriesApi.search(query, page, limit) : Promise.resolve({ data: [], pagination: undefined })),
     {
       onError: (err) => handleApiError(err, "Search series"),
       shouldRetryOnError: true,

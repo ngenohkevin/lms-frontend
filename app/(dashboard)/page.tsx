@@ -22,7 +22,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, BarChart, Bar } from "recharts";
+import { LineChart, Line, XAxis, YAxis } from "recharts";
 import { formatDate } from "@/lib/utils/format";
 
 const chartConfig = {

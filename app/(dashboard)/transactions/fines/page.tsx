@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useFines } from "@/lib/hooks/use-transactions";
 import { transactionsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";

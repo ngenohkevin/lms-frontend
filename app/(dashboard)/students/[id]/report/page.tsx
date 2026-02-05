@@ -59,7 +59,7 @@ export default function StudentReportPage({ params }: PageProps) {
   return (
     <PrintableReport
       title={`Student Report: ${fullName}`}
-      subtitle={`Student ID: ${profile.student_id} | Department: ${profile.department || "N/A"}`}
+      subtitle={`Student ID: ${profile.student_id} | Year ${profile.year_of_study}`}
     >
       <div className="space-y-6">
         {/* Header with back button */}
@@ -102,10 +102,6 @@ export default function StudentReportPage({ params }: PageProps) {
               <div>
                 <p className="text-sm text-muted-foreground">Phone</p>
                 <p className="font-medium">{profile.phone || "N/A"}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Department</p>
-                <p className="font-medium">{profile.department || "N/A"}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Year of Study</p>

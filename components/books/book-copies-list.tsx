@@ -210,7 +210,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       toast.success("Copy added successfully");
       setIsFormOpen(false);
       refresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to add copy");
     } finally {
       setIsSubmitting(false);
@@ -225,7 +225,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       toast.success("Copy updated successfully");
       setEditingCopy(null);
       refresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update copy");
     } finally {
       setIsSubmitting(false);
@@ -240,7 +240,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       toast.success("Copy deleted successfully");
       setDeletingCopy(null);
       refresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete copy");
     } finally {
       setIsSubmitting(false);
@@ -256,7 +256,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       setIsGenerateOpen(false);
       setGenerateCount(1);
       refresh();
-    } catch (error) {
+    } catch {
       toast.error("Failed to generate copies");
     } finally {
       setIsSubmitting(false);
@@ -668,7 +668,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Copy?</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete copy "{deletingCopy?.copy_number}"?
+              Are you sure you want to delete copy &quot;{deletingCopy?.copy_number}&quot;?
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -695,7 +695,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           <AlertDialogHeader>
             <AlertDialogTitle>Return Book?</AlertDialogTitle>
             <AlertDialogDescription>
-              Return copy "{returningCopy?.copy_number}" borrowed by{" "}
+              Return copy &quot;{returningCopy?.copy_number}&quot; borrowed by{" "}
               {copyBorrowerInfo.get(returningCopy?.id || 0)?.current_borrower?.student_name}?
             </AlertDialogDescription>
           </AlertDialogHeader>

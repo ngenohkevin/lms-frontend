@@ -161,7 +161,7 @@ export function useInventoryReport() {
   };
 }
 
-export function useOverdueReport(params?: { department?: string }) {
+export function useOverdueReport(params?: { year?: number }) {
   const key = params
     ? ["/api/v1/reports/overdue-books", params]
     : "/api/v1/reports/overdue-books";

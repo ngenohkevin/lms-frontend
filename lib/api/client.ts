@@ -1,5 +1,3 @@
-import type { ApiResponse } from "@/lib/types";
-
 type ParamValue = string | number | boolean | undefined | null;
 
 // Helper to clear auth cookies

@@ -8,8 +8,6 @@ import type {
   PaginatedResponse,
   BulkStatusUpdateRequest,
   BulkStatusUpdateResponse,
-  BulkDepartmentUpdateRequest,
-  BulkDepartmentUpdateResponse,
 } from "@/lib/types";
 
 const STUDENTS_PREFIX = "/api/v1/students";
@@ -38,9 +36,6 @@ interface BackendStudent {
   last_name: string;
   email?: string;
   phone?: string;
-  department?: string;
-  department_id?: number;
-  department_name?: string;
   year_of_study?: number;
   max_books?: number;
   // These fields may or may not be present depending on the endpoint
@@ -83,9 +78,6 @@ function transformStudent(student: BackendStudent): Student {
     name: `${student.first_name} ${student.last_name}`.trim(),
     email: student.email || "",
     phone: student.phone,
-    department: student.department,
-    department_id: student.department_id,
-    department_name: student.department_name,
     year_of_study: student.year_of_study,
     enrollment_date: student.enrollment_date,
     max_books: student.max_books ?? 5,
@@ -127,7 +119,6 @@ export const studentsApi = {
     // Transform frontend params to backend format
     const backendParams: Record<string, string | number | boolean | undefined> = {};
     if (params?.query) backendParams.q = params.query;
-    if (params?.department) backendParams.department = params.department;
     if (params?.year_of_study) backendParams.year = params.year_of_study;
     if (params?.status) backendParams.active = params.status === "active";
     if (params?.page) backendParams.page = params.page;
@@ -152,7 +143,6 @@ export const studentsApi = {
     // Backend uses 'q' for query, 'limit' for per_page
     const backendParams: Record<string, string | number | boolean | undefined> = {};
     if (params.query) backendParams.q = params.query;
-    if (params.department) backendParams.department = params.department;
     if (params.year_of_study) backendParams.year = params.year_of_study;
     if (params.status) backendParams.active = params.status === "active";
     if (params.page) backendParams.page = params.page;
@@ -191,7 +181,6 @@ export const studentsApi = {
       email: data.email || undefined,
       phone: data.phone || undefined,
       year_of_study: data.year_of_study || 1,
-      department_id: data.department_id || undefined,
       max_books: data.max_books || 5,
       enrollment_date: data.enrollment_date || undefined,
     };
@@ -211,7 +200,6 @@ export const studentsApi = {
     if (data.email !== undefined) backendData.email = data.email || undefined;
     if (data.phone !== undefined) backendData.phone = data.phone || undefined;
     if (data.year_of_study !== undefined) backendData.year_of_study = data.year_of_study;
-    if (data.department_id !== undefined) backendData.department_id = data.department_id || undefined;
     if (data.max_books !== undefined) backendData.max_books = data.max_books;
     if (data.enrollment_date !== undefined) backendData.enrollment_date = data.enrollment_date;
 
@@ -299,12 +287,6 @@ export const studentsApi = {
     return apiClient.download(`${STUDENTS_PREFIX}/export`, { params });
   },
 
-  // Get departments
-  getDepartments: async (): Promise<string[]> => {
-    const response = await apiClient.get<ApiResponse<string[]>>(`${STUDENTS_PREFIX}/departments`);
-    return response.data || [];
-  },
-
   // Reset student password (admin only)
   resetPassword: async (
     id: string,
@@ -321,15 +303,6 @@ export const studentsApi = {
   bulkUpdateStatus: async (data: BulkStatusUpdateRequest): Promise<BulkStatusUpdateResponse> => {
     const response = await apiClient.put<ApiResponse<BulkStatusUpdateResponse>>(
       `${STUDENTS_PREFIX}/status/bulk`,
-      data
-    );
-    return response.data;
-  },
-
-  // Bulk update student department
-  bulkUpdateDepartment: async (data: BulkDepartmentUpdateRequest): Promise<BulkDepartmentUpdateResponse> => {
-    const response = await apiClient.put<ApiResponse<BulkDepartmentUpdateResponse>>(
-      `${STUDENTS_PREFIX}/department/bulk`,
       data
     );
     return response.data;

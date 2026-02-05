@@ -1,6 +1,15 @@
+// Book type enum
+export type BookType = "textbook" | "storybook";
+
+export const BOOK_TYPES: { value: BookType; label: string; description: string }[] = [
+  { value: "textbook", label: "Textbook", description: "Academic materials - 1 year loan" },
+  { value: "storybook", label: "Storybook", description: "Fiction/Non-fiction - loan based on student year" },
+];
+
 export interface Book {
   id: string;
   book_id: string;
+  book_type: BookType;
   isbn?: string;
   title: string;
   author: string;
@@ -37,7 +46,8 @@ export interface Book {
 export type BookFormat = "physical" | "ebook" | "audiobook";
 
 export interface BookFormData {
-  book_id: string;
+  // book_id is now auto-generated, not required in form
+  book_type: BookType;
   isbn: string;
   title: string;
   author: string;

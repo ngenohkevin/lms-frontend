@@ -109,7 +109,7 @@ describe("TransactionDetailDialog", () => {
     mockTransactionsApi.renew.mockResolvedValue({
       id: "1",
       due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-    } as any);
+    } as Transaction);
   });
 
   it("renders transaction details correctly", () => {
@@ -338,7 +338,7 @@ describe("TransactionDetailDialog", () => {
       />
     );
 
-    // Should show renewal count (format is "Renewed 2x")
-    expect(screen.getByText(/Renewed 2x/)).toBeInTheDocument();
+    // Should show renewal count (format is "2x renewed")
+    expect(screen.getByText(/2x renewed/)).toBeInTheDocument();
   });
 });

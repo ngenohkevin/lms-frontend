@@ -6,7 +6,7 @@ import { AuthGuard } from "@/components/auth/auth-guard";
 import { PermissionGuard } from "@/components/auth/permission-guard";
 import { PermissionCodes } from "@/lib/types/permission";
 import { seriesApi } from "@/lib/api/series";
-import type { Series, SeriesFormData } from "@/lib/types/book";
+import type { Series } from "@/lib/types/book";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +51,6 @@ import {
   ArrowLeft,
   Search,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 

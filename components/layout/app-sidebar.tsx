@@ -14,7 +14,6 @@ import {
   LogOut,
   BookMarked,
   ChevronUp,
-  Sparkles,
   Settings,
   Shield,
   ScanLine,

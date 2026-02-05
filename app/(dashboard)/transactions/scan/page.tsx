@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { transactionsApi, studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/providers/auth-provider";

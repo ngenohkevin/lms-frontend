@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/providers/auth-provider";
+
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { BookForm } from "@/components/books";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,6 @@ import type { Book } from "@/lib/types";
 
 export default function NewBookPage() {
   const router = useRouter();
-  const { isLibrarian } = useAuth();
 
   const handleSuccess = (book: Book) => {
     router.push(`/books/${book.id}`);

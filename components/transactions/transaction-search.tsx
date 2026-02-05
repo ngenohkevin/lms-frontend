@@ -10,7 +10,6 @@ import {
   Filter,
   Calendar,
   BookOpen,
-  User,
   AlertTriangle,
   CheckCircle,
   Clock,

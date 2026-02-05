@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 import { notificationsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -50,7 +50,7 @@ const notificationColors: Record<NotificationType, string> = {
 export default function NotificationsPage() {
   const [page, setPage] = useState(1);
 
-  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Notification>>(
+  const { data, isLoading, mutate } = useSWR<PaginatedResponse<Notification>>(
     ["/api/v1/notifications", { page, per_page: 20 }],
     () => notificationsApi.list({ page, per_page: 20 })
   );
@@ -62,7 +62,7 @@ export default function NotificationsPage() {
     try {
       await notificationsApi.markRead(id);
       mutate();
-    } catch (err) {
+    } catch {
       toast.error("Failed to mark notification as read");
     }
   };
@@ -72,7 +72,7 @@ export default function NotificationsPage() {
       await notificationsApi.markAllRead();
       mutate();
       toast.success("All notifications marked as read");
-    } catch (err) {
+    } catch {
       toast.error("Failed to mark all as read");
     }
   };
@@ -82,7 +82,7 @@ export default function NotificationsPage() {
       await notificationsApi.delete(id);
       mutate();
       toast.success("Notification deleted");
-    } catch (err) {
+    } catch {
       toast.error("Failed to delete notification");
     }
   };

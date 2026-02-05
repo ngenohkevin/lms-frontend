@@ -9,7 +9,6 @@ import { useStudent } from "@/lib/hooks/use-students";
 import { useStudentTransactionHistory } from "@/lib/hooks/use-transactions";
 import { studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { PermissionGuard } from "@/components/auth/permission-guard";
 import { PermissionCodes } from "@/lib/types/permission";
 import { SuspendDialog } from "@/components/students/suspend-dialog";
 import { GraduateDialog } from "@/components/students/graduate-dialog";
@@ -35,7 +34,6 @@ import {
   Trash2,
   Mail,
   Phone,
-  Building2,
   GraduationCap,
   BookOpen,
   AlertTriangle,
@@ -291,16 +289,6 @@ export default function StudentDetailPage() {
                     <div>
                       <p className="text-sm text-muted-foreground">Phone</p>
                       <p className="font-medium">{student.phone}</p>
-                    </div>
-                  </div>
-                )}
-
-                {(student.department || student.department_name) && (
-                  <div className="flex items-center gap-3">
-                    <Building2 className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Department</p>
-                      <p className="font-medium">{student.department_name || student.department}</p>
                     </div>
                   </div>
                 )}

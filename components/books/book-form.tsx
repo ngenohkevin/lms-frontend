@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -27,15 +26,18 @@ import {
 } from "@/components/ui/collapsible";
 import { Loader2, Search, ChevronDown } from "lucide-react";
 import { useCategories } from "@/lib/hooks";
-import type { Book, BookFormData, Author } from "@/lib/types";
-import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
+import type { Book, BookFormData, Author, BookType } from "@/lib/types";
+import { BOOK_LANGUAGES, BOOK_FORMATS, BOOK_TYPES } from "@/lib/types/book";
 import { toast } from "sonner";
 import { SeriesSelector } from "./series-selector";
 import { AuthorSelector } from "./author-selector";
 import { CategorySelector } from "./category-selector";
 
 const bookSchema = z.object({
-  book_id: z.string().min(1, "Book ID is required").max(50, "Book ID must be at most 50 characters"),
+  // book_id is now auto-generated, not required in form
+  book_type: z.enum(["textbook", "storybook"], {
+    message: "Please select a book type",
+  }),
   isbn: z.string().min(10, "ISBN must be at least 10 characters"),
   title: z.string().min(1, "Title is required"),
   author: z.string().min(1, "Author is required"),
@@ -84,7 +86,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     resolver: zodResolver(bookSchema),
     defaultValues: book
       ? {
-          book_id: book.book_id || "",
+          book_type: book.book_type || "textbook",
           isbn: book.isbn || "",
           title: book.title || "",
           author: book.author || "",
@@ -103,7 +105,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           cover_image_url: book.cover_image_url || "",
         }
       : {
-          book_id: "",
+          book_type: "textbook",
           isbn: "",
           total_copies: 0,
           category: "",
@@ -346,18 +348,31 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
       {/* Essential Fields */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="book_id">Book ID *</Label>
-          <Input
-            id="book_id"
-            placeholder="BK-001"
-            {...register("book_id")}
+          <Label htmlFor="book_type">Book Type *</Label>
+          <Select
+            value={watch("book_type")}
+            onValueChange={(value) => setValue("book_type", value as BookType)}
             disabled={isEditing}
-          />
-          {errors.book_id && (
-            <p className="text-sm text-destructive">{errors.book_id.message}</p>
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select book type" />
+            </SelectTrigger>
+            <SelectContent>
+              {BOOK_TYPES.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  <div className="flex flex-col">
+                    <span>{type.label}</span>
+                    <span className="text-xs text-muted-foreground">{type.description}</span>
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.book_type && (
+            <p className="text-sm text-destructive">{errors.book_type.message}</p>
           )}
           <p className="text-xs text-muted-foreground">
-            Unique identifier for this book (e.g., BK-001)
+            Textbooks have 1-year loan period, storybooks vary by student year
           </p>
         </div>
 
@@ -442,7 +457,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
             {...register("total_copies", { valueAsNumber: true })}
           />
           <p className="text-xs text-muted-foreground">
-            Auto-managed when using copy tracking. Use "Generate" in the Copies tab after creating the book.
+            Auto-managed when using copy tracking. Use &quot;Generate&quot; in the Copies tab after creating the book.
           </p>
           {errors.total_copies && (
             <p className="text-sm text-destructive">

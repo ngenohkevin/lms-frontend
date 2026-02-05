@@ -10,7 +10,6 @@ import type {
   RenewalEligibility,
   TransactionSearchParams,
   Fine,
-  FinePaymentRequest,
   OverdueTransaction,
   TransactionStats,
   PaginatedResponse,

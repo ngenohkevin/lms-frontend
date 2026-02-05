@@ -49,26 +49,26 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, user?.id, mutate]);
 
-  const permissions = data?.permissions || [];
+  const permissions = data?.permissions;
   const role = data?.role;
 
   const hasPermission = useCallback(
     (permission: string): boolean => {
-      return permissions.includes(permission);
+      return permissions?.includes(permission) ?? false;
     },
     [permissions]
   );
 
   const hasAnyPermission = useCallback(
     (perms: string[]): boolean => {
-      return perms.some((p) => permissions.includes(p));
+      return perms.some((p) => permissions?.includes(p) ?? false);
     },
     [permissions]
   );
 
   const hasAllPermissions = useCallback(
     (perms: string[]): boolean => {
-      return perms.every((p) => permissions.includes(p));
+      return perms.every((p) => permissions?.includes(p) ?? false);
     },
     [permissions]
   );
@@ -78,7 +78,7 @@ export function PermissionProvider({ children }: { children: ReactNode }) {
   }, [mutate]);
 
   const value: PermissionContextType = {
-    permissions,
+    permissions: permissions ?? [],
     role,
     isLoading,
     error: error || null,

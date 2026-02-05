@@ -580,14 +580,14 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE}/departments/:id/activate`, ({ params }) => {
+  http.post(`${API_BASE}/departments/:id/activate`, () => {
     return HttpResponse.json({
       success: true,
       message: "Department activated successfully",
     });
   }),
 
-  http.post(`${API_BASE}/departments/:id/deactivate`, ({ params }) => {
+  http.post(`${API_BASE}/departments/:id/deactivate`, () => {
     return HttpResponse.json({
       success: true,
       message: "Department deactivated successfully",

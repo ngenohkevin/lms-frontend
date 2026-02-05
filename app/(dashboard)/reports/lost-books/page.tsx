@@ -153,27 +153,27 @@ export default function LostBooksReportPage() {
               </PrintSection>
             )}
 
-            {/* Lost Books by Department */}
-            {report.by_department && report.by_department.length > 0 && (
-              <PrintSection title="Lost Books by Department">
+            {/* Lost Books by Year of Study */}
+            {report.by_year_of_study && report.by_year_of_study.length > 0 && (
+              <PrintSection title="Lost Books by Year of Study">
                 <Card>
                   <CardContent className="pt-6">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Department</TableHead>
+                          <TableHead>Year of Study</TableHead>
                           <TableHead className="text-right">Books Lost</TableHead>
                           <TableHead className="text-right">Replacement Value</TableHead>
                           <TableHead className="text-right">Students Affected</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {report.by_department.map((dept, i) => (
+                        {report.by_year_of_study.map((item, i) => (
                           <TableRow key={i}>
-                            <TableCell className="font-medium">{dept.department || "Unknown"}</TableCell>
-                            <TableCell className="text-right">{dept.lost_count}</TableCell>
-                            <TableCell className="text-right">KSH {dept.replacement_value}</TableCell>
-                            <TableCell className="text-right">{dept.students_affected}</TableCell>
+                            <TableCell className="font-medium">Year {item.year_of_study}</TableCell>
+                            <TableCell className="text-right">{item.lost_count}</TableCell>
+                            <TableCell className="text-right">KSH {item.replacement_value}</TableCell>
+                            <TableCell className="text-right">{item.students_affected}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -254,7 +254,7 @@ export default function LostBooksReportPage() {
                               <div>
                                 <p className="font-medium">{book.student_name}</p>
                                 <p className="text-sm text-muted-foreground">{book.student_code}</p>
-                                <p className="text-xs text-muted-foreground">{book.department || "N/A"}</p>
+                                <p className="text-xs text-muted-foreground">Year {book.year_of_study}</p>
                               </div>
                             </TableCell>
                             <TableCell>

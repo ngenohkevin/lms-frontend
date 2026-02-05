@@ -113,7 +113,6 @@ export const reportsApi = {
     to_date?: string;
     category?: string;
     year?: number;
-    department?: string;
     period?: string;
   }): Promise<PopularBook[]> => {
     const defaultDates = getDefaultDateRange();
@@ -156,7 +155,6 @@ export const reportsApi = {
   // Requires: start_date, end_date
   getStudentActivity: async (params?: {
     limit?: number;
-    department?: string;
     year?: number;
     active_only?: boolean;
     period?: string;
@@ -167,7 +165,6 @@ export const reportsApi = {
       {
         start_date: defaultDates.start_date,
         end_date: defaultDates.end_date,
-        department: params?.department,
         year_of_study: params?.year,
       }
     );
@@ -192,14 +189,12 @@ export const reportsApi = {
   // Overdue report - POST /api/v1/reports/overdue-books
   // No required fields
   getOverdueReport: async (params?: {
-    department?: string;
     year?: number;
     days_overdue?: number;
   }): Promise<OverdueReport> => {
     const response = await apiClient.post<ApiResponse<OverdueReport>>(
       `${REPORTS_PREFIX}/overdue-books`,
       {
-        department: params?.department,
         year_of_study: params?.year,
       }
     );
@@ -293,7 +288,7 @@ export const reportsApi = {
       {
         start_date: params?.start_date || defaultDates.start_date,
         end_date: params?.end_date || defaultDates.end_date,
-        department: params?.department,
+        year_of_study: params?.year_of_study,
         genre: params?.genre,
         interval: params?.interval || "month",
       }

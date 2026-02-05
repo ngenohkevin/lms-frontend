@@ -37,7 +37,6 @@ import {
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -83,7 +82,7 @@ export function BookSearch({
   const searchParams = useSearchParams();
   const [isOpen, setIsOpen] = useState(false);
   const [showQuickFilters, setShowQuickFilters] = useState(true);
-  const { categories, isLoading: categoriesLoading } = useCategories();
+  const { categories } = useCategories();
   const { series: seriesList } = useSeries(1, 100);
 
   const [query, setQuery] = useState(searchParams.get("search") || "");

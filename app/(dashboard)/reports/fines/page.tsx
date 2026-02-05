@@ -180,21 +180,21 @@ export default function FinesCollectionReportPage() {
               </PrintSection>
             )}
 
-            {/* Fines by Department */}
-            {report.by_department && report.by_department.length > 0 && (
-              <PrintSection title="Fines by Department">
+            {/* Fines by Year of Study */}
+            {report.by_year_of_study && report.by_year_of_study.length > 0 && (
+              <PrintSection title="Fines by Year of Study">
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building className="h-5 w-5" />
-                      Breakdown by Department
+                      Breakdown by Year of Study
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Department</TableHead>
+                          <TableHead>Year of Study</TableHead>
                           <TableHead className="text-right">Fine Count</TableHead>
                           <TableHead className="text-right">Students</TableHead>
                           <TableHead className="text-right">Total Fines</TableHead>
@@ -203,14 +203,14 @@ export default function FinesCollectionReportPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {report.by_department.map((dept, i) => (
+                        {report.by_year_of_study.map((item, i) => (
                           <TableRow key={i}>
-                            <TableCell className="font-medium">{dept.department || "Unknown"}</TableCell>
-                            <TableCell className="text-right">{dept.fine_count}</TableCell>
-                            <TableCell className="text-right">{dept.students_affected}</TableCell>
-                            <TableCell className="text-right">KSH {dept.total_fines}</TableCell>
-                            <TableCell className="text-right text-green-600">KSH {dept.paid_amount}</TableCell>
-                            <TableCell className="text-right text-destructive">KSH {dept.outstanding_amount}</TableCell>
+                            <TableCell className="font-medium">Year {item.year_of_study}</TableCell>
+                            <TableCell className="text-right">{item.fine_count}</TableCell>
+                            <TableCell className="text-right">{item.students_affected}</TableCell>
+                            <TableCell className="text-right">KSH {item.total_fines}</TableCell>
+                            <TableCell className="text-right text-green-600">KSH {item.paid_amount}</TableCell>
+                            <TableCell className="text-right text-destructive">KSH {item.outstanding_amount}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -295,7 +295,6 @@ export default function FinesCollectionReportPage() {
                                 )}
                               </div>
                             </TableCell>
-                            <TableCell>{student.department || "N/A"}</TableCell>
                             <TableCell>Year {student.year_of_study}</TableCell>
                             <TableCell className="text-right">{student.fine_count}</TableCell>
                             <TableCell className="text-right">KSH {student.total_fines}</TableCell>

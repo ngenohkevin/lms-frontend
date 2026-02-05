@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   Barcode,
   BookOpen,
@@ -64,7 +63,6 @@ const CONDITIONS: { value: CopyCondition; label: string; description: string }[]
 ];
 
 export default function AddCopyPage() {
-  const router = useRouter();
   const barcodeInputRef = useRef<HTMLInputElement>(null);
 
   // Form state

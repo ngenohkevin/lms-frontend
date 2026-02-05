@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { studentsApi } from "@/lib/api";
-import { useDepartments } from "@/lib/hooks/use-departments";
 import { useAcademicYears } from "@/lib/hooks/use-academic-years";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +33,6 @@ const studentSchema = z.object({
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().optional(),
-  department_id: z.number().optional(),
   year_of_study: z.number().min(1).max(10).optional(),
   max_books: z.number().min(1).max(20).optional(),
   password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
@@ -62,7 +60,6 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { departments, isLoading: departmentsLoading } = useDepartments();
   const { academicYears, isLoading: yearsLoading } = useAcademicYears();
 
   const isEditing = !!student;
@@ -82,7 +79,6 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           last_name: student.last_name || "",
           email: student.email || "",
           phone: student.phone || "",
-          department_id: student.department_id,
           year_of_study: student.year_of_study || 1,
           max_books: student.max_books ?? 5,
           enrollment_date: student.enrollment_date || "",
@@ -105,7 +101,6 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
         last_name: data.last_name,
         email: data.email || undefined,
         phone: data.phone || undefined,
-        department_id: data.department_id,
         year_of_study: data.year_of_study,
         max_books: data.max_books,
         password: data.password || undefined,
@@ -200,26 +195,6 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
             placeholder="+254 700 000 000"
             {...register("phone")}
           />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="department_id">Department</Label>
-          <Select
-            value={watch("department_id")?.toString() || ""}
-            onValueChange={(value) => setValue("department_id", value ? parseInt(value) : undefined)}
-            disabled={departmentsLoading}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={departmentsLoading ? "Loading..." : "Select department"} />
-            </SelectTrigger>
-            <SelectContent>
-              {departments.map((dept) => (
-                <SelectItem key={dept.id} value={dept.id.toString()}>
-                  {dept.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-2">

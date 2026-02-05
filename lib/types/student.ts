@@ -7,9 +7,6 @@ export interface Student {
   name: string; // Computed: first_name + " " + last_name
   email: string;
   phone?: string;
-  department?: string;
-  department_id?: number;
-  department_name?: string;
   year_of_study?: number;
   enrollment_date?: string;
   max_books: number;
@@ -33,7 +30,6 @@ export interface StudentFormData {
   last_name: string;
   email?: string; // Optional
   phone?: string;
-  department_id?: number;
   year_of_study?: number;
   max_books?: number;
   enrollment_date?: string;
@@ -43,7 +39,6 @@ export interface StudentFormData {
 
 export interface StudentSearchParams {
   query?: string;
-  department?: string;
   year_of_study?: number;
   status?: StudentStatus;
   has_overdue?: boolean;
@@ -60,7 +55,6 @@ export interface StudentImportData {
   last_name: string;
   email?: string;
   phone?: string;
-  department?: string;
   year_of_study?: number;
 }
 
@@ -132,15 +126,4 @@ export interface BulkStatusUpdateRequest {
 
 export interface BulkStatusUpdateResponse {
   updated: number;
-}
-
-export interface BulkDepartmentUpdateRequest {
-  student_ids: number[];
-  department_id: number;
-}
-
-export interface BulkDepartmentUpdateResponse {
-  updated: number;
-  requested: number;
-  department_id: number;
 }

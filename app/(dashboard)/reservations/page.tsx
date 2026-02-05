@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import useSWR from "swr";
 import { useAuth } from "@/providers/auth-provider";
@@ -168,7 +167,7 @@ export default function ReservationsPage() {
     }
   }, [createBookId, showCreateDialog]);
 
-  const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Reservation>>(
+  const { data, isLoading, mutate } = useSWR<PaginatedResponse<Reservation>>(
     ["/api/v1/reservations", params],
     () => reservationsApi.list(params)
   );

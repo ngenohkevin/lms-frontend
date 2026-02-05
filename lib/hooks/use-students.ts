@@ -79,20 +79,3 @@ export function useStudentAnalytics(id: string | null) {
   };
 }
 
-export function useStudentDepartments() {
-  const { data, error, isLoading } = useSWR<string[]>(
-    "/api/v1/students/departments",
-    () => studentsApi.getDepartments(),
-    {
-      onError: (err) => handleApiError(err, "Load departments"),
-      shouldRetryOnError: true,
-      errorRetryCount: 2,
-    }
-  );
-
-  return {
-    departments: data || [],
-    isLoading,
-    error,
-  };
-}

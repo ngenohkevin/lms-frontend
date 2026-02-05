@@ -52,7 +52,6 @@ import {
   ToggleRight,
   ArrowLeft,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function LanguagesPage() {

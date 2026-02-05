@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSeries, useSeriesSearch } from "@/lib/hooks/use-series";
 import { seriesApi } from "@/lib/api/series";
-import type { Series, SeriesFormData } from "@/lib/types/book";
+import type { SeriesFormData } from "@/lib/types/book";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,7 +83,7 @@ export function SeriesSelector({
       onChange(created.id);
       setCreateDialogOpen(false);
       setNewSeries({ name: "", description: "" });
-    } catch (error) {
+    } catch {
       toast.error("Failed to create series");
     } finally {
       setIsCreating(false);
@@ -134,7 +134,7 @@ export function SeriesSelector({
                           }}
                         >
                           <Plus className="mr-1 h-4 w-4" />
-                          Create "{search}"
+                          Create &quot;{search}&quot;
                         </Button>
                       </div>
                     </CommandEmpty>

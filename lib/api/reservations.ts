@@ -15,14 +15,6 @@ interface ApiResponse<T> {
   message?: string;
 }
 
-// Backend pagination structure
-interface BackendPagination {
-  page: number;
-  limit: number;
-  total: number;
-  total_pages: number;
-}
-
 // Backend reservation row (flat structure from database)
 interface BackendReservationRow {
   id: number;
@@ -81,19 +73,6 @@ function transformReservation(r: BackendReservationRow): Reservation {
       name: r.student_name,
       email: "", // Not available from this endpoint
     } : undefined,
-  };
-}
-
-// Transform backend pagination to frontend format
-function transformPagination(bp?: BackendPagination): PaginatedResponse<Reservation>["pagination"] | undefined {
-  if (!bp) return undefined;
-  return {
-    page: bp.page,
-    per_page: bp.limit,
-    total: bp.total,
-    total_pages: bp.total_pages,
-    has_next: bp.page < bp.total_pages,
-    has_prev: bp.page > 1,
   };
 }
 

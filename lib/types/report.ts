@@ -64,7 +64,7 @@ export interface CategoryStats {
 export interface StudentActivity {
   student_id: string;
   student_name: string;
-  department?: string;
+  year_of_study?: number;
   total_borrowed: number;
   current_books: number;
   overdue_count: number;
@@ -89,8 +89,8 @@ export interface BorrowingTrend {
 export interface OverdueReport {
   total_overdue: number;
   total_fine_amount: number;
-  overdue_by_department: Array<{
-    department: string;
+  overdue_by_year_of_study: Array<{
+    year_of_study: number;
     count: number;
     fine_amount: number;
   }>;
@@ -108,7 +108,7 @@ export interface ReportDateRange {
 export interface ReportParams extends ReportDateRange {
   group_by?: "day" | "week" | "month";
   category?: string;
-  department?: string;
+  year_of_study?: number;
 }
 
 // ============================================
@@ -123,7 +123,6 @@ export interface StudentProfile {
   email: string;
   phone: string;
   year_of_study: number;
-  department: string;
   max_books: number;
   is_active: boolean;
   member_since: string;
@@ -200,7 +199,7 @@ export interface LostBookDetail {
   student_id: number;
   student_code: string;
   student_name: string;
-  department: string;
+  year_of_study: number;
   lost_date: string;
   replacement_cost: string;
   fine_paid: boolean;
@@ -230,8 +229,8 @@ export interface LostBooksByCategory {
   avg_replacement_cost: string;
 }
 
-export interface LostBooksByDepartment {
-  department: string;
+export interface LostBooksByYearOfStudy {
+  year_of_study: number;
   lost_count: number;
   replacement_value: string;
   students_affected: number;
@@ -242,14 +241,14 @@ export interface LostBooksReport {
   lost_books: LostBookDetail[];
   trends: LostBooksTrendItem[];
   by_category: LostBooksByCategory[];
-  by_department: LostBooksByDepartment[];
+  by_year_of_study: LostBooksByYearOfStudy[];
   generated_at: string;
 }
 
 export interface LostBooksReportRequest {
   start_date?: string;
   end_date?: string;
-  department?: string;
+  year_of_study?: number;
   genre?: string;
   interval?: string;
 }
@@ -278,14 +277,6 @@ export interface FinesByYearItem {
   outstanding_amount: string;
 }
 
-export interface FinesByDepartmentItem {
-  department: string;
-  fine_count: number;
-  students_affected: number;
-  total_fines: string;
-  paid_amount: string;
-  outstanding_amount: string;
-}
 
 export interface FinesCollectionTrend {
   period: string;
@@ -300,7 +291,6 @@ export interface FineDefaulterItem {
   student_code: string;
   student_name: string;
   email: string;
-  department: string;
   year_of_study: number;
   fine_count: number;
   total_fines: string;
@@ -320,7 +310,7 @@ export interface FinePaymentHistoryItem {
   days_overdue: number;
   student_code: string;
   student_name: string;
-  department: string;
+  year_of_study: number;
   book_code: string;
   book_title: string;
 }
@@ -328,7 +318,6 @@ export interface FinePaymentHistoryItem {
 export interface FinesCollectionReport {
   summary: FinesCollectionSummary;
   by_year_of_study: FinesByYearItem[];
-  by_department: FinesByDepartmentItem[];
   trends: FinesCollectionTrend[];
   top_defaulters: FineDefaulterItem[];
   recent_fines: FinePaymentHistoryItem[];

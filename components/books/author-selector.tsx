@@ -192,7 +192,7 @@ export function AuthorSelector({
       onChange([...selectedAuthors, created]);
       setCreateDialogOpen(false);
       setNewAuthor({ name: "", bio: "" });
-    } catch (error) {
+    } catch {
       toast.error("Failed to create author");
     } finally {
       setIsCreating(false);

@@ -40,7 +40,7 @@ export function useAuthorSearch(query: string, page: number = 1, limit: number =
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<Author>>(
     key,
-    () => (query ? authorsApi.search(query, page, limit) : Promise.resolve({ data: [], pagination: {} as any })),
+    () => (query ? authorsApi.search(query, page, limit) : Promise.resolve({ data: [], pagination: undefined })),
     {
       onError: (err) => handleApiError(err, "Search authors"),
       shouldRetryOnError: true,

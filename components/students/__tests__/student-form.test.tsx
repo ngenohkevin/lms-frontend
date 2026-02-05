@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StudentForm } from "../student-form";
 
@@ -78,15 +78,10 @@ describe("StudentForm", () => {
     expect(screen.getByText(/email.*optional/i)).toBeInTheDocument();
   });
 
-  it("renders department and year of study sections", () => {
+  it("renders year of study section", () => {
     render(
       <StudentForm onSuccess={mockOnSuccess} onCancel={mockOnCancel} />
     );
-
-    // Just check that the form has rendered without errors and has the expected fields
-    // The dropdowns might have multiple elements matching, so we use getAllByText
-    const departmentLabels = screen.getAllByText(/department/i);
-    expect(departmentLabels.length).toBeGreaterThan(0);
 
     const yearLabels = screen.getAllByText(/year/i);
     expect(yearLabels.length).toBeGreaterThan(0);
