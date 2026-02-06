@@ -209,7 +209,7 @@ export interface CopyBorrowingHistoryEntry {
 }
 
 export interface BookCopyFormData {
-  barcode: string;
+  barcode?: string;
   condition?: CopyCondition;
   status?: CopyStatus;
   acquisition_date?: string;

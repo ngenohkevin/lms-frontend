@@ -34,6 +34,7 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
+  Hash,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
@@ -394,6 +395,14 @@ export default function BookDetailPage() {
 
         {/* Book Metadata */}
         <div className="grid gap-4 grid-cols-2 sm:grid-cols-3">
+            <div className="flex items-center gap-3">
+              <Hash className="h-5 w-5 text-muted-foreground shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm text-muted-foreground">Book ID</p>
+                <p className="font-medium font-mono truncate">{book.book_id}</p>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
               <div className="min-w-0">

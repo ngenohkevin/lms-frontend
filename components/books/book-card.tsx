@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, MapPin, Star, Calendar } from "lucide-react";
+import { BookOpen, MapPin, Star, Calendar, Hash } from "lucide-react";
 import type { Book } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -95,6 +95,10 @@ export function BookCard({
         </Link>
         <p className="text-sm text-muted-foreground mt-1 line-clamp-1">
           by {book.author}
+        </p>
+        <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1 font-mono">
+          <Hash className="h-3 w-3" />
+          {book.book_id}
         </p>
 
         <div className="flex flex-wrap items-center gap-2 mt-3">

@@ -21,6 +21,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useSWRConfig } from "swr";
 import { useBookCopies } from "@/lib/hooks/use-book-copies";
 import { bookCopiesApi } from "@/lib/api/book-copies";
 import { transactionsApi } from "@/lib/api/transactions";
@@ -68,6 +69,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { BookCopyForm } from "./book-copy-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -117,12 +126,28 @@ function getStatusColor(status: CopyStatus): string {
 const ITEMS_PER_PAGE = 10;
 
 export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListProps) {
+  const { mutate: globalMutate } = useSWRConfig();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const { copies, isLoading, refresh } = useBookCopies(bookId, debouncedSearch || undefined);
+
+  // Revalidate both the copies list and all book-related SWR caches
+  const refreshAll = React.useCallback(() => {
+    refresh();
+    // Revalidate the single book detail (updates available_copies on detail page)
+    globalMutate(`/api/v1/books/${bookId}`);
+    // Revalidate all book list queries (updates available_copies on books list page)
+    globalMutate(
+      (key: unknown) =>
+        Array.isArray(key) && typeof key[0] === "string" && key[0].startsWith("/api/v1/books"),
+      undefined,
+      { revalidate: true }
+    );
+  }, [refresh, globalMutate, bookId]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [generateCount, setGenerateCount] = useState(1);
+  const [generateCondition, setGenerateCondition] = useState<string>("good");
   const [editingCopy, setEditingCopy] = useState<BookCopy | null>(null);
   const [deletingCopy, setDeletingCopy] = useState<BookCopy | null>(null);
   const [viewingHistoryCopy, setViewingHistoryCopy] = useState<BookCopy | null>(null);
@@ -209,7 +234,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       await bookCopiesApi.create(bookId, data);
       toast.success("Copy added successfully");
       setIsFormOpen(false);
-      refresh();
+      refreshAll();
     } catch {
       toast.error("Failed to add copy");
     } finally {
@@ -224,7 +249,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       await bookCopiesApi.update(bookId, editingCopy.id, data);
       toast.success("Copy updated successfully");
       setEditingCopy(null);
-      refresh();
+      refreshAll();
     } catch {
       toast.error("Failed to update copy");
     } finally {
@@ -239,7 +264,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
       await bookCopiesApi.delete(bookId, deletingCopy.id);
       toast.success("Copy deleted successfully");
       setDeletingCopy(null);
-      refresh();
+      refreshAll();
     } catch {
       toast.error("Failed to delete copy");
     } finally {
@@ -251,11 +276,12 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
     if (generateCount < 1) return;
     setIsSubmitting(true);
     try {
-      const generated = await bookCopiesApi.generateCopies(bookId, generateCount, bookCode);
+      const generated = await bookCopiesApi.generateCopies(bookId, generateCount, bookCode, generateCondition);
       toast.success(`Generated ${generated.length} copies successfully`);
       setIsGenerateOpen(false);
       setGenerateCount(1);
-      refresh();
+      setGenerateCondition("good");
+      refreshAll();
     } catch {
       toast.error("Failed to generate copies");
     } finally {
@@ -283,7 +309,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
         newMap.delete(returningCopy.id);
         return newMap;
       });
-      refresh();
+      refreshAll();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to return book");
     } finally {
@@ -720,9 +746,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <label htmlFor="count" className="text-sm font-medium">
-                Number of Copies
-              </label>
+              <Label htmlFor="count">Number of Copies</Label>
               <input
                 id="count"
                 type="number"
@@ -733,6 +757,25 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 disabled={isSubmitting}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Condition</Label>
+              <Select
+                value={generateCondition}
+                onValueChange={setGenerateCondition}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select condition" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COPY_CONDITIONS.map((cond) => (
+                    <SelectItem key={cond.value} value={cond.value}>
+                      {cond.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>

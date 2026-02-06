@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 
 const bookCopySchema = z.object({
-  barcode: z.string().min(1, "Barcode is required"),
+  barcode: z.string().optional(),
   condition: z.enum(["excellent", "good", "fair", "poor", "damaged"]).optional(),
   status: z
     .enum(["available", "borrowed", "reserved", "maintenance", "lost", "damaged"])
@@ -66,7 +66,7 @@ export function BookCopyForm({
       status: initialData?.status || "available",
       acquisition_date: initialData?.acquisition_date
         ? new Date(initialData.acquisition_date).toISOString().split("T")[0]
-        : "",
+        : new Date().toISOString().split("T")[0],
       notes: initialData?.notes || "",
     },
   });
@@ -80,22 +80,21 @@ export function BookCopyForm({
 
   return (
     <form onSubmit={onFormSubmit} className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
+      {/* Show barcode read-only when editing, hidden when creating (auto-generated) */}
+      {initialData && (
         <div className="space-y-2">
-          <Label htmlFor="barcode">Barcode *</Label>
+          <Label htmlFor="barcode">Barcode</Label>
           <Input
             id="barcode"
-            placeholder="e.g., 9780123456789"
-            {...register("barcode")}
-            disabled={isSubmitting}
+            value={initialData.barcode}
+            disabled
+            className="font-mono bg-muted"
           />
-          {errors.barcode && (
-            <p className="text-sm text-destructive">
-              {errors.barcode.message}
-            </p>
-          )}
+          <p className="text-xs text-muted-foreground">
+            Barcode is auto-generated and cannot be changed
+          </p>
         </div>
-      </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">

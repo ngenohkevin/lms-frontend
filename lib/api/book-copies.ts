@@ -111,11 +111,12 @@ export const bookCopiesApi = {
   async generateCopies(
     bookId: number,
     count: number,
-    bookCode: string
+    bookCode: string,
+    condition?: string
   ): Promise<BookCopy[]> {
     const response = await apiClient.post<ApiResponse<BookCopy[]>>(
       `${BOOKS_PREFIX}/${bookId}/copies/generate`,
-      { count, book_code: bookCode }
+      { count, book_code: bookCode, condition }
     );
     return response.data || [];
   },
