@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
-  Barcode,
   BookOpen,
   Check,
   ChevronsUpDown,
@@ -11,9 +10,10 @@ import {
   Plus,
   Search,
   Sparkles,
-  X,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,12 +47,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { booksApi } from "@/lib/api/books";
 import { bookCopiesApi } from "@/lib/api/book-copies";
 import { PermissionGuard } from "@/components/auth/permission-guard";
 import { PermissionCodes } from "@/lib/types/permission";
-import type { Book, CopyCondition } from "@/lib/types/book";
+import type { Book, BookCopy, CopyCondition } from "@/lib/types/book";
 
 const CONDITIONS: { value: CopyCondition; label: string; description: string }[] = [
   { value: "excellent", label: "Excellent", description: "Like new, no wear" },
@@ -63,11 +62,9 @@ const CONDITIONS: { value: CopyCondition; label: string; description: string }[]
 ];
 
 export default function AddCopyPage() {
-  const barcodeInputRef = useRef<HTMLInputElement>(null);
-
   // Form state
-  const [barcode, setBarcode] = useState("");
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [count, setCount] = useState(1);
   const [condition, setCondition] = useState<CopyCondition>("good");
   const [notes, setNotes] = useState("");
 
@@ -77,7 +74,13 @@ export default function AddCopyPage() {
   const [searchResults, setSearchResults] = useState<Book[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [barcodeStatus, setBarcodeStatus] = useState<"idle" | "checking" | "valid" | "exists">("idle");
+
+  // Success state
+  const [lastResult, setLastResult] = useState<{
+    book: Book;
+    copies: BookCopy[];
+    count: number;
+  } | null>(null);
 
   // Search for books when query changes
   useEffect(() => {
@@ -103,39 +106,6 @@ export default function AddCopyPage() {
     return () => clearTimeout(debounce);
   }, [bookSearchQuery]);
 
-  // Check if barcode already exists
-  const checkBarcode = useCallback(async (code: string) => {
-    if (!code.trim()) {
-      setBarcodeStatus("idle");
-      return;
-    }
-
-    setBarcodeStatus("checking");
-    try {
-      await bookCopiesApi.scanBarcode(code);
-      // If we get here, barcode exists
-      setBarcodeStatus("exists");
-      toast.error("This barcode is already assigned to another copy");
-    } catch {
-      // Barcode doesn't exist - this is good!
-      setBarcodeStatus("valid");
-    }
-  }, []);
-
-  // Handle barcode input
-  const handleBarcodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setBarcode(value);
-    setBarcodeStatus("idle");
-  };
-
-  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && barcode.trim()) {
-      e.preventDefault();
-      checkBarcode(barcode);
-    }
-  };
-
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,14 +115,8 @@ export default function AddCopyPage() {
       return;
     }
 
-    if (!barcode.trim()) {
-      toast.error("Please scan or enter a barcode");
-      barcodeInputRef.current?.focus();
-      return;
-    }
-
-    if (barcodeStatus === "exists") {
-      toast.error("This barcode is already in use");
+    if (count < 1 || count > 100) {
+      toast.error("Number of copies must be between 1 and 100");
       return;
     }
 
@@ -162,25 +126,27 @@ export default function AddCopyPage() {
         ? parseInt(selectedBook.id, 10)
         : selectedBook.id;
 
-      await bookCopiesApi.create(bookId, {
-        barcode: barcode.trim(),
-        condition,
-        notes: notes.trim() || undefined,
-      });
+      const copies = await bookCopiesApi.generateCopies(
+        bookId,
+        count,
+        selectedBook.book_id,
+        condition
+      );
 
-      toast.success("Copy added successfully!", {
-        description: `Added copy to "${selectedBook.title}"`,
+      setLastResult({ book: selectedBook, copies, count });
+
+      toast.success(`${count} ${count === 1 ? "copy" : "copies"} added successfully!`, {
+        description: `Added to "${selectedBook.title}"`,
       });
 
       // Reset form for next entry
-      setBarcode("");
-      setBarcodeStatus("idle");
+      setCount(1);
       setNotes("");
-      // Keep book selected for adding multiple copies
-      barcodeInputRef.current?.focus();
+      setCondition("good");
+      setSelectedBook(null);
     } catch (error) {
-      console.error("Failed to create copy:", error);
-      toast.error("Failed to add copy", {
+      console.error("Failed to generate copies:", error);
+      toast.error("Failed to add copies", {
         description: error instanceof Error ? error.message : "Please try again",
       });
     } finally {
@@ -189,12 +155,11 @@ export default function AddCopyPage() {
   };
 
   const handleClear = () => {
-    setBarcode("");
     setSelectedBook(null);
+    setCount(1);
     setCondition("good");
     setNotes("");
-    setBarcodeStatus("idle");
-    barcodeInputRef.current?.focus();
+    setLastResult(null);
   };
 
   return (
@@ -204,7 +169,7 @@ export default function AddCopyPage() {
         <div className="container max-w-2xl py-8">
           <div className="flex flex-col items-center justify-center gap-4 py-16">
             <div className="p-4 rounded-full bg-muted">
-              <Barcode className="h-8 w-8 text-muted-foreground" />
+              <Plus className="h-8 w-8 text-muted-foreground" />
             </div>
             <h2 className="text-xl font-semibold">Permission Required</h2>
             <p className="text-muted-foreground text-center max-w-md">
@@ -216,273 +181,263 @@ export default function AddCopyPage() {
     >
       <div className="container max-w-2xl py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold tracking-tight">Add Book Copy</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Add Copies</h1>
           <p className="text-muted-foreground mt-2">
-            Scan a barcode and assign it to a book in your collection
+            Select a book and generate copies with auto-assigned barcodes
           </p>
         </div>
 
-        <form onSubmit={handleSubmit}>
-        <div className="space-y-6">
-          {/* Barcode Scanner Card */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Barcode className="h-5 w-5 text-primary" />
+        {/* Success State */}
+        {lastResult && (
+          <Card className="mb-6 border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/50">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className="p-2 rounded-full bg-green-100 dark:bg-green-900">
+                  <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
                 </div>
-                <div>
-                  <CardTitle className="text-lg">Scan Barcode</CardTitle>
-                  <CardDescription>
-                    Scan or enter the barcode for the new copy
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="relative">
-                  <Input
-                    ref={barcodeInputRef}
-                    type="text"
-                    value={barcode}
-                    onChange={handleBarcodeChange}
-                    onKeyDown={handleBarcodeKeyDown}
-                    onBlur={() => barcode && checkBarcode(barcode)}
-                    placeholder="Scan barcode or type manually..."
-                    className={cn(
-                      "pl-10 pr-10 h-12 text-lg font-mono",
-                      barcodeStatus === "valid" && "border-green-500 focus-visible:ring-green-500",
-                      barcodeStatus === "exists" && "border-red-500 focus-visible:ring-red-500"
-                    )}
-                    autoFocus
-                  />
-                  <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                    {barcodeStatus === "checking" ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    ) : barcodeStatus === "valid" ? (
-                      <Check className="h-5 w-5 text-green-500" />
-                    ) : barcodeStatus === "exists" ? (
-                      <X className="h-5 w-5 text-red-500" />
-                    ) : (
-                      <Barcode className="h-5 w-5 text-muted-foreground" />
-                    )}
-                  </div>
-                  {barcode && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
-                      onClick={() => {
-                        setBarcode("");
-                        setBarcodeStatus("idle");
-                        barcodeInputRef.current?.focus();
-                      }}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                {barcodeStatus === "exists" && (
-                  <p className="text-sm text-red-500">
-                    This barcode is already assigned to another copy
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-green-800 dark:text-green-200">
+                    {lastResult.count} {lastResult.count === 1 ? "copy" : "copies"} added successfully
                   </p>
-                )}
-                {barcodeStatus === "valid" && (
-                  <p className="text-sm text-green-600">
-                    Barcode is available
+                  <p className="text-sm text-green-700/80 dark:text-green-300/80 mt-1">
+                    Added to &quot;{lastResult.book.title}&quot;
                   </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Book Selection Card */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <BookOpen className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Select Book</CardTitle>
-                  <CardDescription>
-                    Choose which book this copy belongs to
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Popover open={bookSearchOpen} onOpenChange={setBookSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={bookSearchOpen}
-                    className="w-full justify-between h-auto min-h-12 py-2"
-                  >
-                    {selectedBook ? (
-                      <div className="flex items-center gap-3 text-left">
-                        <div className="p-1.5 rounded bg-muted">
-                          <BookOpen className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{selectedBook.title}</p>
-                          <p className="text-sm text-muted-foreground truncate">
-                            {selectedBook.author} • {selectedBook.book_id}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground flex items-center gap-2">
-                        <Search className="h-4 w-4" />
-                        Search for a book...
-                      </span>
-                    )}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[400px] p-0" align="start">
-                  <Command shouldFilter={false}>
-                    <CommandInput
-                      placeholder="Search by title, author, or ISBN..."
-                      value={bookSearchQuery}
-                      onValueChange={setBookSearchQuery}
-                    />
-                    <CommandList>
-                      {isSearching ? (
-                        <div className="flex items-center justify-center py-6">
-                          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                        </div>
-                      ) : searchResults.length === 0 ? (
-                        <CommandEmpty>
-                          {bookSearchQuery.length < 2
-                            ? "Type to search..."
-                            : "No books found."}
-                        </CommandEmpty>
-                      ) : (
-                        <CommandGroup>
-                          {searchResults.map((book) => (
-                            <CommandItem
-                              key={book.id}
-                              value={String(book.id)}
-                              onSelect={() => {
-                                setSelectedBook(book);
-                                setBookSearchOpen(false);
-                                setBookSearchQuery("");
-                              }}
-                              className="flex items-center gap-3 py-3"
-                            >
-                              <div className="p-1.5 rounded bg-muted shrink-0">
-                                <BookOpen className="h-4 w-4" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{book.title}</p>
-                                <p className="text-sm text-muted-foreground truncate">
-                                  {book.author}
-                                </p>
-                              </div>
-                              <Badge variant="secondary" className="shrink-0">
-                                {book.available_copies}/{book.total_copies}
-                              </Badge>
-                              {selectedBook?.id === book.id && (
-                                <Check className="h-4 w-4 text-primary shrink-0" />
-                              )}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
+                  {lastResult.copies.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {lastResult.copies.slice(0, 10).map((copy) => (
+                        <Badge key={copy.id} variant="secondary" className="font-mono text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                          {copy.barcode}
+                        </Badge>
+                      ))}
+                      {lastResult.copies.length > 10 && (
+                        <Badge variant="secondary" className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                          +{lastResult.copies.length - 10} more
+                        </Badge>
                       )}
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-
-            </CardContent>
-          </Card>
-
-          {/* Copy Details Card */}
-          <Card>
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Copy Details</CardTitle>
-                  <CardDescription>
-                    Set condition and add optional notes
-                  </CardDescription>
+                    </div>
+                  )}
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" variant="outline" asChild className="border-green-300 dark:border-green-800">
+                      <Link href={`/books/${lastResult.book.id}`}>
+                        View Book
+                      </Link>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setLastResult(null)}
+                      className="text-green-700 dark:text-green-300"
+                    >
+                      Dismiss
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="condition">Condition</Label>
-                <Select value={condition} onValueChange={(v) => setCondition(v as CopyCondition)}>
-                  <SelectTrigger id="condition">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CONDITIONS.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{c.label}</span>
-                          <span className="text-muted-foreground">— {c.description}</span>
+            </CardContent>
+          </Card>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="space-y-6">
+            {/* Book Selection Card */}
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Select Book</CardTitle>
+                    <CardDescription>
+                      Choose which book to add copies to
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Popover open={bookSearchOpen} onOpenChange={setBookSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={bookSearchOpen}
+                      className="w-full justify-between h-auto min-h-12 py-2"
+                    >
+                      {selectedBook ? (
+                        <div className="flex items-center gap-3 text-left">
+                          <div className="p-1.5 rounded bg-muted">
+                            <BookOpen className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{selectedBook.title}</p>
+                            <p className="text-sm text-muted-foreground truncate">
+                              {selectedBook.author} • {selectedBook.book_id}
+                            </p>
+                          </div>
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                      ) : (
+                        <span className="text-muted-foreground flex items-center gap-2">
+                          <Search className="h-4 w-4" />
+                          Search for a book...
+                        </span>
+                      )}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] p-0" align="start">
+                    <Command shouldFilter={false}>
+                      <CommandInput
+                        placeholder="Search by title, author, or ISBN..."
+                        value={bookSearchQuery}
+                        onValueChange={setBookSearchQuery}
+                      />
+                      <CommandList>
+                        {isSearching ? (
+                          <div className="flex items-center justify-center py-6">
+                            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                          </div>
+                        ) : searchResults.length === 0 ? (
+                          <CommandEmpty>
+                            {bookSearchQuery.length < 2
+                              ? "Type to search..."
+                              : "No books found."}
+                          </CommandEmpty>
+                        ) : (
+                          <CommandGroup>
+                            {searchResults.map((book) => (
+                              <CommandItem
+                                key={book.id}
+                                value={String(book.id)}
+                                onSelect={() => {
+                                  setSelectedBook(book);
+                                  setBookSearchOpen(false);
+                                  setBookSearchQuery("");
+                                }}
+                                className="flex items-center gap-3 py-3"
+                              >
+                                <div className="p-1.5 rounded bg-muted shrink-0">
+                                  <BookOpen className="h-4 w-4" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">{book.title}</p>
+                                  <p className="text-sm text-muted-foreground truncate">
+                                    {book.author}
+                                  </p>
+                                </div>
+                                <Badge variant="secondary" className="shrink-0">
+                                  {book.available_copies}/{book.total_copies}
+                                </Badge>
+                                {selectedBook?.id === book.id && (
+                                  <Check className="h-4 w-4 text-primary shrink-0" />
+                                )}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </CardContent>
+            </Card>
 
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes (optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any special notes about this copy..."
-                  className="resize-none"
-                  rows={3}
-                />
-              </div>
-            </CardContent>
-          </Card>
+            {/* Copy Details Card */}
+            <Card>
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Sparkles className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Copy Details</CardTitle>
+                    <CardDescription>
+                      Set the number of copies, condition, and optional notes
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="count">Number of Copies</Label>
+                  <Input
+                    id="count"
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={count}
+                    onChange={(e) => setCount(Math.max(1, Math.min(100, parseInt(e.target.value) || 1)))}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Barcodes will be auto-generated for each copy
+                  </p>
+                </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-3 pt-4">
-            <Button
-              type="submit"
-              size="lg"
-              className="flex-1"
-              disabled={isSubmitting || !selectedBook || !barcode || barcodeStatus === "exists"}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Adding Copy...
-                </>
-              ) : (
-                <>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Copy
-                </>
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              onClick={handleClear}
-              disabled={isSubmitting}
-            >
-              Clear
-            </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="condition">Condition</Label>
+                  <Select value={condition} onValueChange={(v) => setCondition(v as CopyCondition)}>
+                    <SelectTrigger id="condition">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CONDITIONS.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{c.label}</span>
+                            <span className="text-muted-foreground">— {c.description}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes (optional)</Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any special notes about these copies..."
+                    className="resize-none"
+                    rows={3}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 pt-4">
+              <Button
+                type="submit"
+                size="lg"
+                className="flex-1"
+                disabled={isSubmitting || !selectedBook || count < 1}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating {count} {count === 1 ? "copy" : "copies"}...
+                  </>
+                ) : (
+                  <>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add {count} {count === 1 ? "Copy" : "Copies"}
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handleClear}
+                disabled={isSubmitting}
+              >
+                Clear
+              </Button>
+            </div>
           </div>
-        </div>
-      </form>
-    </div>
+        </form>
+      </div>
     </PermissionGuard>
   );
 }

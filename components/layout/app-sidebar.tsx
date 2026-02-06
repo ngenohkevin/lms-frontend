@@ -118,7 +118,7 @@ const transactionNavItems: NavItem[] = [
     permission: PermissionCodes.TRANSACTIONS_BORROW,
   },
   {
-    title: "Add Copy",
+    title: "Add Copies",
     href: "/books/add-copy",
     icon: BookCopy,
     permission: PermissionCodes.BOOKS_CREATE,
