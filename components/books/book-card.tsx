@@ -3,7 +3,7 @@ import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, MapPin, Star, Calendar, Hash } from "lucide-react";
+import { BookOpen, MapPin, Star, Calendar, Hash, AlertTriangle } from "lucide-react";
 import type { Book } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ export function BookCard({
   showActions = false,
 }: BookCardProps) {
   const isAvailable = book.available_copies > 0;
+  const hasNoCopies = book.total_copies === 0;
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
@@ -55,10 +56,16 @@ export function BookCard({
                 "text-xs font-medium shadow-sm",
                 isAvailable
                   ? "bg-emerald-500 hover:bg-emerald-600 text-white border-0"
-                  : "bg-muted/90 backdrop-blur-sm"
+                  : hasNoCopies
+                    ? "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                    : "bg-muted/90 backdrop-blur-sm"
               )}
             >
-              {isAvailable ? `${book.available_copies} available` : "Unavailable"}
+              {isAvailable
+                ? `${book.available_copies} available`
+                : hasNoCopies
+                  ? "No copies"
+                  : "Unavailable"}
             </Badge>
           </div>
 
@@ -126,7 +133,20 @@ export function BookCard({
         )}
       </CardContent>
 
-      {showActions && (
+      {/* Notice for books with no copies */}
+      {hasNoCopies && (
+        <CardFooter className="p-4 pt-0">
+          <Link
+            href={`/books/${book.id}`}
+            className="flex items-center gap-1.5 w-full rounded-md bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-900 px-3 py-2 text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors"
+          >
+            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+            <span>Add copies to make available</span>
+          </Link>
+        </CardFooter>
+      )}
+
+      {showActions && !hasNoCopies && (
         <CardFooter className="p-4 pt-0">
           {isAvailable ? (
             <Button

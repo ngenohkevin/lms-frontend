@@ -35,6 +35,7 @@ import {
   ChevronDown,
   ChevronUp,
   Hash,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
@@ -525,6 +526,21 @@ export default function BookDetailPage() {
           </>
         )}
       </div>
+
+      {/* No copies notice */}
+      {book.total_copies === 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+              No copies registered
+            </p>
+            <p className="text-sm text-amber-700/80 dark:text-amber-300/80 mt-1">
+              This book shows as &quot;Unavailable&quot; to students. Use &quot;Generate&quot; or &quot;Add Copy&quot; in the section below to register physical copies.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Book Copies - Librarian Only */}
       {isLibrarian && (

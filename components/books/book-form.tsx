@@ -442,23 +442,22 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="total_copies">Total Copies</Label>
-          <Input
-            id="total_copies"
-            type="number"
-            min={0}
-            {...register("total_copies", { valueAsNumber: true })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Auto-managed when using copy tracking. Use &quot;Generate&quot; in the Copies tab after creating the book.
-          </p>
-          {errors.total_copies && (
-            <p className="text-sm text-destructive">
-              {errors.total_copies.message}
+        {isEditing && (
+          <div className="space-y-2">
+            <Label htmlFor="total_copies">Total Copies</Label>
+            <Input
+              id="total_copies"
+              type="number"
+              min={0}
+              {...register("total_copies", { valueAsNumber: true })}
+              disabled
+              className="bg-muted"
+            />
+            <p className="text-xs text-muted-foreground">
+              Managed automatically via the Copies section below.
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Series Selection */}
