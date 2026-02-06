@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { transactionsApi, studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/providers/auth-provider";
@@ -26,44 +26,54 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import {
-  ArrowLeft,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Loader2,
   ScanLine,
   BookOpen,
   User,
-  CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   Calendar,
   RefreshCw,
   Search,
   X,
+  Info,
+  ArrowRight,
+  Hash,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { BarcodeScanResult, BookCondition, Student } from "@/lib/types";
 
-const CONDITIONS: { value: BookCondition; label: string }[] = [
-  { value: "excellent", label: "Excellent" },
-  { value: "good", label: "Good" },
-  { value: "fair", label: "Fair" },
-  { value: "poor", label: "Poor" },
-  { value: "damaged", label: "Damaged" },
+const CONDITIONS: { value: BookCondition; label: string; description: string }[] = [
+  { value: "excellent", label: "Excellent", description: "Like new, no visible wear" },
+  { value: "good", label: "Good", description: "Minor wear, fully functional" },
+  { value: "fair", label: "Fair", description: "Moderate wear, still usable" },
+  { value: "poor", label: "Poor", description: "Significant wear, needs attention" },
+  { value: "damaged", label: "Damaged", description: "Requires repair or replacement" },
 ];
 
 function getConditionColor(condition: string): string {
   switch (condition) {
     case "excellent":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      return "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200";
     case "good":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200";
     case "fair":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200";
     case "poor":
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200";
     case "damaged":
-      return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      return "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200";
     default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200";
   }
 }
 
@@ -82,6 +92,7 @@ function formatDate(dateStr: string): string {
     weekday: "short",
     month: "short",
     day: "numeric",
+    year: "numeric",
   });
 }
 
@@ -104,8 +115,16 @@ function useDebounce<T>(value: T, delay: number): T {
 
 type OperationMode = "idle" | "borrow" | "return";
 
+interface TransactionRecord {
+  type: "borrow" | "return";
+  bookTitle: string;
+  barcode: string;
+  studentName?: string;
+  timestamp: Date;
+  overdueDays?: number;
+}
+
 export default function QuickScanPage() {
-  const router = useRouter();
   const { user } = useAuth();
 
   const [barcode, setBarcode] = useState("");
@@ -114,11 +133,9 @@ export default function QuickScanPage() {
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<OperationMode>("idle");
   const [continuousMode, setContinuousMode] = useState(false);
-  const [lastTransaction, setLastTransaction] = useState<{
-    type: "borrow" | "return";
-    bookTitle: string;
-    studentName?: string;
-  } | null>(null);
+
+  // Transaction history for current session
+  const [sessionHistory, setSessionHistory] = useState<TransactionRecord[]>([]);
 
   // Borrow mode state
   const [studentSearch, setStudentSearch] = useState("");
@@ -166,7 +183,7 @@ export default function QuickScanPage() {
       } else if (result.can_borrow) {
         setMode("borrow");
       } else {
-        setError("This copy cannot be borrowed (status: " + result.status + ")");
+        setError(`This copy cannot be borrowed (status: ${result.status})`);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to scan barcode");
@@ -237,11 +254,14 @@ export default function QuickScanPage() {
         librarian_id: user?.id || 0,
       });
 
-      setLastTransaction({
+      const record: TransactionRecord = {
         type: "borrow",
         bookTitle: scanResult.book_title,
+        barcode: scanResult.barcode,
         studentName: selectedStudent.name,
-      });
+        timestamp: new Date(),
+      };
+      setSessionHistory((prev) => [record, ...prev]);
 
       toast.success(`${scanResult.book_title} borrowed by ${selectedStudent.name}`);
 
@@ -272,13 +292,18 @@ export default function QuickScanPage() {
         condition_notes: conditionNotes || undefined,
       });
 
-      setLastTransaction({
+      const daysOverdue = calculateDaysOverdue(scanResult.current_borrower.due_date);
+      const record: TransactionRecord = {
         type: "return",
         bookTitle: scanResult.book_title,
+        barcode: scanResult.barcode,
         studentName: scanResult.current_borrower.student_name,
-      });
+        timestamp: new Date(),
+        overdueDays: daysOverdue > 0 ? daysOverdue : undefined,
+      };
+      setSessionHistory((prev) => [record, ...prev]);
 
-      toast.success(`${scanResult.book_title} returned`);
+      toast.success(`${scanResult.book_title} returned successfully`);
 
       if (continuousMode) {
         resetForNextScan();
@@ -312,357 +337,548 @@ export default function QuickScanPage() {
 
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
-      <div className="space-y-6">
-        <Button
-          variant="ghost"
-          className="-ml-2"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
-        <div className="flex items-center justify-between">
+      <div className="space-y-6 max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Quick Scan</h1>
-            <p className="text-muted-foreground">
-              Scan to automatically borrow or return books
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Quick Scan</h1>
+            <p className="text-muted-foreground text-sm sm:text-base mt-1">
+              Scan a barcode to borrow or return books instantly
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="continuous" className="text-sm">
-              Continuous
-            </Label>
-            <Switch
-              id="continuous"
-              checked={continuousMode}
-              onCheckedChange={setContinuousMode}
-            />
-          </div>
+
+          <TooltipProvider>
+            <div className="flex items-center gap-3 self-start sm:self-auto">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+                    <Label htmlFor="continuous" className="text-sm font-medium cursor-pointer select-none">
+                      Continuous
+                    </Label>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                    <Switch
+                      id="continuous"
+                      checked={continuousMode}
+                      onCheckedChange={setContinuousMode}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[260px] text-center">
+                  <p className="text-sm">
+                    Auto-clears the form after each transaction so you can scan the next book immediately. Ideal for processing multiple books in a row.
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         </div>
 
-        {/* Last Transaction Notification */}
-        {lastTransaction && (
-          <Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertDescription className="text-green-800 dark:text-green-200">
-              <strong>{lastTransaction.bookTitle}</strong>{" "}
-              {lastTransaction.type === "borrow"
-                ? `borrowed by ${lastTransaction.studentName}`
-                : "returned successfully"}
-            </AlertDescription>
-          </Alert>
-        )}
+        {/* Main Layout */}
+        <div className="grid gap-6 lg:grid-cols-5">
+          {/* Left Column: Scanner + Book Info */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* Barcode Input */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <ScanLine className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Scan Barcode</CardTitle>
+                    <CardDescription>Enter or scan a book copy barcode</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <ScanLine className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      ref={barcodeInputRef}
+                      placeholder="Scan or type barcode..."
+                      value={barcode}
+                      onChange={(e) => setBarcode(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleScan()}
+                      disabled={isScanning}
+                      className="pl-10 h-12 text-base sm:text-lg font-mono"
+                      autoFocus
+                    />
+                    {barcode && !isScanning && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8"
+                        onClick={() => {
+                          setBarcode("");
+                          barcodeInputRef.current?.focus();
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    onClick={handleScan}
+                    disabled={isScanning || !barcode.trim()}
+                    size="lg"
+                    className="h-12 px-6"
+                  >
+                    {isScanning ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Scan</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Scanner Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ScanLine className="h-5 w-5" />
-                Scan Barcode
-              </CardTitle>
-              <CardDescription>
-                Scan a book barcode to check out or return
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Input
-                  ref={barcodeInputRef}
-                  placeholder="Scan or enter barcode..."
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleScan()}
-                  disabled={isScanning}
-                  className="font-mono text-lg"
-                />
-                <Button onClick={handleScan} disabled={isScanning || !barcode.trim()}>
-                  {isScanning ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    "Scan"
-                  )}
-                </Button>
-              </div>
+            {/* Error */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-              {error && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Scan Result */}
-              {scanResult && (
-                <div className="space-y-4">
-                  {/* Operation Mode Badge */}
+            {/* Scan Result: Book Info */}
+            {scanResult && (
+              <Card>
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <Badge
-                      variant={mode === "borrow" ? "default" : "secondary"}
-                      className="text-sm"
+                      className={cn(
+                        "text-sm font-medium",
+                        mode === "borrow"
+                          ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
+                          : "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                      )}
                     >
-                      {mode === "borrow" ? "Checkout Mode" : "Return Mode"}
+                      {mode === "borrow" ? "Checkout" : "Return"}
                     </Badge>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={resetForNextScan}
+                      className="text-muted-foreground"
                     >
-                      <RefreshCw className="h-4 w-4 mr-1" />
+                      <RefreshCw className="h-4 w-4 mr-1.5" />
                       Clear
                     </Button>
                   </div>
-
-                  {/* Book Info */}
-                  <div className="rounded-lg border p-4 bg-muted/50">
-                    <div className="flex items-start gap-4">
-                      <div className="h-12 w-10 rounded bg-muted flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{scanResult.book_title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {scanResult.book_author}
-                        </p>
-                        <p className="text-xs text-muted-foreground font-mono mt-1">
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Book Details */}
+                  <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
+                    <div className="h-14 w-11 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+                      <BookOpen className="h-6 w-6 text-primary/60" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-base truncate">{scanResult.book_title}</h3>
+                      <p className="text-sm text-muted-foreground mt-0.5">
+                        by {scanResult.book_author}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground font-mono">
+                          <Hash className="h-3 w-3" />
+                          {scanResult.book_code}
+                        </span>
+                        <span className="text-xs text-muted-foreground">|</span>
+                        <span className="text-xs text-muted-foreground font-mono">
                           {scanResult.barcode}
-                        </p>
+                        </span>
+                        <Badge
+                          variant="outline"
+                          className={cn("text-xs capitalize", getConditionColor(scanResult.condition))}
+                        >
+                          {scanResult.condition}
+                        </Badge>
                       </div>
-                      <Badge
-                        variant="outline"
-                        className={getConditionColor(scanResult.condition)}
-                      >
-                        {scanResult.condition}
-                      </Badge>
                     </div>
                   </div>
 
                   {/* Current Borrower (for returns) */}
                   {mode === "return" && scanResult.current_borrower && (
-                    <div className="rounded-lg border p-4 bg-muted/50">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                          <User className="h-5 w-5 text-muted-foreground" />
+                    <>
+                      <Separator />
+                      <div className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <User className="h-5 w-5 text-primary/60" />
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <p className="font-medium">
                             {scanResult.current_borrower.student_name}
                           </p>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            Due: {formatDate(scanResult.current_borrower.due_date)}
+                          <p className="text-sm text-muted-foreground font-mono">
+                            {scanResult.current_borrower.student_code}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <Calendar className="h-3.5 w-3.5" />
+                              Due: {formatDate(scanResult.current_borrower.due_date)}
+                            </span>
                             {daysOverdue > 0 && (
-                              <Badge variant="destructive" className="ml-2">
-                                {daysOverdue} days overdue
+                              <Badge variant="destructive" className="text-xs">
+                                {daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue
                               </Badge>
                             )}
                           </div>
                         </div>
                       </div>
-                    </div>
+                    </>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            )}
+          </div>
 
-          {/* Action Card - Changes based on mode */}
-          {scanResult && mode !== "idle" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  {mode === "borrow" ? "Checkout" : "Return"}
-                </CardTitle>
-                <CardDescription>
-                  {mode === "borrow"
-                    ? "Select a student to borrow this book"
-                    : "Assess condition and complete return"}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {mode === "borrow" && (
-                  <>
-                    {/* Student Search */}
-                    {!selectedStudent ? (
-                      <div className="relative" ref={studentSearchRef}>
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                          <Input
-                            placeholder="Search student..."
-                            value={studentSearch}
-                            onChange={(e) => {
-                              setStudentSearch(e.target.value);
-                              setError(null);
-                            }}
-                            onFocus={() => {
-                              if (studentResults.length > 0) {
-                                setShowStudentDropdown(true);
-                              }
-                            }}
-                            className="pl-10 pr-10"
-                          />
-                          {isSearchingStudent && (
-                            <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin" />
-                          )}
-                        </div>
-
-                        {showStudentDropdown && studentResults.length > 0 && (
-                          <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-[240px] overflow-auto">
-                            {studentResults.map((student) => (
-                              <button
-                                key={student.id}
-                                className="flex w-full items-center gap-3 p-3 text-left hover:bg-muted/50 transition-colors border-b last:border-b-0"
-                                onClick={() => {
-                                  if (
-                                    student.status === "active" &&
-                                    student.current_books < student.max_books &&
-                                    student.unpaid_fines === 0
-                                  ) {
-                                    setSelectedStudent(student);
-                                    setShowStudentDropdown(false);
-                                  } else {
-                                    let reason = "";
-                                    if (student.status !== "active")
-                                      reason = "Account not active";
-                                    else if (student.current_books >= student.max_books)
-                                      reason = "Max books reached";
-                                    else if (student.unpaid_fines > 0)
-                                      reason = "Has unpaid fines";
-                                    setError(`Cannot borrow: ${reason}`);
+          {/* Right Column: Action Panel */}
+          <div className="lg:col-span-2 space-y-4">
+            {scanResult && mode !== "idle" ? (
+              <Card className="lg:sticky lg:top-6">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">
+                    {mode === "borrow" ? "Checkout Book" : "Return Book"}
+                  </CardTitle>
+                  <CardDescription>
+                    {mode === "borrow"
+                      ? "Select a student to complete the checkout"
+                      : "Assess condition and complete the return"}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {mode === "borrow" && (
+                    <>
+                      {/* Student Search */}
+                      {!selectedStudent ? (
+                        <div className="space-y-2">
+                          <Label>Student</Label>
+                          <div className="relative" ref={studentSearchRef}>
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                              <Input
+                                placeholder="Search by name or ID..."
+                                value={studentSearch}
+                                onChange={(e) => {
+                                  setStudentSearch(e.target.value);
+                                  setError(null);
+                                }}
+                                onFocus={() => {
+                                  if (studentResults.length > 0) {
+                                    setShowStudentDropdown(true);
                                   }
                                 }}
-                              >
-                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                  <User className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium truncate">
-                                    {student.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {student.student_id}
-                                  </p>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Badge variant="outline" className="text-xs">
-                                    {student.current_books}/{student.max_books}
-                                  </Badge>
-                                  {student.unpaid_fines > 0 && (
-                                    <Badge variant="destructive" className="text-xs">
-                                      Fine
-                                    </Badge>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
+                                className="pl-10"
+                              />
+                              {isSearchingStudent && (
+                                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin" />
+                              )}
+                            </div>
+
+                            {showStudentDropdown && studentResults.length > 0 && (
+                              <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-lg max-h-[240px] overflow-auto">
+                                {studentResults.map((student) => {
+                                  const canBorrow =
+                                    student.status === "active" &&
+                                    student.current_books < student.max_books &&
+                                    student.unpaid_fines === 0;
+
+                                  return (
+                                    <button
+                                      key={student.id}
+                                      className={cn(
+                                        "flex w-full items-center gap-3 p-3 text-left transition-colors border-b last:border-b-0",
+                                        canBorrow
+                                          ? "hover:bg-muted/50 cursor-pointer"
+                                          : "opacity-50 cursor-not-allowed"
+                                      )}
+                                      onClick={() => {
+                                        if (canBorrow) {
+                                          setSelectedStudent(student);
+                                          setShowStudentDropdown(false);
+                                        } else {
+                                          let reason = "";
+                                          if (student.status !== "active")
+                                            reason = "Account not active";
+                                          else if (student.current_books >= student.max_books)
+                                            reason = "Max books reached";
+                                          else if (student.unpaid_fines > 0)
+                                            reason = "Has unpaid fines";
+                                          setError(`Cannot borrow: ${reason}`);
+                                        }
+                                      }}
+                                    >
+                                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                        <User className="h-4 w-4 text-muted-foreground" />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-sm truncate">
+                                          {student.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {student.student_id}
+                                        </p>
+                                      </div>
+                                      <div className="flex gap-1 shrink-0">
+                                        <Badge variant="outline" className="text-xs">
+                                          {student.current_books}/{student.max_books}
+                                        </Badge>
+                                        {student.unpaid_fines > 0 && (
+                                          <Badge variant="destructive" className="text-xs">
+                                            Fine
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
-                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                          <User className="h-5 w-5 text-muted-foreground" />
                         </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{selectedStudent.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {selectedStudent.student_id}
+                      ) : (
+                        <div className="space-y-2">
+                          <Label>Student</Label>
+                          <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50">
+                            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <User className="h-4 w-4 text-primary/60" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{selectedStudent.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {selectedStudent.student_id} · {selectedStudent.current_books}/{selectedStudent.max_books} books
+                              </p>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0"
+                              onClick={() => {
+                                setSelectedStudent(null);
+                                setStudentSearch("");
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={handleBorrow}
+                        disabled={isSubmitting || !selectedStudent}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <ArrowRight className="mr-2 h-4 w-4" />
+                            Complete Checkout
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+
+                  {mode === "return" && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="condition">Return Condition</Label>
+                        <Select
+                          value={returnCondition}
+                          onValueChange={(value) =>
+                            setReturnCondition(value as BookCondition)
+                          }
+                        >
+                          <SelectTrigger id="condition">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CONDITIONS.map((c) => (
+                              <SelectItem key={c.value} value={c.value}>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{c.label}</span>
+                                  <span className="text-muted-foreground text-xs">— {c.description}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Notes (optional)</Label>
+                        <Textarea
+                          id="notes"
+                          placeholder="Describe any damage or issues..."
+                          value={conditionNotes}
+                          onChange={(e) => setConditionNotes(e.target.value)}
+                          rows={2}
+                          className="resize-none"
+                        />
+                      </div>
+
+                      {/* Overdue Warning */}
+                      {daysOverdue > 0 && (
+                        <Alert variant="destructive">
+                          <AlertTriangle className="h-4 w-4" />
+                          <AlertDescription>
+                            <strong>KSH {estimatedFine.toLocaleString()}</strong> fine ({daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue at KSH 50/day)
+                          </AlertDescription>
+                        </Alert>
+                      )}
+
+                      {/* Return Summary */}
+                      <div className="rounded-lg border p-3 bg-muted/30 space-y-2">
+                        <h4 className="text-sm font-medium">Summary</h4>
+                        <div className="grid grid-cols-2 gap-y-1.5 text-sm">
+                          <span className="text-muted-foreground">Condition:</span>
+                          <Badge
+                            variant="outline"
+                            className={cn("text-xs capitalize w-fit", getConditionColor(returnCondition))}
+                          >
+                            {returnCondition}
+                          </Badge>
+                          {daysOverdue > 0 && (
+                            <>
+                              <span className="text-muted-foreground">Overdue:</span>
+                              <span className="text-destructive font-medium">
+                                {daysOverdue} day{daysOverdue !== 1 ? "s" : ""}
+                              </span>
+                              <span className="text-muted-foreground">Fine:</span>
+                              <span className="text-destructive font-medium">
+                                KSH {estimatedFine.toLocaleString()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={handleReturn}
+                        disabled={isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <ArrowRight className="mr-2 h-4 w-4" />
+                            Complete Return
+                          </>
+                        )}
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              /* Placeholder when no scan result */
+              <Card className="lg:sticky lg:top-6">
+                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="p-4 rounded-full bg-muted mb-4">
+                    <ScanLine className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Scan a barcode to get started
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 mt-1 max-w-[200px]">
+                    The system will automatically detect whether to check out or return the book
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Session History */}
+            {sessionHistory.length > 0 && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-medium">
+                      Session Activity ({sessionHistory.length})
+                    </CardTitle>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7"
+                      onClick={() => setSessionHistory([])}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {sessionHistory.map((record, i) => (
+                      <div
+                        key={i}
+                        className="flex items-start gap-3 p-2.5 rounded-lg bg-muted/50 text-sm"
+                      >
+                        <div className={cn(
+                          "p-1 rounded-full mt-0.5 shrink-0",
+                          record.type === "borrow"
+                            ? "bg-blue-100 dark:bg-blue-900/50"
+                            : "bg-green-100 dark:bg-green-900/50"
+                        )}>
+                          <CheckCircle2 className={cn(
+                            "h-3.5 w-3.5",
+                            record.type === "borrow"
+                              ? "text-blue-600 dark:text-blue-400"
+                              : "text-green-600 dark:text-green-400"
+                          )} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate text-xs">
+                            {record.bookTitle}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {record.type === "borrow" ? "Checked out to" : "Returned by"}{" "}
+                            {record.studentName}
+                            {record.overdueDays && record.overdueDays > 0 && (
+                              <span className="text-destructive ml-1">
+                                ({record.overdueDays}d overdue)
+                              </span>
+                            )}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedStudent(null);
-                            setStudentSearch("");
-                          }}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <Badge variant="outline" className={cn(
+                          "text-[10px] shrink-0",
+                          record.type === "borrow"
+                            ? "border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
+                            : "border-green-200 dark:border-green-800 text-green-700 dark:text-green-300"
+                        )}>
+                          {record.type === "borrow" ? "OUT" : "IN"}
+                        </Badge>
                       </div>
-                    )}
-
-                    <Button
-                      className="w-full"
-                      onClick={handleBorrow}
-                      disabled={isSubmitting || !selectedStudent}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        "Complete Checkout"
-                      )}
-                    </Button>
-                  </>
-                )}
-
-                {mode === "return" && (
-                  <>
-                    <div className="space-y-2">
-                      <Label htmlFor="condition">Return Condition</Label>
-                      <Select
-                        value={returnCondition}
-                        onValueChange={(value) =>
-                          setReturnCondition(value as BookCondition)
-                        }
-                      >
-                        <SelectTrigger id="condition">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {CONDITIONS.map((c) => (
-                            <SelectItem key={c.value} value={c.value}>
-                              {c.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    ))}
+                  </div>
+                  {sessionHistory.length > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <Button variant="outline" size="sm" className="w-full text-xs" asChild>
+                        <Link href="/transactions">
+                          View All Transactions
+                        </Link>
+                      </Button>
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notes (optional)</Label>
-                      <Textarea
-                        id="notes"
-                        placeholder="Any damage or issues..."
-                        value={conditionNotes}
-                        onChange={(e) => setConditionNotes(e.target.value)}
-                        rows={2}
-                      />
-                    </div>
-
-                    {daysOverdue > 0 && (
-                      <Alert variant="destructive">
-                        <AlertTriangle className="h-4 w-4" />
-                        <AlertDescription>
-                          Fine: <strong>KSH {estimatedFine.toLocaleString()}</strong> ({daysOverdue}{" "}
-                          days overdue)
-                        </AlertDescription>
-                      </Alert>
-                    )}
-
-                    <Button
-                      className="w-full"
-                      onClick={handleReturn}
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Processing...
-                        </>
-                      ) : (
-                        "Complete Return"
-                      )}
-                    </Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </AuthGuard>

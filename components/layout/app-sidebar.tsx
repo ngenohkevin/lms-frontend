@@ -19,7 +19,6 @@ import {
   ScanLine,
   AlertTriangle,
   DollarSign,
-  Undo2,
   BookCopy,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
@@ -122,12 +121,6 @@ const transactionNavItems: NavItem[] = [
     href: "/books/add-copy",
     icon: BookCopy,
     permission: PermissionCodes.BOOKS_CREATE,
-  },
-  {
-    title: "Return Book",
-    href: "/transactions/return",
-    icon: Undo2,
-    permission: PermissionCodes.TRANSACTIONS_RETURN,
   },
   {
     title: "Overdue",
