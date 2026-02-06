@@ -536,7 +536,7 @@ export default function BookDetailPage() {
               No copies registered
             </p>
             <p className="text-sm text-amber-700/80 dark:text-amber-300/80 mt-1">
-              This book shows as &quot;Unavailable&quot; to students. Use &quot;Generate&quot; or &quot;Add Copy&quot; in the section below to register physical copies.
+              This book cannot be borrowed until copies are registered. Use &quot;Generate&quot; or &quot;Add Copy&quot; in the section below to add physical copies.
             </p>
           </div>
         </div>
