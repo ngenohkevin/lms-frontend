@@ -10,6 +10,7 @@ import { useBook } from "@/lib/hooks/use-books";
 import { useSeriesById } from "@/lib/hooks/use-series";
 import { booksApi } from "@/lib/api";
 import apiClient from "@/lib/api/client";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -181,6 +182,7 @@ export default function BookDetailPage() {
   }
 
   const isAvailable = book.available_copies > 0;
+  const hasNoCopies = book.total_copies === 0;
   const FormatIcon = getFormatIcon(book.format);
 
   return (
@@ -274,11 +276,16 @@ export default function BookDetailPage() {
               <div className="hidden sm:flex flex-wrap gap-2 mt-3">
                 <Badge
                   variant={isAvailable ? "default" : "secondary"}
-                  className="text-sm"
+                  className={cn(
+                    "text-sm",
+                    hasNoCopies && "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                  )}
                 >
                   {isAvailable
                     ? `${book.available_copies} of ${book.total_copies} available`
-                    : "Unavailable"}
+                    : hasNoCopies
+                      ? "No copies"
+                      : "Unavailable"}
                 </Badge>
                 {book.format && book.format !== "physical" && (
                   <Badge variant="outline" className="text-sm gap-1">
@@ -315,21 +322,23 @@ export default function BookDetailPage() {
             </div>
 
             {/* Borrow button - hidden on mobile */}
-            <div className="hidden sm:block mt-4">
-              {isAvailable ? (
-                <Button asChild>
-                  <Link href={`/transactions/borrow?book_id=${book.id}`}>
-                    Borrow This Book
-                  </Link>
-                </Button>
-              ) : (
-                <Button variant="outline" asChild>
-                  <Link href={`/reservations?action=create&book_id=${book.id}`}>
-                    Reserve This Book
-                  </Link>
-                </Button>
-              )}
-            </div>
+            {!hasNoCopies && (
+              <div className="hidden sm:block mt-4">
+                {isAvailable ? (
+                  <Button asChild>
+                    <Link href={`/transactions/borrow?book_id=${book.id}`}>
+                      Borrow This Book
+                    </Link>
+                  </Button>
+                ) : (
+                  <Button variant="outline" asChild>
+                    <Link href={`/reservations?action=create&book_id=${book.id}`}>
+                      Reserve This Book
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -338,11 +347,16 @@ export default function BookDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Badge
               variant={isAvailable ? "default" : "secondary"}
-              className="text-sm"
+              className={cn(
+                "text-sm",
+                hasNoCopies && "bg-amber-500 hover:bg-amber-600 text-white border-0"
+              )}
             >
               {isAvailable
                 ? `${book.available_copies} of ${book.total_copies} available`
-                : "Unavailable"}
+                : hasNoCopies
+                  ? "No copies"
+                  : "Unavailable"}
             </Badge>
             {book.format && book.format !== "physical" && (
               <Badge variant="outline" className="text-sm gap-1">
@@ -377,18 +391,20 @@ export default function BookDetailPage() {
             </div>
           )}
 
-          {isAvailable ? (
-            <Button asChild className="w-full">
-              <Link href={`/transactions/borrow?book_id=${book.id}`}>
-                Borrow This Book
-              </Link>
-            </Button>
-          ) : (
-            <Button variant="outline" asChild className="w-full">
-              <Link href={`/reservations?action=create&book_id=${book.id}`}>
-                Reserve This Book
-              </Link>
-            </Button>
+          {!hasNoCopies && (
+            isAvailable ? (
+              <Button asChild className="w-full">
+                <Link href={`/transactions/borrow?book_id=${book.id}`}>
+                  Borrow This Book
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" asChild className="w-full">
+                <Link href={`/reservations?action=create&book_id=${book.id}`}>
+                  Reserve This Book
+                </Link>
+              </Button>
+            )
           )}
         </div>
 
