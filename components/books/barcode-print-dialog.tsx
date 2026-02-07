@@ -46,11 +46,11 @@ export function BarcodePrintDialog({
           try {
             JsBarcode(svg, copy.barcode, {
               format: "CODE128",
-              width: 1.5,
-              height: 40,
+              width: 1,
+              height: 30,
               displayValue: true,
-              fontSize: 12,
-              margin: 4,
+              fontSize: 10,
+              margin: 2,
             });
           } catch {
             // Barcode rendering can fail for invalid characters
@@ -75,11 +75,11 @@ export function BarcodePrintDialog({
           try {
             JsBarcode(svg, copy.barcode, {
               format: "CODE128",
-              width: 2,
-              height: 50,
+              width: 1,
+              height: 40,
               displayValue: true,
-              fontSize: 14,
-              margin: 4,
+              fontSize: 10,
+              margin: 2,
             });
           } catch {
             return "";
@@ -198,18 +198,18 @@ export function BarcodePrintDialog({
 
         {/* Preview grid */}
         <div ref={previewRef} className="overflow-y-auto flex-1 min-h-0">
-          <div className="grid grid-cols-2 gap-3 p-1">
+          <div className="grid grid-cols-2 gap-2 p-1">
             {copies.map((copy) => (
               <div
                 key={copy.id}
-                className="border rounded-md p-2 flex flex-col items-center text-center"
+                className="border rounded-md p-2 flex flex-col items-center text-center overflow-hidden"
               >
                 {bookTitle && (
                   <p className="text-[10px] font-medium text-muted-foreground truncate w-full mb-1">
                     {bookTitle}
                   </p>
                 )}
-                <svg id={`barcode-preview-${copy.id}`} />
+                <svg id={`barcode-preview-${copy.id}`} className="w-full h-auto" />
               </div>
             ))}
           </div>
