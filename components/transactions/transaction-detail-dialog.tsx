@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSWRConfig } from "swr";
-import { transactionsApi } from "@/lib/api";
+import { transactionsApi, finesApi } from "@/lib/api";
 import { useAuth } from "@/providers/auth-provider";
 import { useRenewalEligibility } from "@/lib/hooks/use-transactions";
 import {
@@ -140,6 +140,15 @@ export function TransactionDetailDialog({
   const [cancelRenewalDate, setCancelRenewalDate] = useState("");
   const [isCancellingRenewal, setIsCancellingRenewal] = useState(false);
 
+  const [finePerDay, setFinePerDay] = useState<number>(50);
+
+  useEffect(() => {
+    if (!open) return;
+    finesApi.getStatistics().then((stats) => {
+      if (stats?.fine_per_day) setFinePerDay(stats.fine_per_day);
+    }).catch(() => {});
+  }, [open]);
+
   const isActiveTransaction =
     transaction?.status === "active" || transaction?.status === "overdue";
   const {
@@ -170,7 +179,7 @@ export function TransactionDetailDialog({
       ? calculateDaysOverdue(transaction.due_date)
       : 0;
   const isOverdue = daysOverdue > 0;
-  const estimatedFine = daysOverdue * 0.5;
+  const estimatedFine = daysOverdue * finePerDay;
 
   const handleRenew = async () => {
     if (!transaction || !user) return;

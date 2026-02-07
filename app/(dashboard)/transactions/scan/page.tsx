@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { transactionsApi, studentsApi } from "@/lib/api";
+import { transactionsApi, studentsApi, finesApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { useAuth } from "@/providers/auth-provider";
 import { Button } from "@/components/ui/button";
@@ -143,6 +143,7 @@ export default function QuickScanPage() {
   const [conditionNotes, setConditionNotes] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [finePerDay, setFinePerDay] = useState<number>(50); // Default KSH 50, fetched from API
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const studentSearchRef = useRef<HTMLDivElement>(null);
@@ -150,6 +151,17 @@ export default function QuickScanPage() {
   // Focus barcode input on mount and after transactions
   useEffect(() => {
     barcodeInputRef.current?.focus();
+  }, []);
+
+  // Fetch fine rate from API on mount
+  useEffect(() => {
+    finesApi.getStatistics().then((stats) => {
+      if (stats?.fine_per_day) {
+        setFinePerDay(stats.fine_per_day);
+      }
+    }).catch(() => {
+      // Keep default fine rate on error
+    });
   }, []);
 
   // Handle barcode scan
@@ -326,7 +338,7 @@ export default function QuickScanPage() {
     scanResult?.current_borrower && mode === "return"
       ? calculateDaysOverdue(scanResult.current_borrower.due_date)
       : 0;
-  const estimatedFine = daysOverdue * 50; // KSH 50 per day
+  const estimatedFine = daysOverdue * finePerDay;
 
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
@@ -419,9 +431,20 @@ export default function QuickScanPage() {
 
             {/* Error */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant={error.includes("overdue") ? "default" : "destructive"}
+                className={error.includes("overdue") ? "border-amber-500 text-amber-700 dark:text-amber-400 [&>svg]:text-amber-500" : ""}>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  {error}
+                  {error.includes("overdue") && (
+                    <span className="block mt-1 text-xs">Return overdue books before borrowing new ones.</span>
+                  )}
+                  {error.includes("unpaid fines") && (
+                    <span className="block mt-1 text-xs">
+                      <Link href="/fines" className="underline font-medium">Go to Fines</Link> to pay outstanding fines.
+                    </span>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -712,7 +735,7 @@ export default function QuickScanPage() {
                         <Alert variant="destructive">
                           <AlertTriangle className="h-4 w-4" />
                           <AlertDescription>
-                            <strong>KSH {estimatedFine.toLocaleString()}</strong> fine ({daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue at KSH 50/day)
+                            <strong>KSH {estimatedFine.toLocaleString()}</strong> fine ({daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue at KSH {finePerDay}/day)
                           </AlertDescription>
                         </Alert>
                       )}
