@@ -121,7 +121,7 @@ export function BookSearch({
 
       if (onSearch) {
         onSearch({
-          search: query || undefined,
+          query: query || undefined,
           category: category || undefined,
           available: available ? "true" : undefined,
           sort_by: sortBy || undefined,

@@ -69,11 +69,27 @@ function transformBooks(books: Book[]): Book[] {
 }
 
 export const booksApi = {
-  // List all books with pagination
+  // List/search books with optional filters
   list: async (
     params?: BookSearchParams
   ): Promise<PaginatedResponse<Book>> => {
-    const response = await apiClient.get<ApiResponse<BackendPaginatedBooks>>(BOOKS_PREFIX, { params });
+    // Map frontend param names to backend param names
+    const backendParams: Record<string, unknown> = {
+      page: params?.page || 1,
+      limit: params?.per_page || 20,
+    };
+    if (params?.query) backendParams.query = params.query;
+    if (params?.category) backendParams.genre = params.category;
+    if (params?.available) backendParams.available_only = true;
+    if (params?.format) backendParams.format = params.format;
+    if (params?.language) backendParams.language = params.language;
+    if (params?.series_id) backendParams.series_id = params.series_id;
+    if (params?.sort_by) backendParams.sort_by = params.sort_by;
+
+    const response = await apiClient.get<ApiResponse<BackendPaginatedBooks>>(
+      `${BOOKS_PREFIX}/search`,
+      { params: backendParams }
+    );
     return {
       data: transformBooks(response.data?.books || []),
       pagination: transformPagination(response.data?.pagination),
