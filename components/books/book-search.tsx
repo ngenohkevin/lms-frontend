@@ -60,7 +60,6 @@ const currentYear = new Date().getFullYear();
 // Quick filter presets
 const quickFilters = [
   { label: "New Arrivals", value: "new", icon: Sparkles },
-  { label: "Top Rated", value: "top_rated", icon: ArrowUpDown },
   { label: "Available Now", value: "available", icon: Filter },
   { label: "E-Books", value: "ebook", icon: Tablet },
   { label: "Audiobooks", value: "audiobook", icon: Headphones },
@@ -163,30 +162,45 @@ export function BookSearch({
 
     setQuickFilter(filterValue);
 
+    // Build filter params and call onSearch directly to avoid stale state
+    const filterParams: Record<string, string | undefined> = {
+      query: query || undefined,
+      category: category || undefined,
+      sort_by: sortBy || undefined,
+      language: language || undefined,
+      series_id: seriesId || undefined,
+    };
+
     switch (filterValue) {
       case "new":
-        setSortBy("created_at");
+        setSortBy("-created_at");
         setAvailable(false);
         setFormat("");
-        break;
-      case "top_rated":
-        setSortBy("average_rating");
-        setMinRating(4);
-        setFormat("");
+        filterParams.sort_by = "-created_at";
+        filterParams.available = undefined;
+        filterParams.format = undefined;
         break;
       case "available":
         setAvailable(true);
         setFormat("");
+        filterParams.available = "true";
+        filterParams.format = undefined;
         break;
       case "ebook":
         setFormat("ebook");
+        filterParams.format = "ebook";
         break;
       case "audiobook":
         setFormat("audiobook");
+        filterParams.format = "audiobook";
         break;
     }
 
-    setTimeout(() => handleSearch(), 0);
+    // Push URL and notify parent immediately
+    const params = new URLSearchParams();
+    Object.entries(filterParams).forEach(([k, v]) => { if (v) params.set(k, v); });
+    router.push(`/books${params.toString() ? `?${params.toString()}` : ""}`);
+    onSearch?.(filterParams);
   };
 
   const activeFiltersCount = [

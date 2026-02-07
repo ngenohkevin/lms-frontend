@@ -28,12 +28,6 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
   Loader2,
   ScanLine,
   BookOpen,
@@ -44,7 +38,6 @@ import {
   RefreshCw,
   Search,
   X,
-  Info,
   ArrowRight,
   Hash,
 } from "lucide-react";
@@ -347,30 +340,16 @@ export default function QuickScanPage() {
             </p>
           </div>
 
-          <TooltipProvider>
-            <div className="flex items-center gap-3 self-start sm:self-auto">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
-                    <Label htmlFor="continuous" className="text-sm font-medium cursor-pointer select-none">
-                      Continuous
-                    </Label>
-                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                    <Switch
-                      id="continuous"
-                      checked={continuousMode}
-                      onCheckedChange={setContinuousMode}
-                    />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" className="max-w-[260px] text-center">
-                  <p className="text-sm">
-                    Auto-clears the form after each transaction so you can scan the next book immediately. Ideal for processing multiple books in a row.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
+          <div className="flex items-center gap-2 self-start sm:self-auto rounded-lg border px-3 py-2">
+            <Label htmlFor="continuous" className="text-sm font-medium cursor-pointer select-none">
+              Continuous
+            </Label>
+            <Switch
+              id="continuous"
+              checked={continuousMode}
+              onCheckedChange={setContinuousMode}
+            />
+          </div>
         </div>
 
         {/* Main Layout */}
