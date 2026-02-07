@@ -122,8 +122,12 @@ function extractFinePaid(finePaid: BackendTransactionRow["fine_paid"]): boolean 
   return false;
 }
 
-// Map transaction type to status
-function mapTransactionStatus(type: string, returnedDate?: string): "active" | "returned" | "overdue" | "lost" {
+// Map transaction type/status to frontend status
+function mapTransactionStatus(type: string, returnedDate?: string, backendStatus?: string): "active" | "returned" | "overdue" | "lost" | "cancelled" {
+  // Use backend status if available
+  if (backendStatus === "completed") return "returned";
+  if (backendStatus === "cancelled") return "cancelled";
+  if (backendStatus === "lost") return "lost";
   // Check for lost status first (lost transactions have both type='lost' AND returned_date set)
   if (type === "lost") return "lost";
   if (returnedDate) return "returned";
@@ -156,9 +160,8 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
     "Unknown";
   const studentCode = tx.student_code || tx.student_id_2 || "";
 
-  // Use status from backend if available (search endpoint), otherwise compute it
-  const status = (tx.status as "active" | "returned" | "overdue" | "lost") ||
-    mapTransactionStatus(tx.transaction_type, tx.returned_date);
+  // Compute status from backend status + transaction type + returned date
+  const status = mapTransactionStatus(tx.transaction_type, tx.returned_date, tx.status);
 
   return {
     id: String(tx.id),
