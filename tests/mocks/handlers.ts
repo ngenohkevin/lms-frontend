@@ -279,6 +279,30 @@ export const handlers = [
   }),
 
   // Book copies endpoint
+  http.get(`${API_BASE}/books/:bookId/copies/unprinted`, () => {
+    return HttpResponse.json({
+      success: true,
+      data: [
+        {
+          id: 1,
+          book_id: 1,
+          barcode: "BC001",
+          condition: "excellent",
+          status: "available",
+          barcode_printed_at: null,
+        },
+        {
+          id: 3,
+          book_id: 1,
+          barcode: "BC003",
+          condition: "fair",
+          status: "borrowed",
+          barcode_printed_at: null,
+        },
+      ],
+    });
+  }),
+
   http.get(`${API_BASE}/books/:bookId/copies`, () => {
     return HttpResponse.json({
       success: true,
@@ -289,6 +313,7 @@ export const handlers = [
           barcode: "BC001",
           condition: "excellent",
           status: "available",
+          barcode_printed_at: null,
         },
         {
           id: 2,
@@ -296,6 +321,7 @@ export const handlers = [
           barcode: "BC002",
           condition: "good",
           status: "available",
+          barcode_printed_at: "2024-01-20T10:00:00Z",
         },
         {
           id: 3,
@@ -303,8 +329,26 @@ export const handlers = [
           barcode: "BC003",
           condition: "fair",
           status: "borrowed",
+          barcode_printed_at: null,
         },
       ],
+    });
+  }),
+
+  http.post(`${API_BASE}/books/copies/mark-printed`, async ({ request }) => {
+    const body = (await request.json()) as { copy_ids: number[] };
+    const now = new Date().toISOString();
+    return HttpResponse.json({
+      success: true,
+      data: body.copy_ids.map((id) => ({
+        id,
+        book_id: 1,
+        barcode: `BC00${id}`,
+        condition: "good",
+        status: "available",
+        barcode_printed_at: now,
+      })),
+      message: `Marked ${body.copy_ids.length} copies as printed`,
     });
   }),
 

@@ -19,6 +19,8 @@ import {
   ArrowLeftCircle,
   ChevronLeft,
   ChevronRight,
+  Printer,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { useSWRConfig } from "swr";
@@ -78,6 +80,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { BookCopyForm } from "./book-copy-form";
+import { BarcodePrintDialog } from "./barcode-print-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 
@@ -157,19 +160,34 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
   const [isReturning, setIsReturning] = useState(false);
   const [isLoadingBorrowerInfo, setIsLoadingBorrowerInfo] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [printFilter, setPrintFilter] = useState<"all" | "unprinted" | "printed">("all");
+  const [isPrintDialogOpen, setIsPrintDialogOpen] = useState(false);
+  const [printCopies, setPrintCopies] = useState<BookCopy[]>([]);
 
-  // Pagination calculations
-  const totalPages = Math.ceil(copies.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedCopies = React.useMemo(
-    () => copies.slice(startIndex, startIndex + ITEMS_PER_PAGE),
-    [copies, startIndex]
+  // Filter copies by print status
+  const filteredCopies = React.useMemo(() => {
+    if (printFilter === "unprinted") return copies.filter((c) => !c.barcode_printed_at);
+    if (printFilter === "printed") return copies.filter((c) => !!c.barcode_printed_at);
+    return copies;
+  }, [copies, printFilter]);
+
+  const unprintedCount = React.useMemo(
+    () => copies.filter((c) => !c.barcode_printed_at).length,
+    [copies]
   );
 
-  // Reset to page 1 when search changes
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredCopies.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedCopies = React.useMemo(
+    () => filteredCopies.slice(startIndex, startIndex + ITEMS_PER_PAGE),
+    [filteredCopies, startIndex]
+  );
+
+  // Reset to page 1 when search or filter changes
   React.useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, printFilter]);
 
   // Debounce search input
   React.useEffect(() => {
@@ -347,6 +365,23 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
             </CardDescription>
           </div>
           <div className="flex gap-2">
+            {unprintedCount > 0 && (
+              <Button
+                onClick={() => {
+                  const unprinted = copies.filter((c) => !c.barcode_printed_at);
+                  setPrintCopies(unprinted);
+                  setIsPrintDialogOpen(true);
+                }}
+                size="sm"
+                variant="outline"
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Print Labels</span>
+                <Badge className="ml-1.5 bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-1.5 py-0 text-xs">
+                  {unprintedCount}
+                </Badge>
+              </Button>
+            )}
             <Button onClick={() => setIsGenerateOpen(true)} size="sm" variant="outline">
               <Plus className="mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Generate</span>
@@ -382,6 +417,26 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
             </div>
           </div>
 
+          {/* Print status filter */}
+          {copies.length > 0 && (
+            <div className="mb-4 flex gap-1">
+              {(["all", "unprinted", "printed"] as const).map((filter) => (
+                <Button
+                  key={filter}
+                  variant={printFilter === filter ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPrintFilter(filter)}
+                  className="text-xs capitalize"
+                >
+                  {filter}
+                  {filter === "unprinted" && unprintedCount > 0 && (
+                    <span className="ml-1 text-[10px]">({unprintedCount})</span>
+                  )}
+                </Button>
+              ))}
+            </div>
+          )}
+
           {/* Content area with min-height to prevent layout shifts */}
           <div className="min-h-[200px]">
             {copies.length === 0 && !debouncedSearch ? (
@@ -397,16 +452,20 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                   Add First Copy
                 </Button>
               </div>
-            ) : copies.length === 0 && debouncedSearch ? (
+            ) : filteredCopies.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Search className="mb-4 h-12 w-12 text-muted-foreground" />
-                <p className="text-muted-foreground">No copies found for &quot;{debouncedSearch}&quot;</p>
+                <p className="text-muted-foreground">
+                  {debouncedSearch
+                    ? `No copies found for "${debouncedSearch}"`
+                    : `No ${printFilter} copies`}
+                </p>
                 <Button
                   variant="outline"
                   className="mt-4"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => { setSearchQuery(""); setPrintFilter("all"); }}
                 >
-                  Clear Search
+                  Clear Filters
                 </Button>
               </div>
             ) : (
@@ -420,6 +479,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                       <TableHead>Condition</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Borrower / Due</TableHead>
+                      <TableHead>Printed</TableHead>
                       <TableHead className="w-[70px]"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -474,6 +534,16 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                           )}
                         </TableCell>
                         <TableCell>
+                          {copy.barcode_printed_at ? (
+                            <span className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                              <Check className="h-3.5 w-3.5" />
+                              {new Date(copy.barcode_printed_at).toLocaleDateString()}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">Not printed</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon">
@@ -497,6 +567,15 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                                   Return Book
                                 </DropdownMenuItem>
                               )}
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setPrintCopies([copy]);
+                                  setIsPrintDialogOpen(true);
+                                }}
+                              >
+                                <Printer className="mr-2 h-4 w-4" />
+                                {copy.barcode_printed_at ? "Reprint Label" : "Print Label"}
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() => setViewingHistoryCopy(copy)}
                               >
@@ -558,6 +637,15 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                               Return Book
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setPrintCopies([copy]);
+                              setIsPrintDialogOpen(true);
+                            }}
+                          >
+                            <Printer className="mr-2 h-4 w-4" />
+                            {copy.barcode_printed_at ? "Reprint Label" : "Print Label"}
+                          </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => setViewingHistoryCopy(copy)}>
                             <History className="mr-2 h-4 w-4" />
                             View History
@@ -586,6 +674,16 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
                         {COPY_STATUSES.find((s) => s.value === copy.status)
                           ?.label || copy.status}
                       </Badge>
+                      {copy.barcode_printed_at ? (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          <Check className="mr-1 h-3 w-3" />
+                          Printed
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                          Unprinted
+                        </Badge>
+                      )}
                     </div>
                     {/* Borrower info for borrowed copies */}
                     {copy.status === "borrowed" && copyBorrowerInfo.get(copy.id)?.current_borrower && (
@@ -613,7 +711,7 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4 pt-4 border-t">
                   <p className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, copies.length)} of {copies.length} copies
+                    Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredCopies.length)} of {filteredCopies.length} copies
                   </p>
                   <div className="flex items-center gap-2">
                     <Button
@@ -799,6 +897,15 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Barcode Print Dialog */}
+      <BarcodePrintDialog
+        open={isPrintDialogOpen}
+        onOpenChange={setIsPrintDialogOpen}
+        copies={printCopies}
+        bookTitle={bookTitle}
+        onPrinted={refreshAll}
+      />
 
       {/* Copy History Dialog */}
       <Dialog open={!!viewingHistoryCopy} onOpenChange={() => setViewingHistoryCopy(null)}>

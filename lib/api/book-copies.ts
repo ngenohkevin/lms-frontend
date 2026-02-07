@@ -120,6 +120,27 @@ export const bookCopiesApi = {
     );
     return response.data || [];
   },
+
+  /**
+   * Mark copies as having their barcodes printed
+   */
+  async markBarcodePrinted(copyIds: number[]): Promise<BookCopy[]> {
+    const response = await apiClient.post<ApiResponse<BookCopy[]>>(
+      `${BOOKS_PREFIX}/copies/mark-printed`,
+      { copy_ids: copyIds }
+    );
+    return response.data || [];
+  },
+
+  /**
+   * List unprinted copies for a book
+   */
+  async listUnprinted(bookId: number): Promise<BookCopy[]> {
+    const response = await apiClient.get<ApiResponse<BookCopy[]>>(
+      `${BOOKS_PREFIX}/${bookId}/copies/unprinted`
+    );
+    return response.data || [];
+  },
 };
 
 export default bookCopiesApi;

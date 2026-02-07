@@ -188,6 +188,7 @@ export interface BookCopy {
   status: CopyStatus;
   acquisition_date?: string;
   notes?: string;
+  barcode_printed_at?: string;
   created_at: string;
   updated_at: string;
   // Extended fields for borrowed copies (optional)
