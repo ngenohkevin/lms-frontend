@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useSWRConfig } from "swr";
 import { transactionsApi, finesApi } from "@/lib/api";
+import { getFineSettings } from "@/lib/api/settings";
 import { useAuth } from "@/providers/auth-provider";
 import { useRenewalEligibility } from "@/lib/hooks/use-transactions";
 import {
@@ -41,6 +42,7 @@ import {
   AlertOctagon,
   Trash2,
   Barcode,
+  Search,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -131,7 +133,12 @@ export function TransactionDetailDialog({
 
   const [showLostDialog, setShowLostDialog] = useState(false);
   const [lostReason, setLostReason] = useState("");
+  const [lostFineAmount, setLostFineAmount] = useState("");
   const [isMarkingLost, setIsMarkingLost] = useState(false);
+
+  const [showFoundDialog, setShowFoundDialog] = useState(false);
+  const [foundReason, setFoundReason] = useState("");
+  const [isMarkingFound, setIsMarkingFound] = useState(false);
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -141,11 +148,15 @@ export function TransactionDetailDialog({
   const [isCancellingRenewal, setIsCancellingRenewal] = useState(false);
 
   const [finePerDay, setFinePerDay] = useState<number>(50);
+  const [defaultLostFine, setDefaultLostFine] = useState<number>(0);
 
   useEffect(() => {
     if (!open) return;
     finesApi.getStatistics().then((stats) => {
       if (stats?.fine_per_day) setFinePerDay(stats.fine_per_day);
+    }).catch(() => {});
+    getFineSettings().then((settings) => {
+      if (settings?.lost_book_fine) setDefaultLostFine(settings.lost_book_fine);
     }).catch(() => {});
   }, [open]);
 
@@ -253,10 +264,12 @@ export function TransactionDetailDialog({
     if (!transaction || !lostReason.trim()) return;
     setIsMarkingLost(true);
     try {
-      await transactionsApi.markAsLost(transaction.id, lostReason.trim());
+      const fineValue = lostFineAmount ? parseFloat(lostFineAmount) : undefined;
+      await transactionsApi.markAsLost(transaction.id, lostReason.trim(), fineValue);
       toast.success("Transaction marked as lost");
       setShowLostDialog(false);
       setLostReason("");
+      setLostFineAmount("");
       await invalidateRelatedCaches();
       onRefresh?.();
       onOpenChange(false);
@@ -264,6 +277,24 @@ export function TransactionDetailDialog({
       toast.error(err instanceof Error ? err.message : "Failed to mark as lost");
     } finally {
       setIsMarkingLost(false);
+    }
+  };
+
+  const handleMarkAsFound = async () => {
+    if (!transaction || !foundReason.trim()) return;
+    setIsMarkingFound(true);
+    try {
+      await transactionsApi.markAsFound(transaction.id, foundReason.trim());
+      toast.success("Transaction marked as found — book copy restored to available");
+      setShowFoundDialog(false);
+      setFoundReason("");
+      await invalidateRelatedCaches();
+      onRefresh?.();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to mark as found");
+    } finally {
+      setIsMarkingFound(false);
     }
   };
 
@@ -391,7 +422,27 @@ export function TransactionDetailDialog({
                 {formatDate(transaction.due_date)}
               </p>
             </div>
-            {transaction.returned_at ? (
+            {transaction.status === "lost" ? (
+              <div>
+                <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
+                  <AlertOctagon className="h-3 w-3" />
+                  <span className="text-xs">Lost on</span>
+                </div>
+                <p className="font-medium text-xs text-muted-foreground">
+                  {transaction.returned_at ? formatDate(transaction.returned_at) : "N/A"}
+                </p>
+              </div>
+            ) : transaction.status === "cancelled" ? (
+              <div>
+                <div className="flex items-center gap-1 text-orange-500 mb-0.5">
+                  <XCircle className="h-3 w-3" />
+                  <span className="text-xs">Cancelled</span>
+                </div>
+                <p className="font-medium text-xs text-orange-500">
+                  {transaction.returned_at ? formatDate(transaction.returned_at) : "N/A"}
+                </p>
+              </div>
+            ) : transaction.returned_at ? (
               <div>
                 <div className="flex items-center gap-1 text-green-600 mb-0.5">
                   <CheckCircle className="h-3 w-3" />
@@ -603,6 +654,17 @@ export function TransactionDetailDialog({
                 )}
               </>
             )}
+            {transaction.status === "lost" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowFoundDialog(true)}
+                className="h-8 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800"
+              >
+                <Search className="mr-1.5 h-3.5 w-3.5" />
+                Mark Found
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -665,15 +727,32 @@ export function TransactionDetailDialog({
               A replacement fine will be applied to the student&apos;s account.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="space-y-2 py-2">
-            <Label htmlFor="lost-reason">Reason *</Label>
-            <Textarea
-              id="lost-reason"
-              placeholder="Describe circumstances..."
-              value={lostReason}
-              onChange={(e) => setLostReason(e.target.value)}
-              rows={2}
-            />
+          <div className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="lost-fine">Replacement Fine (KSH)</Label>
+              <Input
+                id="lost-fine"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder={defaultLostFine > 0 ? `Default: KSH ${defaultLostFine}` : "Enter fine amount"}
+                value={lostFineAmount}
+                onChange={(e) => setLostFineAmount(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank to use the system default
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lost-reason">Reason *</Label>
+              <Textarea
+                id="lost-reason"
+                placeholder="Describe circumstances..."
+                value={lostReason}
+                onChange={(e) => setLostReason(e.target.value)}
+                rows={2}
+              />
+            </div>
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isMarkingLost}>Cancel</AlertDialogCancel>
@@ -684,6 +763,42 @@ export function TransactionDetailDialog({
             >
               {isMarkingLost ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Mark as Lost
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Found Dialog */}
+      <AlertDialog open={showFoundDialog} onOpenChange={setShowFoundDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-green-500" />
+              Mark as Found
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the book copy to available and automatically waive the replacement fine.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="found-reason">Reason *</Label>
+            <Textarea
+              id="found-reason"
+              placeholder="Describe how/where the book was found..."
+              value={foundReason}
+              onChange={(e) => setFoundReason(e.target.value)}
+              rows={2}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isMarkingFound}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleMarkAsFound}
+              disabled={isMarkingFound || !foundReason.trim()}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isMarkingFound ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Mark as Found
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

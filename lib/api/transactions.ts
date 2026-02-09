@@ -334,10 +334,19 @@ export const transactionsApi = {
     return response.data;
   },
 
-  // Mark a transaction as lost (applies replacement fine)
-  markAsLost: async (id: string, reason: string): Promise<Transaction> => {
+  // Mark a transaction as lost (applies replacement fine set by librarian)
+  markAsLost: async (id: string, reason: string, fineAmount?: number): Promise<Transaction> => {
     const response = await apiClient.post<ApiResponse<Transaction>>(
       `${TRANSACTIONS_PREFIX}/${id}/lost`,
+      { reason, fine_amount: fineAmount }
+    );
+    return response.data;
+  },
+
+  // Mark a lost transaction as found (restores copy to available)
+  markAsFound: async (id: string, reason: string): Promise<Transaction> => {
+    const response = await apiClient.post<ApiResponse<Transaction>>(
+      `${TRANSACTIONS_PREFIX}/${id}/found`,
       { reason }
     );
     return response.data;

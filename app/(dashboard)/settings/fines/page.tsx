@@ -262,7 +262,7 @@ export default function FineSettingsPage() {
                   </TooltipProvider>
                 </CardTitle>
                 <CardDescription>
-                  Default fine amount when a book is reported lost
+                  Default fine when a book is reported lost. Librarians can override this per transaction.
                 </CardDescription>
               </CardHeader>
               <CardContent>
