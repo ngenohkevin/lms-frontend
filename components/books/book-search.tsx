@@ -136,6 +136,30 @@ export function BookSearch({
     [query, category, available, sortBy, yearRange, minRating, language, format, seriesId, router, onSearch]
   );
 
+  // Build current filter params with overrides — used by badge X buttons
+  // to pass the correct values directly (avoids stale state from setState + handleSearch)
+  const buildParams = (overrides: Record<string, string | boolean | undefined> = {}) => {
+    const merged = {
+      query: query || undefined,
+      category: category || undefined,
+      available: available ? "true" : undefined,
+      sort_by: sortBy || undefined,
+      language: language || undefined,
+      format: format || undefined,
+      series_id: seriesId || undefined,
+      ...Object.fromEntries(
+        Object.entries(overrides).map(([k, v]) => [k, v === false || v === "" ? undefined : v])
+      ),
+    } as Record<string, string | undefined>;
+    return merged;
+  };
+
+  const removeFilter = (overrides: Record<string, string | boolean | undefined>) => {
+    const params = buildParams(overrides);
+    setQuickFilter(null);
+    onSearch?.(params);
+  };
+
   const clearFilters = () => {
     setQuery("");
     setCategory("");
@@ -553,10 +577,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {category}
                 <button
-                  onClick={() => {
-                    setCategory("");
-                    handleSearch();
-                  }}
+                  onClick={() => { setCategory(""); removeFilter({ category: "" }); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -567,10 +588,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {getFormatLabel(format)}
                 <button
-                  onClick={() => {
-                    setFormat("");
-                    handleSearch();
-                  }}
+                  onClick={() => { setFormat(""); removeFilter({ format: "" }); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -581,10 +599,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {getLanguageName(language)}
                 <button
-                  onClick={() => {
-                    setLanguage("");
-                    handleSearch();
-                  }}
+                  onClick={() => { setLanguage(""); removeFilter({ language: "" }); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -595,10 +610,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {getSeriesName(seriesId)}
                 <button
-                  onClick={() => {
-                    setSeriesId("");
-                    handleSearch();
-                  }}
+                  onClick={() => { setSeriesId(""); removeFilter({ series_id: "" }); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -609,10 +621,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 Available
                 <button
-                  onClick={() => {
-                    setAvailable(false);
-                    handleSearch();
-                  }}
+                  onClick={() => { setAvailable(false); removeFilter({ available: false }); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -623,10 +632,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {yearRange[0]}-{yearRange[1]}
                 <button
-                  onClick={() => {
-                    setYearRange([1900, currentYear]);
-                    handleSearch();
-                  }}
+                  onClick={() => { setYearRange([1900, currentYear]); removeFilter({}); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -637,10 +643,7 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {minRating}+ stars
                 <button
-                  onClick={() => {
-                    setMinRating(0);
-                    handleSearch();
-                  }}
+                  onClick={() => { setMinRating(0); removeFilter({}); }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
