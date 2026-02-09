@@ -40,10 +40,12 @@ import {
   X,
   ArrowRight,
   Hash,
+  Copy,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { BarcodeScanResult, BookCondition, Student } from "@/lib/types";
+import type { BarcodeScanResult, BarcodeScanResponse, BookCondition, Student } from "@/lib/types";
 
 const CONDITIONS: { value: BookCondition; label: string; description: string }[] = [
   { value: "excellent", label: "Excellent", description: "Like new, no visible wear" },
@@ -63,6 +65,21 @@ function getConditionColor(condition: string): string {
       return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-200";
     case "poor":
       return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200";
+    case "damaged":
+      return "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900/50 dark:text-gray-200";
+  }
+}
+
+function getStatusColor(status: string): string {
+  switch (status) {
+    case "available":
+      return "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200";
+    case "borrowed":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200";
+    case "lost":
+      return "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200";
     case "damaged":
       return "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200";
     default:
@@ -122,6 +139,7 @@ export default function QuickScanPage() {
 
   const [barcode, setBarcode] = useState("");
   const [isScanning, setIsScanning] = useState(false);
+  const [scanResponse, setScanResponse] = useState<BarcodeScanResponse | null>(null);
   const [scanResult, setScanResult] = useState<BarcodeScanResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<OperationMode>("idle");
@@ -148,6 +166,9 @@ export default function QuickScanPage() {
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const studentSearchRef = useRef<HTMLDivElement>(null);
 
+  // Derived: are we in copy selection mode?
+  const showCopySelection = scanResponse && scanResponse.is_isbn_scan && scanResponse.results.length > 1 && !scanResult;
+
   // Focus barcode input on mount and after transactions
   useEffect(() => {
     barcodeInputRef.current?.focus();
@@ -170,33 +191,57 @@ export default function QuickScanPage() {
 
     setIsScanning(true);
     setError(null);
+    setScanResponse(null);
     setScanResult(null);
     setMode("idle");
     setSelectedStudent(null);
     setStudentSearch("");
 
     try {
-      const result = await transactionsApi.scanBarcode(barcode.trim());
-      setScanResult(result);
+      const response = await transactionsApi.scanBarcode(barcode.trim());
+      setScanResponse(response);
 
-      // Auto-detect mode based on copy status
-      if (result.is_borrowed) {
-        setMode("return");
-        if (result.condition) {
-          setReturnCondition(result.condition as BookCondition);
-        }
-      } else if (result.can_borrow) {
-        setMode("borrow");
-      } else {
-        setError(`This copy cannot be borrowed (status: ${result.status})`);
+      // If single result (direct barcode match or ISBN with 1 copy), auto-select
+      if (response.results.length === 1) {
+        selectCopy(response.results[0]);
       }
+      // If multiple results (ISBN scan), show copy selection UI
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to scan barcode");
+      setScanResponse(null);
       setScanResult(null);
     } finally {
       setIsScanning(false);
     }
   }, [barcode]);
+
+  // Select a specific copy from the list
+  const selectCopy = (copy: BarcodeScanResult) => {
+    setScanResult(copy);
+
+    // Auto-detect mode based on copy status
+    if (copy.is_borrowed) {
+      setMode("return");
+      if (copy.condition) {
+        setReturnCondition(copy.condition as BookCondition);
+      }
+    } else if (copy.can_borrow) {
+      setMode("borrow");
+    } else {
+      setError(`This copy cannot be borrowed (status: ${copy.status})`);
+    }
+  };
+
+  // Go back to copy selection
+  const backToCopySelection = () => {
+    setScanResult(null);
+    setMode("idle");
+    setSelectedStudent(null);
+    setStudentSearch("");
+    setReturnCondition("good");
+    setConditionNotes("");
+    setError(null);
+  };
 
   // Auto-search students when typing
   useEffect(() => {
@@ -323,6 +368,7 @@ export default function QuickScanPage() {
   // Reset for next scan
   const resetForNextScan = () => {
     setBarcode("");
+    setScanResponse(null);
     setScanResult(null);
     setMode("idle");
     setSelectedStudent(null);
@@ -377,7 +423,7 @@ export default function QuickScanPage() {
                   </div>
                   <div>
                     <CardTitle className="text-lg">Scan Barcode</CardTitle>
-                    <CardDescription>Enter or scan a book copy barcode</CardDescription>
+                    <CardDescription>Enter or scan a book copy barcode or ISBN</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -448,21 +494,142 @@ export default function QuickScanPage() {
               </Alert>
             )}
 
-            {/* Scan Result: Book Info */}
+            {/* Copy Selection: when ISBN scan returns multiple copies */}
+            {showCopySelection && scanResponse && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-lg">Select a Copy</CardTitle>
+                      <CardDescription>
+                        ISBN matched {scanResponse.results.length} copies — select the one to process
+                      </CardDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={resetForNextScan}
+                      className="text-muted-foreground"
+                    >
+                      <RefreshCw className="h-4 w-4 mr-1.5" />
+                      Clear
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {/* Book info header */}
+                  <div className="flex items-start gap-3 p-3 rounded-lg bg-muted/50 border">
+                    <div className="h-10 w-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                      <BookOpen className="h-5 w-5 text-primary/60" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm truncate">{scanResponse.results[0].book_title}</h3>
+                      <p className="text-xs text-muted-foreground">
+                        by {scanResponse.results[0].book_author}
+                      </p>
+                      {scanResponse.results[0].isbn && (
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                          ISBN: {scanResponse.results[0].isbn}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Copy grid */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {scanResponse.results.map((copy) => {
+                      const overdue = copy.current_borrower
+                        ? calculateDaysOverdue(copy.current_borrower.due_date)
+                        : 0;
+
+                      return (
+                        <button
+                          key={copy.copy_id}
+                          onClick={() => selectCopy(copy)}
+                          className={cn(
+                            "flex flex-col gap-2 p-3 rounded-lg border text-left transition-all",
+                            "hover:border-primary/50 hover:bg-muted/30 active:scale-[0.98]",
+                            "focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-mono text-sm font-medium truncate">
+                              {copy.barcode}
+                            </span>
+                            <div className="flex gap-1 shrink-0">
+                              <Badge
+                                variant="outline"
+                                className={cn("text-[10px] capitalize", getStatusColor(copy.status))}
+                              >
+                                {copy.status}
+                              </Badge>
+                              <Badge
+                                variant="outline"
+                                className={cn("text-[10px] capitalize", getConditionColor(copy.condition))}
+                              >
+                                {copy.condition}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {copy.current_borrower && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <User className="h-3 w-3 shrink-0" />
+                              <span className="truncate">{copy.current_borrower.student_name}</span>
+                              <span className="text-muted-foreground/60">·</span>
+                              <span className="flex items-center gap-0.5 shrink-0">
+                                <Calendar className="h-3 w-3" />
+                                {formatDate(copy.current_borrower.due_date)}
+                              </span>
+                              {overdue > 0 && (
+                                <Badge variant="destructive" className="text-[10px] h-4 shrink-0">
+                                  {overdue}d overdue
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+
+                          {!copy.current_borrower && copy.status === "available" && (
+                            <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Ready to check out
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Scan Result: Book Info (after copy is selected) */}
             {scanResult && (
               <Card>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <Badge
-                      className={cn(
-                        "text-sm font-medium",
-                        mode === "borrow"
-                          ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
-                          : "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                    <div className="flex items-center gap-2">
+                      {scanResponse?.is_isbn_scan && scanResponse.results.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 -ml-1"
+                          onClick={backToCopySelection}
+                        >
+                          <ArrowLeft className="h-4 w-4" />
+                        </Button>
                       )}
-                    >
-                      {mode === "borrow" ? "Checkout" : "Return"}
-                    </Badge>
+                      <Badge
+                        className={cn(
+                          "text-sm font-medium",
+                          mode === "borrow"
+                            ? "bg-blue-500 hover:bg-blue-600 text-white border-0"
+                            : "bg-amber-500 hover:bg-amber-600 text-white border-0"
+                        )}
+                      >
+                        {mode === "borrow" ? "Checkout" : "Return"}
+                      </Badge>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -491,7 +658,8 @@ export default function QuickScanPage() {
                           {scanResult.book_code}
                         </span>
                         <span className="text-xs text-muted-foreground">|</span>
-                        <span className="text-xs text-muted-foreground font-mono">
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground font-mono">
+                          <Copy className="h-3 w-3" />
                           {scanResult.barcode}
                         </span>
                         <Badge
@@ -796,10 +964,14 @@ export default function QuickScanPage() {
                     <ScanLine className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <p className="text-sm font-medium text-muted-foreground">
-                    Scan a barcode to get started
+                    {showCopySelection
+                      ? "Select a copy from the list"
+                      : "Scan a barcode to get started"}
                   </p>
                   <p className="text-xs text-muted-foreground/70 mt-1 max-w-[200px]">
-                    The system will automatically detect whether to check out or return the book
+                    {showCopySelection
+                      ? "Tap a copy card to proceed with borrow or return"
+                      : "The system will automatically detect whether to check out or return the book"}
                   </p>
                 </CardContent>
               </Card>

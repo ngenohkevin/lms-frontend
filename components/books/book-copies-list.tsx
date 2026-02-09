@@ -229,8 +229,10 @@ export function BookCopiesList({ bookId, bookCode, bookTitle }: BookCopiesListPr
         borrowedCopies.map(async (copy) => {
           if (!copy.barcode) return;
           try {
-            const result = await transactionsApi.scanBarcode(copy.barcode);
-            newInfoMap.set(copy.id, result);
+            const response = await transactionsApi.scanBarcode(copy.barcode);
+            if (response.results?.length > 0) {
+              newInfoMap.set(copy.id, response.results[0]);
+            }
           } catch {
             // Mark as fetched even on error to prevent infinite retries
             newInfoMap.set(copy.id, {} as BarcodeScanResult);

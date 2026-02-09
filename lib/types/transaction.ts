@@ -90,6 +90,11 @@ export interface BarcodeScanResult {
   };
 }
 
+export interface BarcodeScanResponse {
+  results: BarcodeScanResult[];
+  is_isbn_scan: boolean;
+}
+
 export interface ReturnRequest {
   condition?: BookCondition;
   condition_notes?: string;

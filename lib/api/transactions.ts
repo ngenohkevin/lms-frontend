@@ -4,7 +4,7 @@ import type {
   BorrowRequest,
   BorrowByBarcodeRequest,
   ReturnByBarcodeRequest,
-  BarcodeScanResult,
+  BarcodeScanResponse,
   ReturnRequest,
   RenewRequest,
   RenewalEligibility,
@@ -282,9 +282,9 @@ export const transactionsApi = {
     return response.data;
   },
 
-  // Scan a barcode for transaction info
-  scanBarcode: async (barcode: string): Promise<BarcodeScanResult> => {
-    const response = await apiClient.get<ApiResponse<BarcodeScanResult>>(`${TRANSACTIONS_PREFIX}/scan`, {
+  // Scan a barcode for transaction info (returns all copies when ISBN is scanned)
+  scanBarcode: async (barcode: string): Promise<BarcodeScanResponse> => {
+    const response = await apiClient.get<ApiResponse<BarcodeScanResponse>>(`${TRANSACTIONS_PREFIX}/scan`, {
       params: { barcode },
     });
     return response.data;

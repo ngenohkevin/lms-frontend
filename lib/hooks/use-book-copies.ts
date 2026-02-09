@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { bookCopiesApi } from "@/lib/api/book-copies";
 import { transactionsApi } from "@/lib/api/transactions";
 import type { BookCopy } from "@/lib/types/book";
-import type { BarcodeScanResult } from "@/lib/types/transaction";
+import type { BarcodeScanResponse } from "@/lib/types/transaction";
 
 const handleApiError = (error: Error, context: string) => {
   console.error(`${context}:`, error);
@@ -64,22 +64,22 @@ export function useBookCopy(bookId: number | null, copyId: number | null) {
  * Hook for barcode scanning with transaction context
  */
 export function useBarcodeScan() {
-  const [scanResult, setScanResult] = useState<BarcodeScanResult | null>(null);
+  const [scanResponse, setScanResponse] = useState<BarcodeScanResponse | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const scan = useCallback(async (barcode: string): Promise<BarcodeScanResult | null> => {
+  const scan = useCallback(async (barcode: string): Promise<BarcodeScanResponse | null> => {
     setIsScanning(true);
     setError(null);
 
     try {
       const result = await transactionsApi.scanBarcode(barcode);
-      setScanResult(result);
+      setScanResponse(result);
       return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to scan barcode";
       setError(errorMessage);
-      setScanResult(null);
+      setScanResponse(null);
       return null;
     } finally {
       setIsScanning(false);
@@ -87,11 +87,15 @@ export function useBarcodeScan() {
   }, []);
 
   const clear = useCallback(() => {
-    setScanResult(null);
+    setScanResponse(null);
     setError(null);
   }, []);
 
+  // Convenience: first result for single-copy scans
+  const scanResult = scanResponse?.results?.[0] ?? null;
+
   return {
+    scanResponse,
     scanResult,
     isScanning,
     error,
