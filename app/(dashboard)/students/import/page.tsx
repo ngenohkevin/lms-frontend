@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useDropzone } from "react-dropzone";
 import { useSWRConfig } from "swr";
 import { AuthGuard } from "@/components/auth/auth-guard";
-import { booksApi } from "@/lib/api";
+import { studentsApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,14 +37,14 @@ import {
   Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
-import type { BookImportResult } from "@/lib/types";
+import type { StudentImportResult } from "@/lib/types";
 
-export default function BookImportPage() {
+export default function StudentImportPage() {
   const router = useRouter();
   const { mutate } = useSWRConfig();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [result, setResult] = useState<BookImportResult | null>(null);
+  const [result, setResult] = useState<StudentImportResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
@@ -52,7 +52,7 @@ export default function BookImportPage() {
       const selectedFile = acceptedFiles[0];
       const ext = selectedFile.name.split(".").pop()?.toLowerCase();
 
-      if (!["csv", "xlsx", "xls"].includes(ext || "")) {
+      if (ext !== "csv" && ext !== "xlsx" && ext !== "xls") {
         setError("Only CSV and Excel files (.csv, .xlsx, .xls) are supported");
         return;
       }
@@ -85,26 +85,30 @@ export default function BookImportPage() {
     setError(null);
 
     try {
-      const importResult = await booksApi.import(file);
+      const importResult = await studentsApi.import(file);
       setResult(importResult);
 
-      if (importResult.success_count > 0) {
-        // Invalidate all books-related SWR cache
+      if (importResult.successful_count > 0) {
         await mutate(
           (key) =>
             typeof key === "string"
-              ? key.includes("/api/v1/books")
-              : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
+              ? key.includes("/api/v1/students")
+              : Array.isArray(key) && key[0]?.includes("/api/v1/students"),
           undefined,
           { revalidate: false }
         );
-        toast.success(`Successfully imported ${importResult.success_count} books`);
+        toast.success(
+          `Successfully imported ${importResult.successful_count} students`
+        );
       }
-      if (importResult.failure_count > 0) {
-        toast.warning(`${importResult.failure_count} books failed to import`);
+      if (importResult.failed_count > 0) {
+        toast.warning(
+          `${importResult.failed_count} students failed to import`
+        );
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to import books";
+      const message =
+        err instanceof Error ? err.message : "Failed to import students";
       setError(message);
       toast.error(message);
     } finally {
@@ -120,20 +124,17 @@ export default function BookImportPage() {
 
   const downloadTemplate = () => {
     const headers = [
-      "isbn",
-      "book_type",
-      "category",
-      "title",
-      "author",
-      "publisher",
-      "published_year",
-      "genre",
-      "description",
-      "shelf_location",
+      "student_id",
+      "first_name",
+      "last_name",
+      "year_of_study",
+      "email",
+      "phone",
+      "max_books",
     ];
     const sampleData = [
-      "978-0743273565,storybook,Fiction,The Great Gatsby,F. Scott Fitzgerald,Scribner,1925,Fiction,,A-1",
-      "978-0451524935,storybook,Fiction,,,,,,",
+      "STU2025001,John,Doe,1,john.doe@school.edu,+254700000001,5",
+      "STU2025002,Jane,Smith,2,,,",
     ];
 
     const csvContent = [headers.join(","), ...sampleData].join("\n");
@@ -141,7 +142,7 @@ export default function BookImportPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "book_import_template.csv";
+    a.download = "student_import_template.csv";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -162,9 +163,11 @@ export default function BookImportPage() {
             Back
           </Button>
 
-          <h1 className="text-3xl font-bold tracking-tight mt-2">Import Books</h1>
+          <h1 className="text-3xl font-bold tracking-tight mt-2">
+            Import Students
+          </h1>
           <p className="text-muted-foreground">
-            Bulk import books from CSV or Excel files
+            Bulk import students from a CSV or Excel file
           </p>
         </div>
 
@@ -177,7 +180,7 @@ export default function BookImportPage() {
                 Upload File
               </CardTitle>
               <CardDescription>
-                Select a CSV or Excel file containing book data
+                Select a CSV or Excel file containing student data
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -209,7 +212,7 @@ export default function BookImportPage() {
                           Drag & drop a file here, or click to select
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Supports CSV, XLSX, XLS (max 10MB)
+                          Supports CSV and Excel files (max 10MB)
                         </p>
                       </div>
                     )}
@@ -237,7 +240,7 @@ export default function BookImportPage() {
                       ) : (
                         <>
                           <Upload className="mr-2 h-4 w-4" />
-                          Import Books
+                          Import Students
                         </>
                       )}
                     </Button>
@@ -254,9 +257,9 @@ export default function BookImportPage() {
                 <div className="space-y-4">
                   {/* Success Summary */}
                   <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
-                    {result.failure_count === 0 ? (
+                    {result.failed_count === 0 ? (
                       <CheckCircle2 className="h-10 w-10 text-green-500" />
-                    ) : result.success_count === 0 ? (
+                    ) : result.successful_count === 0 ? (
                       <XCircle className="h-10 w-10 text-destructive" />
                     ) : (
                       <AlertTriangle className="h-10 w-10 text-yellow-500" />
@@ -264,7 +267,8 @@ export default function BookImportPage() {
                     <div>
                       <p className="font-semibold text-lg">Import Complete</p>
                       <p className="text-sm text-muted-foreground">
-                        {result.success_count} of {result.total_records} books imported
+                        {result.successful_count} of {result.total_records}{" "}
+                        students imported
                       </p>
                     </div>
                   </div>
@@ -272,34 +276,25 @@ export default function BookImportPage() {
                   {/* Progress Bar */}
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span>Success: {result.success_count}</span>
-                      <span>Failed: {result.failure_count}</span>
+                      <span>Success: {result.successful_count}</span>
+                      <span>Failed: {result.failed_count}</span>
                     </div>
                     <Progress
-                      value={(result.success_count / result.total_records) * 100}
+                      value={
+                        result.total_records > 0
+                          ? (result.successful_count / result.total_records) *
+                            100
+                          : 0
+                      }
                     />
                   </div>
-
-                  {/* Summary Stats */}
-                  {result.summary && (
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <p className="text-muted-foreground">New Books</p>
-                        <p className="font-semibold text-lg">{result.summary.new_books}</p>
-                      </div>
-                      <div className="p-3 rounded-lg bg-muted/50">
-                        <p className="text-muted-foreground">Duplicates</p>
-                        <p className="font-semibold text-lg">{result.summary.duplicates_found}</p>
-                      </div>
-                    </div>
-                  )}
 
                   <div className="flex gap-2">
                     <Button onClick={handleReset} className="flex-1">
                       Import Another File
                     </Button>
                     <Button variant="outline" asChild>
-                      <Link href="/books">View Books</Link>
+                      <Link href="/students">View Students</Link>
                     </Button>
                   </div>
                 </div>
@@ -319,76 +314,86 @@ export default function BookImportPage() {
               <div className="space-y-3">
                 <h4 className="font-medium">Required Columns</h4>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">isbn</Badge>
-                  <Badge variant="secondary">book_type</Badge>
-                  <Badge variant="secondary">category</Badge>
+                  <Badge variant="secondary">student_id</Badge>
+                  <Badge variant="secondary">first_name</Badge>
+                  <Badge variant="secondary">last_name</Badge>
+                  <Badge variant="secondary">year_of_study</Badge>
                 </div>
               </div>
 
               <div className="space-y-3">
                 <h4 className="font-medium">Optional Columns</h4>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline">title</Badge>
-                  <Badge variant="outline">author</Badge>
-                  <Badge variant="outline">publisher</Badge>
-                  <Badge variant="outline">published_year</Badge>
-                  <Badge variant="outline">genre</Badge>
-                  <Badge variant="outline">description</Badge>
-                  <Badge variant="outline">shelf_location</Badge>
+                  <Badge variant="outline">email</Badge>
+                  <Badge variant="outline">phone</Badge>
+                  <Badge variant="outline">max_books</Badge>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  These fields can also be added later when editing each student
+                </p>
               </div>
 
               <div className="space-y-2">
                 <h4 className="font-medium">Notes</h4>
                 <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                   <li>First row must contain column headers</li>
-                  <li>The system will automatically look up book details from the ISBN</li>
-                  <li>Values you provide in CSV take priority over ISBN lookup</li>
-                  <li>book_type must be &quot;textbook&quot; or &quot;storybook&quot;</li>
-                  <li>category must match an existing category name</li>
-                  <li>Duplicate ISBNs will be skipped</li>
+                  <li>student_id must be unique (e.g., STU2025001)</li>
+                  <li>Duplicate student IDs will be skipped</li>
+                  <li>year_of_study must be between 1 and 8</li>
+                  <li>Max books allowed defaults to 5</li>
+                  <li>Default password is the student ID</li>
                   <li>Maximum file size is 10MB</li>
                 </ul>
               </div>
 
-              {/* Example CSV Preview */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={downloadTemplate}
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Template
+              </Button>
+
+              {/* CSV Preview */}
               <div className="space-y-2">
-                <h4 className="font-medium">Example CSV</h4>
-                <div className="overflow-x-auto rounded-md border">
+                <h4 className="font-medium text-sm">Example CSV</h4>
+                <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-xs">isbn</TableHead>
-                        <TableHead className="text-xs">book_type</TableHead>
-                        <TableHead className="text-xs">category</TableHead>
-                        <TableHead className="text-xs">title</TableHead>
-                        <TableHead className="text-xs">author</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">student_id</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">first_name</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">last_name</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">year_of_study</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">email</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">phone</TableHead>
+                        <TableHead className="text-xs whitespace-nowrap">max_books</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       <TableRow>
-                        <TableCell className="text-xs font-mono">978-0743273565</TableCell>
-                        <TableCell className="text-xs">storybook</TableCell>
-                        <TableCell className="text-xs">Fiction</TableCell>
-                        <TableCell className="text-xs">The Great Gatsby</TableCell>
-                        <TableCell className="text-xs">F. Scott Fitzgerald</TableCell>
+                        <TableCell className="text-xs font-mono">STU2025001</TableCell>
+                        <TableCell className="text-xs">John</TableCell>
+                        <TableCell className="text-xs">Doe</TableCell>
+                        <TableCell className="text-xs">1</TableCell>
+                        <TableCell className="text-xs">john@school.edu</TableCell>
+                        <TableCell className="text-xs">+254700000001</TableCell>
+                        <TableCell className="text-xs">5</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell className="text-xs font-mono">978-0451524935</TableCell>
-                        <TableCell className="text-xs">storybook</TableCell>
-                        <TableCell className="text-xs">Fiction</TableCell>
-                        <TableCell className="text-xs text-muted-foreground italic">auto-filled</TableCell>
-                        <TableCell className="text-xs text-muted-foreground italic">auto-filled</TableCell>
+                        <TableCell className="text-xs font-mono">STU2025002</TableCell>
+                        <TableCell className="text-xs">Jane</TableCell>
+                        <TableCell className="text-xs">Smith</TableCell>
+                        <TableCell className="text-xs">2</TableCell>
+                        <TableCell className="text-xs"></TableCell>
+                        <TableCell className="text-xs"></TableCell>
+                        <TableCell className="text-xs"></TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
                 </div>
               </div>
-
-              <Button variant="outline" className="w-full" onClick={downloadTemplate}>
-                <Download className="mr-2 h-4 w-4" />
-                Download Template
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -410,7 +415,7 @@ export default function BookImportPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-20">Row</TableHead>
-                    <TableHead className="w-32">ISBN</TableHead>
+                    <TableHead className="w-40">Data</TableHead>
                     <TableHead className="w-32">Field</TableHead>
                     <TableHead>Error</TableHead>
                   </TableRow>
@@ -420,7 +425,7 @@ export default function BookImportPage() {
                     <TableRow key={idx}>
                       <TableCell>{err.row}</TableCell>
                       <TableCell className="font-mono text-sm">
-                        {err.isbn || "-"}
+                        {err.data || "-"}
                       </TableCell>
                       <TableCell>{err.field || "-"}</TableCell>
                       <TableCell className="text-destructive">

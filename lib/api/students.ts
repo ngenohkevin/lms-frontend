@@ -276,7 +276,7 @@ export const studentsApi = {
     const formData = new FormData();
     formData.append("file", file);
     const response = await apiClient.upload<ApiResponse<StudentImportResult>>(
-      `${STUDENTS_PREFIX}/import`,
+      `${STUDENTS_PREFIX}/bulk-import`,
       formData
     );
     return response.data;

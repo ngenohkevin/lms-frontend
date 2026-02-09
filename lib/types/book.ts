@@ -123,7 +123,7 @@ export interface BookImportData {
 
 export interface BookImportError {
   row: number;
-  book_id?: string;
+  isbn?: string;
   field?: string;
   message: string;
   type?: string;

@@ -59,13 +59,16 @@ export interface StudentImportData {
 }
 
 export interface StudentImportResult {
-  success: number;
-  failed: number;
-  errors: Array<{
+  total_records: number;
+  successful_count: number;
+  failed_count: number;
+  errors?: Array<{
     row: number;
-    student_id: string;
-    error: string;
+    field?: string;
+    message: string;
+    data?: string;
   }>;
+  created_students?: Array<Student>;
 }
 
 export interface StudentAnalytics {
