@@ -16,6 +16,8 @@ import {
   Tablet,
   Globe,
   Library,
+  GraduationCap,
+  BookHeart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,10 +36,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Collapsible,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -47,7 +46,12 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useCategories } from "@/lib/hooks";
 import { useSeries } from "@/lib/hooks/use-series";
-import { BOOK_LANGUAGES, BOOK_FORMATS, type BookFormat } from "@/lib/types/book";
+import {
+  BOOK_LANGUAGES,
+  BOOK_FORMATS,
+  BOOK_TYPES,
+  type BookFormat,
+} from "@/lib/types/book";
 
 interface BookSearchProps {
   onSearch?: (params: Record<string, string | undefined>) => void;
@@ -59,6 +63,8 @@ const currentYear = new Date().getFullYear();
 
 // Quick filter presets
 const quickFilters = [
+  { label: "Textbooks", value: "textbook", icon: GraduationCap },
+  { label: "Storybooks", value: "storybook", icon: BookHeart },
   { label: "New Arrivals", value: "new", icon: Sparkles },
   { label: "Available Now", value: "available", icon: Filter },
   { label: "E-Books", value: "ebook", icon: Tablet },
@@ -87,16 +93,20 @@ export function BookSearch({
   const [query, setQuery] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState(searchParams.get("category") || "");
   const [available, setAvailable] = useState(
-    searchParams.get("available") === "true"
+    searchParams.get("available") === "true",
   );
   const [sortBy, setSortBy] = useState(searchParams.get("sort_by") || "title");
-  const [yearRange, setYearRange] = useState<[number, number]>([1900, currentYear]);
+  const [yearRange, setYearRange] = useState<[number, number]>([
+    1900,
+    currentYear,
+  ]);
   const [minRating, setMinRating] = useState(0);
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
   // New filter states
   const [language, setLanguage] = useState(searchParams.get("language") || "");
   const [format, setFormat] = useState(searchParams.get("format") || "");
   const [seriesId, setSeriesId] = useState(searchParams.get("series_id") || "");
+  const [bookType, setBookType] = useState(searchParams.get("book_type") || "");
 
   const handleSearch = useCallback(
     (e?: React.FormEvent) => {
@@ -108,12 +118,14 @@ export function BookSearch({
       if (available) params.set("available", "true");
       if (sortBy) params.set("sort_by", sortBy);
       if (yearRange[0] > 1900) params.set("year_from", String(yearRange[0]));
-      if (yearRange[1] < currentYear) params.set("year_to", String(yearRange[1]));
+      if (yearRange[1] < currentYear)
+        params.set("year_to", String(yearRange[1]));
       if (minRating > 0) params.set("min_rating", String(minRating));
       // New filters
       if (language) params.set("language", language);
       if (format) params.set("format", format);
       if (seriesId) params.set("series_id", seriesId);
+      if (bookType) params.set("book_type", bookType);
 
       const newUrl = `/books${params.toString() ? `?${params.toString()}` : ""}`;
       router.push(newUrl);
@@ -125,20 +137,37 @@ export function BookSearch({
           available: available ? "true" : undefined,
           sort_by: sortBy || undefined,
           year_from: yearRange[0] > 1900 ? String(yearRange[0]) : undefined,
-          year_to: yearRange[1] < currentYear ? String(yearRange[1]) : undefined,
+          year_to:
+            yearRange[1] < currentYear ? String(yearRange[1]) : undefined,
           min_rating: minRating > 0 ? String(minRating) : undefined,
           language: language || undefined,
           format: format || undefined,
           series_id: seriesId || undefined,
+          book_type: bookType || undefined,
         });
       }
     },
-    [query, category, available, sortBy, yearRange, minRating, language, format, seriesId, router, onSearch]
+    [
+      query,
+      category,
+      available,
+      sortBy,
+      yearRange,
+      minRating,
+      language,
+      format,
+      seriesId,
+      bookType,
+      router,
+      onSearch,
+    ],
   );
 
   // Build current filter params with overrides — used by badge X buttons
   // to pass the correct values directly (avoids stale state from setState + handleSearch)
-  const buildParams = (overrides: Record<string, string | boolean | undefined> = {}) => {
+  const buildParams = (
+    overrides: Record<string, string | boolean | undefined> = {},
+  ) => {
     const merged = {
       query: query || undefined,
       category: category || undefined,
@@ -147,14 +176,20 @@ export function BookSearch({
       language: language || undefined,
       format: format || undefined,
       series_id: seriesId || undefined,
+      book_type: bookType || undefined,
       ...Object.fromEntries(
-        Object.entries(overrides).map(([k, v]) => [k, v === false || v === "" ? undefined : v])
+        Object.entries(overrides).map(([k, v]) => [
+          k,
+          v === false || v === "" ? undefined : v,
+        ]),
       ),
     } as Record<string, string | undefined>;
     return merged;
   };
 
-  const removeFilter = (overrides: Record<string, string | boolean | undefined>) => {
+  const removeFilter = (
+    overrides: Record<string, string | boolean | undefined>,
+  ) => {
     const params = buildParams(overrides);
     setQuickFilter(null);
     onSearch?.(params);
@@ -171,6 +206,7 @@ export function BookSearch({
     setLanguage("");
     setFormat("");
     setSeriesId("");
+    setBookType("");
     router.push("/books");
     if (onSearch) {
       onSearch({});
@@ -193,9 +229,18 @@ export function BookSearch({
       sort_by: sortBy || undefined,
       language: language || undefined,
       series_id: seriesId || undefined,
+      book_type: bookType || undefined,
     };
 
     switch (filterValue) {
+      case "textbook":
+        setBookType("textbook");
+        filterParams.book_type = "textbook";
+        break;
+      case "storybook":
+        setBookType("storybook");
+        filterParams.book_type = "storybook";
+        break;
       case "new":
         setSortBy("-created_at");
         setAvailable(false);
@@ -222,7 +267,9 @@ export function BookSearch({
 
     // Push URL and notify parent immediately
     const params = new URLSearchParams();
-    Object.entries(filterParams).forEach(([k, v]) => { if (v) params.set(k, v); });
+    Object.entries(filterParams).forEach(([k, v]) => {
+      if (v) params.set(k, v);
+    });
     router.push(`/books${params.toString() ? `?${params.toString()}` : ""}`);
     onSearch?.(filterParams);
   };
@@ -236,6 +283,7 @@ export function BookSearch({
     language,
     format,
     seriesId,
+    bookType,
   ].filter(Boolean).length;
 
   const hasActiveFilters =
@@ -246,7 +294,8 @@ export function BookSearch({
     minRating > 0 ||
     language ||
     format ||
-    seriesId;
+    seriesId ||
+    bookType;
 
   const getLanguageName = (code: string) => {
     return BOOK_LANGUAGES.find((l) => l.code === code)?.name || code;
@@ -279,7 +328,13 @@ export function BookSearch({
 
         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           {/* Sort dropdown */}
-          <Select value={sortBy} onValueChange={(value) => { setSortBy(value); handleSearch(); }}>
+          <Select
+            value={sortBy}
+            onValueChange={(value) => {
+              setSortBy(value);
+              handleSearch();
+            }}
+          >
             <SelectTrigger className="w-full sm:w-[160px] h-11 border border-input">
               <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Sort by" />
@@ -345,7 +400,12 @@ export function BookSearch({
                 {/* Category filter */}
                 <div className="space-y-3">
                   <Label className="text-sm font-semibold">Category</Label>
-                  <Select value={category || "all"} onValueChange={(val) => setCategory(val === "all" ? "" : val)}>
+                  <Select
+                    value={category || "all"}
+                    onValueChange={(val) =>
+                      setCategory(val === "all" ? "" : val)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="All categories" />
                     </SelectTrigger>
@@ -388,8 +448,14 @@ export function BookSearch({
                           className="w-full gap-1"
                         >
                           <Icon className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">{fmt.label.split(" ")[0]}</span>
-                          <span className="sm:hidden">{fmt.value === "physical" ? "Book" : fmt.label.split(" ")[0]}</span>
+                          <span className="hidden sm:inline">
+                            {fmt.label.split(" ")[0]}
+                          </span>
+                          <span className="sm:hidden">
+                            {fmt.value === "physical"
+                              ? "Book"
+                              : fmt.label.split(" ")[0]}
+                          </span>
                         </Button>
                       );
                     })}
@@ -404,7 +470,12 @@ export function BookSearch({
                     <Globe className="h-4 w-4" />
                     Language
                   </Label>
-                  <Select value={language || "all"} onValueChange={(val) => setLanguage(val === "all" ? "" : val)}>
+                  <Select
+                    value={language || "all"}
+                    onValueChange={(val) =>
+                      setLanguage(val === "all" ? "" : val)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="All languages" />
                     </SelectTrigger>
@@ -427,7 +498,12 @@ export function BookSearch({
                     <Library className="h-4 w-4" />
                     Series
                   </Label>
-                  <Select value={seriesId || "all"} onValueChange={(val) => setSeriesId(val === "all" ? "" : val)}>
+                  <Select
+                    value={seriesId || "all"}
+                    onValueChange={(val) =>
+                      setSeriesId(val === "all" ? "" : val)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="All series" />
                     </SelectTrigger>
@@ -447,7 +523,10 @@ export function BookSearch({
                 {/* Availability filter */}
                 <div className="flex items-center justify-between py-1">
                   <div className="space-y-0.5">
-                    <Label htmlFor="available" className="text-sm font-semibold cursor-pointer">
+                    <Label
+                      htmlFor="available"
+                      className="text-sm font-semibold cursor-pointer"
+                    >
                       Availability
                     </Label>
                     <p className="text-xs text-muted-foreground">
@@ -466,7 +545,9 @@ export function BookSearch({
                 {/* Publication year range */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-4">
-                    <Label className="text-sm font-semibold shrink-0">Publication Year</Label>
+                    <Label className="text-sm font-semibold shrink-0">
+                      Publication Year
+                    </Label>
                     <span className="text-sm text-muted-foreground tabular-nums">
                       {yearRange[0]} - {yearRange[1]}
                     </span>
@@ -474,7 +555,9 @@ export function BookSearch({
                   <div className="px-1">
                     <Slider
                       value={yearRange}
-                      onValueChange={(value) => setYearRange(value as [number, number])}
+                      onValueChange={(value) =>
+                        setYearRange(value as [number, number])
+                      }
                       min={1900}
                       max={currentYear}
                       step={1}
@@ -492,7 +575,9 @@ export function BookSearch({
                 {/* Minimum rating */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <Label className="text-sm font-semibold">Minimum Rating</Label>
+                    <Label className="text-sm font-semibold">
+                      Minimum Rating
+                    </Label>
                     <span className="text-sm text-muted-foreground">
                       {minRating > 0 ? `${minRating}+ stars` : "Any"}
                     </span>
@@ -554,7 +639,7 @@ export function BookSearch({
                 size="sm"
                 className={cn(
                   "gap-2 transition-all",
-                  quickFilter === filter.value && "shadow-sm"
+                  quickFilter === filter.value && "shadow-sm",
                 )}
                 onClick={() => applyQuickFilter(filter.value)}
               >
@@ -573,11 +658,29 @@ export function BookSearch({
             <span className="text-xs font-medium text-muted-foreground mr-2">
               Active filters:
             </span>
+            {bookType && (
+              <Badge variant="secondary" className="gap-1 pr-1">
+                {BOOK_TYPES.find((t) => t.value === bookType)?.label ||
+                  bookType}
+                <button
+                  onClick={() => {
+                    setBookType("");
+                    removeFilter({ book_type: "" });
+                  }}
+                  className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            )}
             {category && (
               <Badge variant="secondary" className="gap-1 pr-1">
                 {category}
                 <button
-                  onClick={() => { setCategory(""); removeFilter({ category: "" }); }}
+                  onClick={() => {
+                    setCategory("");
+                    removeFilter({ category: "" });
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -588,7 +691,10 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {getFormatLabel(format)}
                 <button
-                  onClick={() => { setFormat(""); removeFilter({ format: "" }); }}
+                  onClick={() => {
+                    setFormat("");
+                    removeFilter({ format: "" });
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -599,7 +705,10 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {getLanguageName(language)}
                 <button
-                  onClick={() => { setLanguage(""); removeFilter({ language: "" }); }}
+                  onClick={() => {
+                    setLanguage("");
+                    removeFilter({ language: "" });
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -610,7 +719,10 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {getSeriesName(seriesId)}
                 <button
-                  onClick={() => { setSeriesId(""); removeFilter({ series_id: "" }); }}
+                  onClick={() => {
+                    setSeriesId("");
+                    removeFilter({ series_id: "" });
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -621,7 +733,10 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 Available
                 <button
-                  onClick={() => { setAvailable(false); removeFilter({ available: false }); }}
+                  onClick={() => {
+                    setAvailable(false);
+                    removeFilter({ available: false });
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -632,7 +747,10 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {yearRange[0]}-{yearRange[1]}
                 <button
-                  onClick={() => { setYearRange([1900, currentYear]); removeFilter({}); }}
+                  onClick={() => {
+                    setYearRange([1900, currentYear]);
+                    removeFilter({});
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />
@@ -643,7 +761,10 @@ export function BookSearch({
               <Badge variant="secondary" className="gap-1 pr-1">
                 {minRating}+ stars
                 <button
-                  onClick={() => { setMinRating(0); removeFilter({}); }}
+                  onClick={() => {
+                    setMinRating(0);
+                    removeFilter({});
+                  }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
                   <X className="h-3 w-3" />

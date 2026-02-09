@@ -81,6 +81,7 @@ export interface BookSearchParams {
   language?: string;
   format?: BookFormat;
   series_id?: number;
+  book_type?: BookType;
 }
 
 export interface BookRating {
@@ -100,12 +101,12 @@ export interface BookRatingFormData {
 export interface ISBNLookupResult {
   isbn: string;
   title: string;
-  authors: string;  // Backend returns "authors" not "author"
+  authors: string; // Backend returns "authors" not "author"
   publisher?: string;
-  published_year?: number;  // Backend returns "published_year"
+  published_year?: number; // Backend returns "published_year"
   description?: string;
-  cover_image_url?: string;  // Backend returns "cover_image_url"
-  page_count?: number;  // Backend returns "page_count"
+  cover_image_url?: string; // Backend returns "cover_image_url"
+  page_count?: number; // Backend returns "page_count"
   language?: string;
   genre?: string;
 }
@@ -178,7 +179,13 @@ export type BookCategory = (typeof BOOK_CATEGORIES)[number];
 
 // Book Copy Types
 export type CopyCondition = "excellent" | "good" | "fair" | "poor" | "damaged";
-export type CopyStatus = "available" | "borrowed" | "reserved" | "maintenance" | "lost" | "damaged";
+export type CopyStatus =
+  | "available"
+  | "borrowed"
+  | "reserved"
+  | "maintenance"
+  | "lost"
+  | "damaged";
 
 export interface BookCopy {
   id: number;

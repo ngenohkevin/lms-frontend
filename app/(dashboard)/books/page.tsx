@@ -19,28 +19,35 @@ function BooksContent() {
   const { hasPermission } = usePermissions();
 
   // Derive params from URL search params
-  const urlParams = useMemo<BookSearchParams>(() => ({
-    page: Number(searchParams.get("page")) || 1,
-    per_page: 20,
-    query: searchParams.get("search") || undefined,
-    category: searchParams.get("category") || undefined,
-    available: searchParams.get("available") === "true" || undefined,
-    sort_by: searchParams.get("sort_by") || "title",
-  }), [searchParams]);
+  const urlParams = useMemo<BookSearchParams>(
+    () => ({
+      page: Number(searchParams.get("page")) || 1,
+      per_page: 20,
+      query: searchParams.get("search") || undefined,
+      category: searchParams.get("category") || undefined,
+      available: searchParams.get("available") === "true" || undefined,
+      sort_by: searchParams.get("sort_by") || "title",
+    }),
+    [searchParams],
+  );
 
   const [localParams, setLocalParams] = useState<Partial<BookSearchParams>>({});
 
   // Merge URL params with local overrides
-  const params = useMemo(() => ({ ...urlParams, ...localParams }), [urlParams, localParams]);
+  const params = useMemo(
+    () => ({ ...urlParams, ...localParams }),
+    [urlParams, localParams],
+  );
 
   const { books, pagination, isLoading } = useBooks(params);
 
-  const handleSearch = (newSearchParams: Record<string, string | undefined>) => {
-    setLocalParams((prev) => ({
-      ...prev,
+  const handleSearch = (
+    newSearchParams: Record<string, string | undefined>,
+  ) => {
+    setLocalParams({
       ...newSearchParams,
       page: 1, // Reset to first page on new search
-    }));
+    });
   };
 
   const handlePageChange = (page: number) => {
@@ -67,7 +74,10 @@ function BooksContent() {
             Browse and search the library catalog
           </p>
         </div>
-        <PermissionGuard permission={PermissionCodes.BOOKS_CREATE} hideWhenDenied>
+        <PermissionGuard
+          permission={PermissionCodes.BOOKS_CREATE}
+          hideWhenDenied
+        >
           <div className="flex gap-2">
             <Button variant="outline" asChild>
               <Link href="/books/import">
