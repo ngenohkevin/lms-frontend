@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Clock,
   RefreshCcw,
+  SearchX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +44,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import type { TransactionSearchParams, TransactionStatus, TransactionType } from "@/lib/types";
+import type {
+  TransactionSearchParams,
+  TransactionStatus,
+  TransactionType,
+} from "@/lib/types";
 
 interface TransactionSearchProps {
   onSearch: (params: TransactionSearchParams) => void;
@@ -56,6 +61,7 @@ const statusFilters = [
   { label: "Active", value: "active", icon: Clock },
   { label: "Overdue", value: "overdue", icon: AlertTriangle },
   { label: "Returned", value: "returned", icon: CheckCircle },
+  { label: "Lost", value: "lost", icon: SearchX },
 ];
 
 // Transaction type options
@@ -80,16 +86,24 @@ export function TransactionSearch({
 }: TransactionSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState(initialParams.query || "");
-  const [status, setStatus] = useState<TransactionStatus | "">(initialParams.status || "");
-  const [type, setType] = useState<TransactionType | "">(initialParams.type || "");
+  const [status, setStatus] = useState<TransactionStatus | "">(
+    initialParams.status || "",
+  );
+  const [type, setType] = useState<TransactionType | "">(
+    initialParams.type || "",
+  );
   const [fromDate, setFromDate] = useState<Date | undefined>(
-    initialParams.from_date ? new Date(initialParams.from_date) : undefined
+    initialParams.from_date ? new Date(initialParams.from_date) : undefined,
   );
   const [toDate, setToDate] = useState<Date | undefined>(
-    initialParams.to_date ? new Date(initialParams.to_date) : undefined
+    initialParams.to_date ? new Date(initialParams.to_date) : undefined,
   );
-  const [sortBy, setSortBy] = useState(initialParams.sort_by || "transaction_date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(initialParams.sort_order || "desc");
+  const [sortBy, setSortBy] = useState(
+    initialParams.sort_by || "transaction_date",
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
+    initialParams.sort_order || "desc",
+  );
 
   const handleSearch = useCallback(
     (e?: React.FormEvent) => {
@@ -111,7 +125,17 @@ export function TransactionSearch({
 
       onSearch(params);
     },
-    [query, status, type, fromDate, toDate, sortBy, sortOrder, initialParams, onSearch]
+    [
+      query,
+      status,
+      type,
+      fromDate,
+      toDate,
+      sortBy,
+      sortOrder,
+      initialParams,
+      onSearch,
+    ],
   );
 
   const clearFilters = () => {
@@ -168,12 +192,9 @@ export function TransactionSearch({
     }
   };
 
-  const activeFiltersCount = [
-    status,
-    type,
-    fromDate,
-    toDate,
-  ].filter(Boolean).length;
+  const activeFiltersCount = [status, type, fromDate, toDate].filter(
+    Boolean,
+  ).length;
 
   const hasActiveFilters = status || type || fromDate || toDate;
 
@@ -249,14 +270,19 @@ export function TransactionSearch({
                   </Label>
                   <Select
                     value={type || "all"}
-                    onValueChange={(val) => setType(val === "all" ? "" : (val as TransactionType))}
+                    onValueChange={(val) =>
+                      setType(val === "all" ? "" : (val as TransactionType))
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All types" />
                     </SelectTrigger>
                     <SelectContent>
                       {transactionTypes.map((t) => (
-                        <SelectItem key={t.value || "all"} value={t.value || "all"}>
+                        <SelectItem
+                          key={t.value || "all"}
+                          value={t.value || "all"}
+                        >
                           {t.label}
                         </SelectItem>
                       ))}
@@ -274,14 +300,16 @@ export function TransactionSearch({
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">From</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        From
+                      </Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !fromDate && "text-muted-foreground"
+                              !fromDate && "text-muted-foreground",
                             )}
                           >
                             <Calendar className="mr-2 h-4 w-4" />
@@ -299,14 +327,16 @@ export function TransactionSearch({
                       </Popover>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs text-muted-foreground">To</Label>
+                      <Label className="text-xs text-muted-foreground">
+                        To
+                      </Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !toDate && "text-muted-foreground"
+                              !toDate && "text-muted-foreground",
                             )}
                           >
                             <Calendar className="mr-2 h-4 w-4" />
@@ -366,7 +396,7 @@ export function TransactionSearch({
             size="sm"
             className={cn(
               "gap-2 transition-all",
-              status === filter.value && "shadow-sm"
+              status === filter.value && "shadow-sm",
             )}
             onClick={() => handleStatusFilter(filter.value)}
           >
