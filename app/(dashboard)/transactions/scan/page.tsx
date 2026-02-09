@@ -398,15 +398,20 @@ export default function QuickScanPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-auto rounded-lg border px-3 py-2">
-            <Label htmlFor="continuous" className="text-sm font-medium cursor-pointer select-none">
-              Continuous
-            </Label>
-            <Switch
-              id="continuous"
-              checked={continuousMode}
-              onCheckedChange={setContinuousMode}
-            />
+          <div className="flex flex-col items-end gap-1 self-start sm:self-auto">
+            <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
+              <Label htmlFor="continuous" className="text-sm font-medium cursor-pointer select-none">
+                Continuous
+              </Label>
+              <Switch
+                id="continuous"
+                checked={continuousMode}
+                onCheckedChange={setContinuousMode}
+              />
+            </div>
+            <p className="text-[11px] text-muted-foreground max-w-[180px] text-right">
+              Auto-reset after each transaction for rapid scanning
+            </p>
           </div>
         </div>
 
