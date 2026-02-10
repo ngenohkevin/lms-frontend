@@ -7,7 +7,6 @@ import {
   usePopularBooks,
   useBorrowingTrends,
   useInventoryReport,
-  useCategoryStats,
   useOverdueReport,
 } from "@/lib/hooks/use-reports";
 import { DashboardMetricsCards } from "@/components/reports/dashboard-metrics";
@@ -116,7 +115,6 @@ export default function DashboardPage() {
   const { books: popularBooks, isLoading: booksLoading } = usePopularBooks({ limit: 5 });
   const { trends, isLoading: trendsLoading } = useBorrowingTrends();
   const { report: inventory, isLoading: inventoryLoading } = useInventoryReport();
-  const { stats: categoryStats, isLoading: categoryLoading } = useCategoryStats();
   const { report: overdueReport, isLoading: overdueLoading } = useOverdueReport();
 
   const inventoryPieData = inventory
@@ -131,7 +129,7 @@ export default function DashboardPage() {
     ? Math.round((inventory.checked_out / inventory.total_copies) * 100)
     : 0;
 
-  const topCategories = [...categoryStats]
+  const topCategories = [...(inventory?.categories || [])]
     .sort((a, b) => b.total_books - a.total_books)
     .slice(0, 8);
 
@@ -352,7 +350,7 @@ export default function DashboardPage() {
               </div>
             </CardHeader>
             <CardContent>
-              {categoryLoading ? (
+              {inventoryLoading ? (
                 <Skeleton className="h-[300px] w-full" />
               ) : topCategories.length > 0 ? (
                 <ChartContainer config={categoryChartConfig} className="h-[300px] w-full">
