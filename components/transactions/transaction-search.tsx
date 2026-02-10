@@ -201,13 +201,13 @@ export function TransactionSearch({
   return (
     <div className="space-y-4">
       {/* Main search bar */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <form onSubmit={handleSearch} className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search by book title, author, student name, or barcode..."
+              placeholder="Search books, students, barcodes..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-10 h-11 bg-background"
@@ -215,7 +215,7 @@ export function TransactionSearch({
           </div>
         </form>
 
-        <div className="flex gap-2 flex-wrap sm:flex-nowrap">
+        <div className="flex gap-2 shrink-0">
           {/* Sort dropdown */}
           <Select
             value={`${sortBy}-${sortOrder}`}

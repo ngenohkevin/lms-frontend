@@ -178,12 +178,12 @@ export default function DashboardPage() {
       {isLibrarian && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Borrowing Trends - AreaChart */}
-          <Card>
+          <Card className="min-w-0 overflow-hidden">
             <CardHeader className="flex flex-row items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <CardTitle>Borrowing Trends</CardTitle>
-                <CardDescription>
+              <TrendingUp className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <CardTitle className="truncate">Borrowing Trends</CardTitle>
+                <CardDescription className="truncate">
                   Borrowing and returns over the past 30 days
                 </CardDescription>
               </div>
@@ -252,12 +252,12 @@ export default function DashboardPage() {
           </Card>
 
           {/* Inventory Status - Donut + Stats */}
-          <Card>
+          <Card className="min-w-0 overflow-hidden">
             <CardHeader className="flex flex-row items-center gap-2">
-              <PieChartIcon className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <CardTitle>Inventory Status</CardTitle>
-                <CardDescription>
+              <PieChartIcon className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <CardTitle className="truncate">Inventory Status</CardTitle>
+                <CardDescription className="truncate">
                   Physical copies across the library
                 </CardDescription>
               </div>
@@ -341,15 +341,15 @@ export default function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Category Distribution - Horizontal BarChart */}
         {isLibrarian && (
-          <Card>
+          <Card className="min-w-0 overflow-hidden">
             <CardHeader className="flex flex-row items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <CardTitle>Category Distribution</CardTitle>
-                <CardDescription>Top categories by title count</CardDescription>
+              <BarChart3 className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <CardTitle className="truncate">Category Distribution</CardTitle>
+                <CardDescription className="truncate">Top categories by title count</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="overflow-hidden">
+            <CardContent>
               {inventoryLoading ? (
                 <Skeleton className="h-[300px] w-full" />
               ) : topCategories.length > 0 ? (
@@ -396,7 +396,7 @@ export default function DashboardPage() {
         )}
 
         {/* Popular Books - Enhanced List */}
-        <Card className={!isLibrarian ? "lg:col-span-2" : ""}>
+        <Card className={`min-w-0 overflow-hidden ${!isLibrarian ? "lg:col-span-2" : ""}`}>
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <BookOpen className="h-5 w-5 shrink-0 text-muted-foreground" />
@@ -479,18 +479,18 @@ export default function DashboardPage() {
 
       {/* Overdue Breakdown */}
       {isLibrarian && overdueReport && overdueReport.overdue_by_days && overdueReport.overdue_by_days.length > 0 && (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <CardTitle>Overdue Breakdown</CardTitle>
-                <CardDescription>
+        <Card className="overflow-hidden">
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertTriangle className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <CardTitle className="truncate">Overdue Breakdown</CardTitle>
+                <CardDescription className="truncate">
                   {formatNumber(overdueReport.total_overdue)} total overdue books by duration
                 </CardDescription>
               </div>
             </div>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="shrink-0">
               <Link href="/reports">
                 Full Report <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
