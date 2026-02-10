@@ -204,12 +204,13 @@ export const reportsApi = {
     const genres = raw?.genres || [];
     const summary = raw?.summary || { total_books: 0, available_books: 0, overall_utilization: "0" };
 
+    const availableCopies = safeNumber(summary.available_books);
     const totalBorrowed = genres.reduce((sum, g) => sum + safeNumber(g.borrowed_books), 0);
 
     return {
       total_books: safeNumber(summary.total_books),
-      total_copies: safeNumber(summary.total_books),
-      available_copies: safeNumber(summary.available_books),
+      total_copies: availableCopies + totalBorrowed,
+      available_copies: availableCopies,
       checked_out: totalBorrowed,
       lost_books: 0,
       categories: genres.map((g) => ({
