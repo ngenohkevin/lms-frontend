@@ -80,11 +80,11 @@ function MetricCard({
       style={{ animationDelay: `${index * 75}ms` }}
     >
       <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div className="space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 space-y-2">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold tracking-tight">{value}</span>
+              <span className="text-3xl font-bold tracking-tight truncate">{value}</span>
               {trend && (
                 <span
                   className={cn(
@@ -107,7 +107,7 @@ function MetricCard({
               <p className="text-xs text-muted-foreground">{description}</p>
             )}
           </div>
-          <div className={cn("rounded-xl p-3", styles.icon)}>
+          <div className={cn("shrink-0 rounded-xl p-3", styles.icon)}>
             <Icon className="h-5 w-5" />
           </div>
         </div>

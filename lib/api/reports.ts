@@ -172,6 +172,7 @@ export const reportsApi = {
   },
 
   // Inventory status - GET /api/v1/reports/inventory-status
+  // Backend returns { genres[], summary{} } — transform to frontend InventoryReport shape
   getInventoryReport: async (params?: {
     low_stock?: boolean;
     genre?: string;
@@ -179,11 +180,45 @@ export const reportsApi = {
     location?: string;
     category?: string;
   }): Promise<InventoryReport> => {
-    const response = await apiClient.get<ApiResponse<InventoryReport>>(
+    interface BackendGenre {
+      genre: string;
+      total_books: number;
+      available_books: number;
+      borrowed_books: number;
+      reserved_books: number;
+      utilization_rate: string;
+    }
+    interface BackendInventory {
+      genres: BackendGenre[];
+      summary: {
+        total_books: number;
+        available_books: number;
+        overall_utilization: string;
+      };
+    }
+    const response = await apiClient.get<ApiResponse<BackendInventory>>(
       `${REPORTS_PREFIX}/inventory-status`,
       { params }
     );
-    return response.data;
+    const raw = response.data;
+    const genres = raw?.genres || [];
+    const summary = raw?.summary || { total_books: 0, available_books: 0, overall_utilization: "0" };
+
+    const totalBorrowed = genres.reduce((sum, g) => sum + safeNumber(g.borrowed_books), 0);
+
+    return {
+      total_books: safeNumber(summary.total_books),
+      total_copies: safeNumber(summary.total_books),
+      available_copies: safeNumber(summary.available_books),
+      checked_out: totalBorrowed,
+      lost_books: 0,
+      categories: genres.map((g) => ({
+        category: g.genre,
+        total_books: safeNumber(g.total_books),
+        total_borrowed: safeNumber(g.borrowed_books),
+        available: safeNumber(g.available_books),
+      })),
+    };
   },
 
   // Overdue report - POST /api/v1/reports/overdue-books
