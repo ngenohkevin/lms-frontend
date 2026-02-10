@@ -34,6 +34,7 @@ interface BackendReservationRow {
   book_title?: string;
   book_author?: string;
   book_id_code?: string;
+  book_cover_url?: string;
 }
 
 // Backend paginated response structure
@@ -65,6 +66,7 @@ function transformReservation(r: BackendReservationRow): Reservation {
       title: r.book_title,
       author: r.book_author || "",
       isbn: r.book_id_code || "",
+      cover_url: r.book_cover_url,
       available_copies: 0, // Not available from this endpoint
     } : undefined,
     student: r.student_name ? {
