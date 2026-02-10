@@ -116,8 +116,8 @@ export default function OverdueTransactionsPage() {
             <div className="flex items-center gap-1.5">
               <p className="font-medium">{tx.student?.name || "Unknown"}</p>
               {tx.student?.is_deleted && (
-                <Badge className="text-[10px] px-1 py-0 h-4 bg-red-500/10 text-red-600 border-red-500/20">
-                  Deleted
+                <Badge className="text-[10px] px-1 py-0 h-4 bg-red-500/10 text-red-600 border-red-500/20" title={tx.student.deleted_by_name ? `Removed by ${tx.student.deleted_by_name}` : undefined}>
+                  Removed
                 </Badge>
               )}
             </div>

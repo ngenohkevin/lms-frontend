@@ -43,10 +43,42 @@ import {
   Trash2,
   Barcode,
   Search,
+  RotateCcw,
+  FileText,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils/format";
 import { toast } from "sonner";
 import type { Transaction } from "@/lib/types";
+
+type NoteTag = "LOST" | "FOUND" | "RENEWED" | "RENEWAL CANCELLED" | "CANCELLED";
+
+const NOTE_CONFIG: Record<NoteTag, { icon: typeof AlertOctagon; label: string; color: string; bg: string }> = {
+  LOST: { icon: AlertOctagon, label: "Marked as Lost", color: "text-red-500", bg: "bg-red-500/10" },
+  FOUND: { icon: Search, label: "Book Found", color: "text-green-500", bg: "bg-green-500/10" },
+  RENEWED: { icon: RefreshCw, label: "Renewed", color: "text-blue-500", bg: "bg-blue-500/10" },
+  "RENEWAL CANCELLED": { icon: RotateCcw, label: "Renewal Cancelled", color: "text-orange-500", bg: "bg-orange-500/10" },
+  CANCELLED: { icon: XCircle, label: "Cancelled", color: "text-orange-500", bg: "bg-orange-500/10" },
+};
+
+function parseTransactionNotes(notes: string) {
+  const entries = notes.split(/\n\n/).filter(Boolean);
+  const tagPattern = /^\[(LOST|FOUND|RENEWED|RENEWAL CANCELLED|CANCELLED)\]\s*/;
+
+  return entries.map((entry) => {
+    const match = entry.match(tagPattern);
+    if (match) {
+      const tag = match[1] as NoteTag;
+      const config = NOTE_CONFIG[tag];
+      let detail = entry.slice(match[0].length).trim();
+      // Clean up raw timestamps (e.g. "at 2026-02-10 12:53:44.913413+00")
+      detail = detail.replace(/\s+at\s+\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\.\d+\+\d{2}/, "");
+      // Clean up pipe separators into readable lines
+      detail = detail.replace(/\s*\|\s*/g, " — ");
+      return { ...config, detail: detail || null };
+    }
+    return { icon: FileText, label: "Note", color: "text-muted-foreground", bg: "bg-muted/50", detail: entry };
+  });
+}
 
 interface TransactionDetailDialogProps {
   transaction: Transaction | null;
@@ -396,8 +428,10 @@ export function TransactionDetailDialog({
                   {transaction.student?.name || "Unknown"}
                 </p>
                 {transaction.student?.is_deleted && (
-                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-red-500/10 text-red-600 border-red-500/20">
-                    Deleted
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-red-500/10 text-red-600 border-red-500/20 dark:text-red-400">
+                    {transaction.student.deleted_by_name
+                      ? `Removed by ${transaction.student.deleted_by_name}`
+                      : "Removed"}
                   </Badge>
                 )}
               </div>
@@ -616,13 +650,25 @@ export function TransactionDetailDialog({
             </>
           )}
 
-          {/* Notes - Compact */}
+          {/* Notes - Parsed Timeline */}
           {transaction.notes && (
             <>
               <Separator />
               <div>
-                <p className="text-xs text-muted-foreground mb-0.5">Notes</p>
-                <p className="text-xs">{transaction.notes}</p>
+                <p className="text-xs text-muted-foreground mb-1.5">Activity Log</p>
+                <div className="space-y-1.5">
+                  {parseTransactionNotes(transaction.notes).map((entry, i) => (
+                    <div key={i} className={`flex items-start gap-2 rounded-md px-2 py-1.5 text-xs ${entry.bg}`}>
+                      <entry.icon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${entry.color}`} />
+                      <div className="min-w-0">
+                        <span className={`font-medium ${entry.color}`}>{entry.label}</span>
+                        {entry.detail && (
+                          <p className="text-muted-foreground mt-0.5 break-words">{entry.detail}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </>
           )}

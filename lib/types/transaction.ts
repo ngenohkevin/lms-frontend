@@ -25,6 +25,7 @@ export interface Transaction {
     name: string;
     email: string;
     is_deleted?: boolean;
+    deleted_by_name?: string;
   };
   // Copy-level tracking fields
   copy_id?: number;
