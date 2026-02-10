@@ -85,7 +85,7 @@ const inventoryChartConfig = {
 
 const categoryChartConfig = {
   total_books: {
-    label: "Total Books",
+    label: "Titles",
     color: "hsl(var(--chart-1))",
   },
   total_borrowed: {
@@ -258,7 +258,7 @@ export default function DashboardPage() {
               <div>
                 <CardTitle>Inventory Status</CardTitle>
                 <CardDescription>
-                  Copy distribution across the library
+                  Physical copies across the library
                 </CardDescription>
               </div>
             </CardHeader>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
               <BarChart3 className="h-5 w-5 text-muted-foreground" />
               <div>
                 <CardTitle>Category Distribution</CardTitle>
-                <CardDescription>Top categories by book count</CardDescription>
+                <CardDescription>Top categories by title count</CardDescription>
               </div>
             </CardHeader>
             <CardContent>

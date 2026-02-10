@@ -161,9 +161,9 @@ export function DashboardMetricsCards({
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <MetricCard
-        title="Total Books"
+        title="Total Titles"
         value={formatNumber(metrics.total_books)}
-        description="Books in the library"
+        description="Unique books in catalog"
         icon={Library}
         variant="primary"
         index={0}
