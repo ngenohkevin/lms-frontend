@@ -133,6 +133,11 @@ export interface Fine {
   id: string;
   transaction_id: string;
   student_id: string;
+  student_name?: string;
+  student_code?: string;
+  book_title?: string;
+  book_author?: string;
+  book_cover_url?: string;
   amount: number;
   reason: string;
   paid: boolean;

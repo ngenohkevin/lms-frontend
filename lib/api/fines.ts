@@ -41,7 +41,10 @@ interface BackendFine {
   transaction_id: number;
   student_id: number;
   student_name?: string;
+  student_code?: string;
   book_title?: string;
+  book_author?: string;
+  book_cover_url?: string;
   amount: number;
   reason?: string;
   paid: boolean;
@@ -59,6 +62,11 @@ function transformFine(fine: BackendFine): Fine {
     id: String(fine.id),
     transaction_id: String(fine.transaction_id),
     student_id: String(fine.student_id),
+    student_name: fine.student_name,
+    student_code: fine.student_code,
+    book_title: fine.book_title,
+    book_author: fine.book_author,
+    book_cover_url: fine.book_cover_url,
     amount: fine.amount,
     reason: fine.reason || "Overdue book",
     paid: fine.paid,

@@ -29,10 +29,10 @@ import {
   CheckCircle,
   AlertTriangle,
   Loader2,
-  User,
   CreditCard,
   XCircle,
 } from "lucide-react";
+import { BookCoverImage } from "@/components/books/book-cover-image";
 import { toast } from "sonner";
 import type { Fine } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
@@ -122,19 +122,27 @@ export default function FinesPage() {
       ),
     },
     {
+      key: "book",
+      header: "Book",
+      render: (fine: Fine) => (
+        <div className="flex items-center gap-3">
+          <BookCoverImage src={fine.book_cover_url} alt={fine.book_title || ""} size="sm" />
+          <div className="min-w-0">
+            <p className="font-medium truncate">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
+            <p className="text-xs text-muted-foreground truncate">{fine.book_author}</p>
+          </div>
+        </div>
+      ),
+    },
+    {
       key: "student",
       header: "Student",
       render: (fine: Fine) => (
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-            <User className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="font-medium">Student #{fine.student_id}</p>
-            <p className="text-xs text-muted-foreground">
-              Transaction #{fine.transaction_id}
-            </p>
-          </div>
+        <div>
+          <p className="font-medium">{fine.student_name || `Student #${fine.student_id}`}</p>
+          {fine.student_code && (
+            <p className="text-xs text-muted-foreground">{fine.student_code}</p>
+          )}
         </div>
       ),
     },

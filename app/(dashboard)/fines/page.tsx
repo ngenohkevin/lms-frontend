@@ -31,6 +31,7 @@ import {
   Users,
   RefreshCw,
 } from "lucide-react";
+import { BookCoverImage } from "@/components/books/book-cover-image";
 import type { Fine, PaginatedResponse } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -123,19 +124,28 @@ export default function FinesPage() {
 
   const columns = [
     {
-      key: "student",
-      header: "Student",
+      key: "book",
+      header: "Book",
       render: (fine: Fine) => (
-        <div>
-          <p className="font-medium">Student #{fine.student_id}</p>
+        <div className="flex items-center gap-3">
+          <BookCoverImage src={fine.book_cover_url} alt={fine.book_title || ""} size="sm" />
+          <div className="min-w-0">
+            <p className="font-medium truncate">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
+            <p className="text-xs text-muted-foreground truncate">{fine.book_author}</p>
+          </div>
         </div>
       ),
     },
     {
-      key: "transaction",
-      header: "Transaction",
+      key: "student",
+      header: "Student",
       render: (fine: Fine) => (
-        <span className="text-sm text-muted-foreground">#{fine.transaction_id}</span>
+        <div>
+          <p className="font-medium">{fine.student_name || `Student #${fine.student_id}`}</p>
+          {fine.student_code && (
+            <p className="text-xs text-muted-foreground">{fine.student_code}</p>
+          )}
+        </div>
       ),
     },
     {
