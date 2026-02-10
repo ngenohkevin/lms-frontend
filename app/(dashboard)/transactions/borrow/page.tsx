@@ -57,7 +57,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 const borrowSchema = z.object({
-  due_days: z.number().min(1).max(90).optional(),
+  due_days: z.number().min(1).max(365).optional(),
   notes: z.string().optional(),
 });
 
@@ -96,6 +96,7 @@ function BorrowContent() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<BorrowFormData>({
     resolver: zodResolver(borrowSchema),
@@ -114,6 +115,7 @@ function BorrowContent() {
           if (book.available_copies >= 1) {
             setSelectedBook(book);
             setBookSearch(book.book_id || initialBookId);
+            setValue("due_days", book.book_type === "textbook" ? 365 : 14);
           } else {
             setError("This book is not available for borrowing");
           }
@@ -191,6 +193,7 @@ function BorrowContent() {
         setSelectedBook(null);
       } else {
         setSelectedBook(book);
+        setValue("due_days", book.book_type === "textbook" ? 365 : 14);
       }
     };
 
@@ -737,7 +740,7 @@ function BorrowContent() {
                   id="due_days"
                   type="number"
                   min={1}
-                  max={90}
+                  max={365}
                   {...register("due_days", { valueAsNumber: true })}
                 />
                 {errors.due_days && (
