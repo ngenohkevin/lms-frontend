@@ -69,27 +69,11 @@ export default function TransactionsPage() {
       key: "book",
       header: "Book",
       render: (tx: Transaction) => (
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:block">
-            <BookCoverImage src={tx.book?.cover_url} alt={tx.book?.title || "Book"} />
-          </div>
-          <div className="min-w-0">
+        <div className="flex items-center gap-3">
+          <BookCoverImage src={tx.book?.cover_url} alt={tx.book?.title || "Book"} />
+          <div>
             <p className="font-medium line-clamp-1">{tx.book?.title || "Unknown"}</p>
-            <p className="text-sm text-muted-foreground truncate">{tx.book?.author}</p>
-            {/* Show status inline on mobile since columns are hidden */}
-            <div className="flex items-center gap-1.5 mt-1 sm:hidden">
-              <Badge
-                variant="outline"
-                className={`text-[10px] px-1.5 py-0 h-5 ${statusColors[tx.status] || statusColors.active}`}
-              >
-                {tx.status}
-              </Badge>
-              {tx.fine_amount > 0 && !tx.fine_paid && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0 h-5">
-                  {formatCurrency(tx.fine_amount)}
-                </Badge>
-              )}
-            </div>
+            <p className="text-sm text-muted-foreground">{tx.book?.author}</p>
           </div>
         </div>
       ),
@@ -120,7 +104,6 @@ export default function TransactionsPage() {
     {
       key: "borrowed_at",
       header: "Borrowed",
-      className: "hidden lg:table-cell",
       render: (tx: Transaction) => (
         <span className="text-sm">{formatDate(tx.borrowed_at)}</span>
       ),
@@ -128,7 +111,6 @@ export default function TransactionsPage() {
     {
       key: "due_date",
       header: "Due Date",
-      className: "hidden md:table-cell",
       render: (tx: Transaction) => {
         const overdue = tx.status === "active" && isOverdue(tx.due_date);
         return (
@@ -148,7 +130,6 @@ export default function TransactionsPage() {
     {
       key: "status",
       header: "Status",
-      className: "hidden sm:table-cell",
       render: (tx: Transaction) => (
         <Badge
           variant="outline"
@@ -161,7 +142,6 @@ export default function TransactionsPage() {
     {
       key: "fine",
       header: "Fine",
-      className: "hidden sm:table-cell",
       render: (tx: Transaction) => (
         <span
           className={`text-sm ${
