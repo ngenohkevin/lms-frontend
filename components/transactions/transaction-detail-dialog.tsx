@@ -391,9 +391,16 @@ export function TransactionDetailDialog({
                 <User className="h-3.5 w-3.5" />
                 <span className="text-xs">Student</span>
               </div>
-              <p className="font-medium leading-tight">
-                {transaction.student?.name || "Unknown"}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-medium leading-tight">
+                  {transaction.student?.name || "Unknown"}
+                </p>
+                {transaction.student?.is_deleted && (
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-red-500/10 text-red-600 border-red-500/20">
+                    Deleted
+                  </Badge>
+                )}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {transaction.student?.student_id}
               </p>

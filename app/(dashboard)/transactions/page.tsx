@@ -85,7 +85,14 @@ export default function TransactionsPage() {
             header: "Student",
             render: (tx: Transaction) => (
               <div>
-                <p className="font-medium">{tx.student?.name || "Unknown"}</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="font-medium">{tx.student?.name || "Unknown"}</p>
+                  {tx.student?.is_deleted && (
+                    <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 bg-red-500/10 text-red-600 border-red-500/20">
+                      Deleted
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {tx.student?.student_id}
                 </p>

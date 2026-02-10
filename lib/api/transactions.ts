@@ -70,6 +70,7 @@ interface BackendTransactionRow {
   book_code?: string;
   status?: string;
   days_overdue?: number;
+  student_deleted?: boolean;
 }
 
 // Backend paginated response structures
@@ -188,6 +189,7 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
       student_id: studentCode,
       name: studentName,
       email: "", // Not available in this query
+      is_deleted: tx.student_deleted,
     },
     // Copy-level tracking fields
     copy_id: txWithCopy.copy_id,
