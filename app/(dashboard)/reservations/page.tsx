@@ -413,7 +413,7 @@ export default function ReservationsPage() {
               : "View your book reservations"}
           </p>
         </div>
-        <Button onClick={handleOpenNewReservation}>
+        <Button onClick={handleOpenNewReservation} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
           New Reservation
         </Button>

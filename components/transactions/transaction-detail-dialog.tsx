@@ -396,7 +396,7 @@ export function TransactionDetailDialog({
 
         <div className="space-y-3 text-sm">
           {/* Book & Student - Compact */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <BookOpen className="h-3.5 w-3.5" />
@@ -675,7 +675,7 @@ export function TransactionDetailDialog({
 
           {/* Actions - Compact Row */}
           <Separator />
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {isActiveTransaction && (
               <>
                 {canCancel() ? (

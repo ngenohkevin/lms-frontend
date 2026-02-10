@@ -115,11 +115,11 @@ export function Header() {
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="h-10 w-10 sm:h-9 sm:w-9 md:hidden"
             onClick={() => setCommandOpen(true)}
           >
             <Search className="h-5 w-5" />
@@ -129,7 +129,7 @@ export function Header() {
           {mounted && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="h-10 w-10 sm:h-9 sm:w-9">
                   {theme === "dark" ? (
                     <Moon className="h-5 w-5" />
                   ) : (
@@ -152,7 +152,7 @@ export function Header() {
             </DropdownMenu>
           )}
 
-          <Button variant="ghost" size="icon" asChild className="relative">
+          <Button variant="ghost" size="icon" asChild className="relative h-10 w-10 sm:h-9 sm:w-9">
             <Link href="/notifications">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (

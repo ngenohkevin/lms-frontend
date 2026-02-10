@@ -151,7 +151,7 @@ export function BookCard({
           {isAvailable ? (
             <Button
               size="sm"
-              className="w-full font-medium cursor-pointer"
+              className="w-full font-medium cursor-pointer h-10 sm:h-9"
               onClick={(e) => {
                 e.preventDefault();
                 onBorrow?.();
@@ -163,7 +163,7 @@ export function BookCard({
             <Button
               size="sm"
               variant="outline"
-              className="w-full font-medium cursor-pointer border-primary/20 hover:bg-primary/5"
+              className="w-full font-medium cursor-pointer border-primary/20 hover:bg-primary/5 h-10 sm:h-9"
               onClick={(e) => {
                 e.preventDefault();
                 onReserve?.();

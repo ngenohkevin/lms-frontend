@@ -259,7 +259,7 @@ export default function FinesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Fine Management</h1>
           <p className="text-muted-foreground">
@@ -267,7 +267,7 @@ export default function FinesPage() {
           </p>
         </div>
         {isAdmin && (
-          <Button onClick={handleCalculateFines} disabled={isProcessing}>
+          <Button onClick={handleCalculateFines} disabled={isProcessing} className="w-full sm:w-auto">
             <RefreshCw className={`mr-2 h-4 w-4 ${isProcessing ? "animate-spin" : ""}`} />
             Calculate Fines
           </Button>
@@ -275,7 +275,7 @@ export default function FinesPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Fines</CardTitle>
@@ -345,7 +345,7 @@ export default function FinesPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 md:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {highFineStudents.slice(0, 6).map((student) => (
                 <div
                   key={student.student_id}

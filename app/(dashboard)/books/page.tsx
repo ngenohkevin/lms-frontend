@@ -78,14 +78,14 @@ function BooksContent() {
           permission={PermissionCodes.BOOKS_CREATE}
           hideWhenDenied
         >
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" asChild className="flex-1 sm:flex-initial">
               <Link href="/books/import">
                 <Upload className="mr-2 h-4 w-4" />
-                Import
+                <span className="hidden sm:inline">Import</span>
               </Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="flex-1 sm:flex-initial">
               <Link href="/books/new">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Book
@@ -133,7 +133,7 @@ export default function BooksPage() {
             </div>
           </div>
           <Skeleton className="h-10 w-full" />
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="overflow-hidden rounded-lg border">
                 <Skeleton className="aspect-[2/3] w-full" />

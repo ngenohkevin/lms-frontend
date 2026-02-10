@@ -155,24 +155,24 @@ export default function StudentDetailPage() {
     <AuthGuard requiredRoles={["admin", "librarian"]}>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Button variant="ghost" asChild>
             <Link href="/students">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Students
             </Link>
           </Button>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
               <Link href={`/students/${student.id}/report`}>
-                <FileText className="mr-2 h-4 w-4" />
-                Report
+                <FileText className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Report</span>
               </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href={`/students/${student.id}/edit`}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Edit</span>
               </Link>
             </Button>
 
@@ -184,8 +184,8 @@ export default function StudentDetailPage() {
                     variant="secondary"
                     onClick={() => setShowSuspendDialog(true)}
                   >
-                    <Ban className="mr-2 h-4 w-4" />
-                    Suspend
+                    <Ban className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Suspend</span>
                   </Button>
                 )}
                 {canGraduate && (
@@ -193,8 +193,8 @@ export default function StudentDetailPage() {
                     variant="secondary"
                     onClick={() => setShowGraduateDialog(true)}
                   >
-                    <GraduationCap className="mr-2 h-4 w-4" />
-                    Graduate
+                    <GraduationCap className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">Graduate</span>
                   </Button>
                 )}
               </>
@@ -207,11 +207,11 @@ export default function StudentDetailPage() {
                 disabled={isReactivating}
               >
                 {isReactivating ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 sm:mr-2 animate-spin" />
                 ) : (
-                  <CheckCircle className="mr-2 h-4 w-4" />
+                  <CheckCircle className="h-4 w-4 sm:mr-2" />
                 )}
-                Reactivate
+                <span className="hidden sm:inline">Reactivate</span>
               </Button>
             )}
 
@@ -220,8 +220,8 @@ export default function StudentDetailPage() {
                 variant="destructive"
                 onClick={() => setShowDeleteDialog(true)}
               >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Delete</span>
               </Button>
             )}
           </div>

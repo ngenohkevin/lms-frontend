@@ -44,7 +44,7 @@ export function BookList({
 }: BookListProps) {
   if (isLoading) {
     return (
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {Array.from({ length: 10 }).map((_, i) => (
           <BookCardSkeleton key={i} />
         ))}
@@ -65,7 +65,7 @@ export function BookList({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
         {books.map((book) => (
           <BookCard
             key={book.id}
@@ -78,16 +78,17 @@ export function BookList({
       </div>
 
       {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground text-center sm:text-left">
             Showing {(pagination.page - 1) * pagination.per_page + 1} to{" "}
             {Math.min(pagination.page * pagination.per_page, pagination.total)}{" "}
             of {pagination.total} books
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center sm:justify-end gap-2">
             <Button
               variant="outline"
               size="sm"
+              className="h-10 sm:h-9"
               onClick={() => onPageChange?.(pagination.page - 1)}
               disabled={!pagination.has_prev}
             >
@@ -100,6 +101,7 @@ export function BookList({
             <Button
               variant="outline"
               size="sm"
+              className="h-10 sm:h-9"
               onClick={() => onPageChange?.(pagination.page + 1)}
               disabled={!pagination.has_next}
             >

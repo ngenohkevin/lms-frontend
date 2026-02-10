@@ -171,8 +171,8 @@ export default function TransactionsPage() {
           </p>
         </div>
         <PermissionGuard permission={PermissionCodes.TRANSACTIONS_BORROW} hideWhenDenied>
-          <div className="flex gap-2">
-            <Button asChild>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button asChild className="flex-1 sm:flex-initial">
               <Link href="/transactions/borrow">
                 <ArrowLeftRight className="mr-2 h-4 w-4" />
                 New Transaction
@@ -184,7 +184,7 @@ export default function TransactionsPage() {
 
       {/* Stats Cards */}
       {canViewAll && (
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           {statsLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <Card key={i}>

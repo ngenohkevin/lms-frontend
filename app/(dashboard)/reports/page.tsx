@@ -82,8 +82,8 @@ export default function ReportsPage() {
             </p>
           </div>
           <PermissionGuard permission={PermissionCodes.REPORTS_EXPORT} hideWhenDenied>
-            <div className="flex gap-2">
-              <Button variant="outline">
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="outline" className="flex-1 sm:flex-initial">
                 <Download className="mr-2 h-4 w-4" />
                 Export Report
               </Button>
@@ -92,7 +92,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Quick Reports Links */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
           <Link href="/reports/lost-books">
             <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -328,7 +328,7 @@ export default function ReportsPage() {
 
           {/* Inventory Tab */}
           <TabsContent value="inventory" className="space-y-6 mt-6">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               {inventoryLoading ? (
                 Array.from({ length: 4 }).map((_, i) => (
                   <Card key={i}>

@@ -115,18 +115,18 @@ export function DataTable<T extends { id: string }>({
               className="pl-10"
             />
           </div>
-          <Button type="submit" variant="secondary">
+          <Button type="submit" variant="secondary" className="hidden sm:inline-flex">
             Search
           </Button>
         </form>
       )}
 
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={column.key} className={column.className}>
+                <TableHead key={column.key} className={`whitespace-nowrap ${column.className || ""}`}>
                   {column.header}
                 </TableHead>
               ))}
@@ -164,7 +164,7 @@ export function DataTable<T extends { id: string }>({
       </div>
 
       {pagination && pagination.total_pages > 1 && (
-        <div className="flex items-center justify-between px-2">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between px-2">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>
               Showing {(pagination.page - 1) * pagination.per_page + 1} to{" "}
@@ -192,7 +192,7 @@ export function DataTable<T extends { id: string }>({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-10 w-10 sm:h-8 sm:w-8 hidden sm:inline-flex"
               onClick={() => onPageChange?.(1)}
               disabled={!pagination.has_prev}
             >
@@ -201,7 +201,7 @@ export function DataTable<T extends { id: string }>({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-10 w-10 sm:h-8 sm:w-8"
               onClick={() => onPageChange?.(pagination.page - 1)}
               disabled={!pagination.has_prev}
             >
@@ -213,7 +213,7 @@ export function DataTable<T extends { id: string }>({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-10 w-10 sm:h-8 sm:w-8"
               onClick={() => onPageChange?.(pagination.page + 1)}
               disabled={!pagination.has_next}
             >
@@ -222,7 +222,7 @@ export function DataTable<T extends { id: string }>({
             <Button
               variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-10 w-10 sm:h-8 sm:w-8 hidden sm:inline-flex"
               onClick={() => onPageChange?.(pagination.total_pages)}
               disabled={!pagination.has_next}
             >

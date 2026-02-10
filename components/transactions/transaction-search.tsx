@@ -221,7 +221,7 @@ export function TransactionSearch({
             value={`${sortBy}-${sortOrder}`}
             onValueChange={handleSortChange}
           >
-            <SelectTrigger className="w-full sm:w-[180px] h-11 border border-input">
+            <SelectTrigger className="flex-1 sm:flex-none sm:w-[180px] h-11 border border-input">
               <ArrowUpDown className="h-4 w-4 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
@@ -250,7 +250,7 @@ export function TransactionSearch({
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent className="w-full sm:max-w-md overflow-y-auto p-6">
+            <SheetContent className="w-full sm:max-w-md overflow-y-auto p-4 sm:p-6">
               <SheetHeader className="space-y-2">
                 <SheetTitle className="flex items-center gap-2 text-lg">
                   <Filter className="h-5 w-5 shrink-0" />
@@ -381,7 +381,7 @@ export function TransactionSearch({
             </SheetContent>
           </Sheet>
 
-          <Button onClick={() => handleSearch()} className="h-11">
+          <Button onClick={() => handleSearch()} className="h-11 hidden sm:inline-flex">
             Search
           </Button>
         </div>
