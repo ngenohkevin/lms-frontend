@@ -673,11 +673,11 @@ export function TransactionDetailDialog({
             </>
           )}
 
-          {/* Actions - Compact Row */}
+          {/* Actions */}
           <Separator />
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="space-y-2">
             {isActiveTransaction && (
-              <>
+              <div className="flex flex-wrap gap-2">
                 {canCancel() ? (
                   <Button
                     variant="outline"
@@ -690,7 +690,7 @@ export function TransactionDetailDialog({
                     <span className="ml-1 text-xs opacity-70">({getCancelTimeRemaining()})</span>
                   </Button>
                 ) : (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground self-center">
                     {getCancelExpiredMessage()}
                   </span>
                 )}
@@ -705,7 +705,7 @@ export function TransactionDetailDialog({
                     Mark Lost
                   </Button>
                 )}
-              </>
+              </div>
             )}
             {transaction.status === "lost" && (
               <Button
@@ -718,15 +718,17 @@ export function TransactionDetailDialog({
                 Mark Found
               </Button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-              className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800 ml-auto"
-            >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-              Delete
-            </Button>
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDeleteDialog(true)}
+                className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
+              >
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Delete
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
