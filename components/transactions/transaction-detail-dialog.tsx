@@ -376,21 +376,19 @@ export function TransactionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader className="pb-2">
-          <DialogTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              Transaction #{transaction.id}
-              <Badge variant="outline" className={getStatusColor(transaction.status)}>
-                {transaction.status}
+          <DialogTitle className="flex flex-wrap items-center gap-2">
+            <span>Transaction #{transaction.id}</span>
+            <Badge variant="outline" className={getStatusColor(transaction.status)}>
+              {transaction.status}
+            </Badge>
+            {renewalCount > 0 && (
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                <RefreshCw className="h-3 w-3 mr-1" />
+                {renewalCount}x renewed
               </Badge>
-              {renewalCount > 0 && (
-                <Badge variant="secondary" className="bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  {renewalCount}x renewed
-                </Badge>
-              )}
-            </span>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -444,7 +442,7 @@ export function TransactionDetailDialog({
           <Separator />
 
           {/* Dates - Compact Row */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <div>
               <div className="flex items-center gap-1 text-muted-foreground mb-0.5">
                 <Calendar className="h-3 w-3" />
@@ -620,8 +618,8 @@ export function TransactionDetailDialog({
                     </Button>
                   </div>
                 ) : canRenew ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <Input
                         type="number"
                         min={1}
@@ -632,12 +630,12 @@ export function TransactionDetailDialog({
                         className="w-16 h-8 text-sm"
                       />
                       <span className="text-xs text-muted-foreground">days</span>
-                      <span className="text-xs text-muted-foreground mx-1">→</span>
+                      <span className="text-xs text-muted-foreground">→</span>
                       <span className="text-xs font-medium">
                         {formatDate(calculateNewDueDate(transaction.due_date, extensionDays || 14))}
                       </span>
                     </div>
-                    <Button size="sm" onClick={handleRenew} disabled={isRenewing} className="h-8">
+                    <Button size="sm" onClick={handleRenew} disabled={isRenewing} className="h-8 ml-auto">
                       {isRenewing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Renew"}
                     </Button>
                   </div>
@@ -675,15 +673,15 @@ export function TransactionDetailDialog({
 
           {/* Actions */}
           <Separator />
-          <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             {isActiveTransaction && (
-              <div className="flex flex-wrap gap-2">
+              <>
                 {canCancel() ? (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowCancelDialog(true)}
-                    className="h-8 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800"
+                    className="h-9 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800"
                   >
                     <XCircle className="mr-1.5 h-3.5 w-3.5" />
                     Cancel
@@ -699,36 +697,34 @@ export function TransactionDetailDialog({
                     variant="outline"
                     size="sm"
                     onClick={() => setShowLostDialog(true)}
-                    className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
+                    className="h-9 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
                   >
                     <AlertOctagon className="mr-1.5 h-3.5 w-3.5" />
                     Mark Lost
                   </Button>
                 )}
-              </div>
+              </>
             )}
             {transaction.status === "lost" && (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFoundDialog(true)}
-                className="h-8 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800"
+                className="h-9 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800"
               >
                 <Search className="mr-1.5 h-3.5 w-3.5" />
                 Mark Found
               </Button>
             )}
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowDeleteDialog(true)}
-                className="h-8 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
-              >
-                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                Delete
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDeleteDialog(true)}
+              className="h-9 ml-auto text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+              Delete
+            </Button>
           </div>
         </div>
       </DialogContent>
