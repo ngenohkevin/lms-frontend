@@ -86,11 +86,11 @@ const inventoryChartConfig = {
 const categoryChartConfig = {
   total_books: {
     label: "Titles",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(221, 83%, 53%)",
   },
   total_borrowed: {
     label: "Borrowed",
-    color: "hsl(var(--chart-3))",
+    color: "hsl(142, 71%, 45%)",
   },
 } satisfies ChartConfig;
 
