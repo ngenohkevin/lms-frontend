@@ -70,7 +70,7 @@ const trendsChartConfig = {
 
 const inventoryChartConfig = {
   available: {
-    label: "Available",
+    label: "Available Copies",
     color: "hsl(142, 71%, 45%)",
   },
   checked_out: {
@@ -78,7 +78,7 @@ const inventoryChartConfig = {
     color: "hsl(38, 92%, 50%)",
   },
   lost: {
-    label: "Lost",
+    label: "Lost Copies",
     color: "hsl(0, 84%, 60%)",
   },
 } satisfies ChartConfig;
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="rounded-lg border p-3">
-                        <p className="text-xs text-muted-foreground">Available</p>
+                        <p className="text-xs text-muted-foreground">Available Copies</p>
                         <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
                           {formatNumber(inventory.available_copies)}
                         </p>
@@ -319,7 +319,7 @@ export default function DashboardPage() {
                         </p>
                       </div>
                       <div className="rounded-lg border p-3">
-                        <p className="text-xs text-muted-foreground">Lost</p>
+                        <p className="text-xs text-muted-foreground">Lost Copies</p>
                         <p className="text-xl font-bold text-red-600 dark:text-red-400">
                           {formatNumber(inventory.lost_books)}
                         </p>
