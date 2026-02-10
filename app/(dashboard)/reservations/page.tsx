@@ -20,7 +20,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { BookOpen, Clock, CheckCircle, XCircle, AlertTriangle, Bell, Loader2, Plus, Search, User, Trash2 } from "lucide-react";
+import { Clock, CheckCircle, XCircle, AlertTriangle, Bell, Loader2, Plus, Search, User, Trash2 } from "lucide-react";
+import { BookCoverImage } from "@/components/books/book-cover-image";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { Reservation, ReservationSearchParams, ReservationStatus, PaginatedResponse, Book, Student } from "@/lib/types";
 import { formatDate, formatRelativeTime } from "@/lib/utils/format";
@@ -281,9 +282,7 @@ export default function ReservationsPage() {
       header: "Book",
       render: (res: Reservation) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-8 rounded bg-muted flex items-center justify-center">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <BookCoverImage src={res.book?.cover_url} alt={res.book?.title || "Book"} />
           <div>
             <p className="font-medium line-clamp-1">{res.book?.title || "Unknown"}</p>
             <p className="text-sm text-muted-foreground">{res.book?.author}</p>
@@ -464,9 +463,7 @@ export default function ReservationsPage() {
               {/* Book Info */}
               <div className="rounded-lg border p-4">
                 <div className="flex items-start gap-4">
-                  <div className="h-14 w-11 rounded bg-muted flex items-center justify-center shrink-0">
-                    <BookOpen className="h-6 w-6 text-muted-foreground" />
-                  </div>
+                  <BookCoverImage src={createBook.cover_url} alt={createBook.title} size="md" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium">{createBook.title}</p>
                     <p className="text-sm text-muted-foreground">
@@ -588,9 +585,7 @@ export default function ReservationsPage() {
                           className="w-full px-3 py-2 text-left hover:bg-muted flex items-center gap-3"
                           onClick={() => handleSelectBook(book)}
                         >
-                          <div className="h-10 w-8 rounded bg-muted flex items-center justify-center shrink-0">
-                            <BookOpen className="h-4 w-4 text-muted-foreground" />
-                          </div>
+                          <BookCoverImage src={book.cover_url} alt={book.title} />
                           <div className="flex-1 min-w-0">
                             <p className="font-medium text-sm truncate">{book.title}</p>
                             <p className="text-xs text-muted-foreground">by {book.author}</p>

@@ -19,6 +19,7 @@ import {
   Clock,
   DollarSign,
 } from "lucide-react";
+import { BookCoverImage } from "@/components/books/book-cover-image";
 import type { Transaction, TransactionSearchParams, TransactionStatus } from "@/lib/types";
 import { formatDate, formatRelativeTime, isOverdue, formatCurrency } from "@/lib/utils/format";
 import { TransactionDetailDialog } from "@/components/transactions/transaction-detail-dialog";
@@ -69,9 +70,7 @@ export default function TransactionsPage() {
       header: "Book",
       render: (tx: Transaction) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-8 rounded bg-muted flex items-center justify-center">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <BookCoverImage src={tx.book?.cover_url} alt={tx.book?.title || "Book"} />
           <div>
             <p className="font-medium line-clamp-1">{tx.book?.title || "Unknown"}</p>
             <p className="text-sm text-muted-foreground">{tx.book?.author}</p>

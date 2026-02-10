@@ -13,12 +13,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   AlertTriangle,
-  BookOpen,
   User,
   DollarSign,
   Clock,
   Mail,
 } from "lucide-react";
+import { BookCoverImage } from "@/components/books/book-cover-image";
 import type { OverdueTransaction } from "@/lib/types";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { TransactionDetailDialog } from "@/components/transactions/transaction-detail-dialog";
@@ -96,9 +96,7 @@ export default function OverdueTransactionsPage() {
       header: "Book",
       render: (tx: OverdueTransaction) => (
         <div className="flex items-center gap-3">
-          <div className="h-10 w-8 rounded bg-muted flex items-center justify-center">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <BookCoverImage src={tx.book?.cover_url} alt={tx.book?.title || "Book"} />
           <div>
             <p className="font-medium line-clamp-1">{tx.book?.title || "Unknown"}</p>
             <p className="text-sm text-muted-foreground">{tx.book?.author}</p>

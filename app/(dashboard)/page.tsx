@@ -16,6 +16,7 @@ import {
   Clock,
   Star,
 } from "lucide-react";
+import { BookCoverImage } from "@/components/books/book-cover-image";
 import {
   ChartConfig,
   ChartContainer,
@@ -164,8 +165,11 @@ export default function DashboardPage() {
                     href={`/books/${book.book_id}`}
                     className="flex items-center gap-4 rounded-lg p-2 transition-colors hover:bg-muted"
                   >
-                    <div className="flex h-12 w-9 items-center justify-center rounded bg-muted text-lg font-bold text-muted-foreground">
-                      {index + 1}
+                    <div className="relative">
+                      <BookCoverImage src={book.cover_url} alt={book.title} />
+                      <span className="absolute -top-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                        {index + 1}
+                      </span>
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{book.title}</p>
