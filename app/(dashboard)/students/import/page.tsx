@@ -133,8 +133,8 @@ export default function StudentImportPage() {
       "max_books",
     ];
     const sampleData = [
-      "STU2025001,John,Doe,1,john.doe@school.edu,+254700000001,5",
-      "STU2025002,Jane,Smith,2,,,",
+      "STU001,John,Doe,1,john.doe@school.edu,+254700000001,5",
+      "STU002,Jane,Smith,2,,,",
     ];
 
     const csvContent = [headers.join(","), ...sampleData].join("\n");
@@ -337,9 +337,9 @@ export default function StudentImportPage() {
                 <h4 className="font-medium">Notes</h4>
                 <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
                   <li>First row must contain column headers</li>
-                  <li>student_id must be unique (e.g., STU2025001)</li>
+                  <li>student_id must be unique (e.g., STU001)</li>
                   <li>Duplicate student IDs will be skipped</li>
-                  <li>year_of_study must be between 1 and 8</li>
+                  <li>year_of_study must be between 1 and 13</li>
                   <li>Max books allowed defaults to 5</li>
                   <li>Default password is the student ID</li>
                   <li>Maximum file size is 10MB</li>
@@ -373,7 +373,7 @@ export default function StudentImportPage() {
                     </TableHeader>
                     <TableBody>
                       <TableRow>
-                        <TableCell className="text-xs font-mono">STU2025001</TableCell>
+                        <TableCell className="text-xs font-mono">STU001</TableCell>
                         <TableCell className="text-xs">John</TableCell>
                         <TableCell className="text-xs">Doe</TableCell>
                         <TableCell className="text-xs">1</TableCell>
@@ -382,7 +382,7 @@ export default function StudentImportPage() {
                         <TableCell className="text-xs">5</TableCell>
                       </TableRow>
                       <TableRow>
-                        <TableCell className="text-xs font-mono">STU2025002</TableCell>
+                        <TableCell className="text-xs font-mono">STU002</TableCell>
                         <TableCell className="text-xs">Jane</TableCell>
                         <TableCell className="text-xs">Smith</TableCell>
                         <TableCell className="text-xs">2</TableCell>

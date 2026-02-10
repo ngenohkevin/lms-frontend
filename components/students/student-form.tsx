@@ -33,7 +33,7 @@ const studentSchema = z.object({
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
   phone: z.string().optional(),
-  year_of_study: z.number().min(1).max(10).optional(),
+  year_of_study: z.number().min(1).max(13).optional(),
   max_books: z.number().min(1).max(20).optional(),
   password: z.string().min(6, "Password must be at least 6 characters").optional().or(z.literal("")),
   enrollment_date: z.string().optional().refine(
@@ -142,7 +142,7 @@ export function StudentForm({ student, onSuccess, onCancel }: StudentFormProps) 
           <Label htmlFor="student_id">Student ID *</Label>
           <Input
             id="student_id"
-            placeholder="STU-001"
+            placeholder="STU001"
             {...register("student_id")}
             disabled={isEditing}
           />

@@ -89,8 +89,8 @@ export default function AcademicYearsPage() {
     }
 
     const levelNum = parseInt(level, 10);
-    if (isNaN(levelNum) || levelNum < 1 || levelNum > 10) {
-      toast.error("Level must be a number between 1 and 10");
+    if (isNaN(levelNum) || levelNum < 1 || levelNum > 13) {
+      toast.error("Level must be a number between 1 and 13");
       return;
     }
 
@@ -119,8 +119,8 @@ export default function AcademicYearsPage() {
     }
 
     const levelNum = parseInt(level, 10);
-    if (isNaN(levelNum) || levelNum < 1 || levelNum > 10) {
-      toast.error("Level must be a number between 1 and 10");
+    if (isNaN(levelNum) || levelNum < 1 || levelNum > 13) {
+      toast.error("Level must be a number between 1 and 13");
       return;
     }
 
@@ -232,13 +232,13 @@ export default function AcademicYearsPage() {
                       id="level"
                       type="number"
                       min={1}
-                      max={10}
+                      max={13}
                       placeholder="e.g., 1"
                       value={level}
                       onChange={(e) => setLevel(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Numeric level for ordering (1-10). Each level must be unique.
+                      Numeric level for ordering (1-13). Each level must be unique.
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -390,13 +390,13 @@ export default function AcademicYearsPage() {
                   id="edit-level"
                   type="number"
                   min={1}
-                  max={10}
+                  max={13}
                   placeholder="e.g., 1"
                   value={level}
                   onChange={(e) => setLevel(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Numeric level for ordering (1-10). Each level must be unique.
+                  Numeric level for ordering (1-13). Each level must be unique.
                 </p>
               </div>
               <div className="space-y-2">
