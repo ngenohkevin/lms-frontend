@@ -673,58 +673,57 @@ export function TransactionDetailDialog({
 
           {/* Actions */}
           <Separator />
-          <div className="flex flex-wrap gap-2">
-            {isActiveTransaction && (
-              <>
-                {canCancel() ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowCancelDialog(true)}
-                    className="h-9 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800"
-                  >
-                    <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                    Cancel
-                    <span className="ml-1 text-xs opacity-70">({getCancelTimeRemaining()})</span>
-                  </Button>
-                ) : (
-                  <span className="text-xs text-muted-foreground self-center">
-                    {getCancelExpiredMessage()}
-                  </span>
-                )}
-                {canMarkAsLost() && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowLostDialog(true)}
-                    className="h-9 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
-                  >
-                    <AlertOctagon className="mr-1.5 h-3.5 w-3.5" />
-                    Mark Lost
-                  </Button>
-                )}
-              </>
+          <div className="space-y-2">
+            {isActiveTransaction && !canCancel() && (
+              <p className="text-xs text-muted-foreground">
+                {getCancelExpiredMessage()}
+              </p>
             )}
-            {transaction.status === "lost" && (
+            <div className="flex gap-2">
+              {isActiveTransaction && canCancel() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCancelDialog(true)}
+                  className="h-9 flex-1 text-orange-600 border-orange-200 hover:bg-orange-50 dark:text-orange-400 dark:border-orange-800"
+                >
+                  <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                  Cancel
+                  <span className="ml-1 text-xs opacity-70">({getCancelTimeRemaining()})</span>
+                </Button>
+              )}
+              {isActiveTransaction && canMarkAsLost() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowLostDialog(true)}
+                  className="h-9 flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
+                >
+                  <AlertOctagon className="mr-1.5 h-3.5 w-3.5" />
+                  Mark Lost
+                </Button>
+              )}
+              {transaction.status === "lost" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowFoundDialog(true)}
+                  className="h-9 flex-1 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800"
+                >
+                  <Search className="mr-1.5 h-3.5 w-3.5" />
+                  Mark Found
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowFoundDialog(true)}
-                className="h-9 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800"
+                onClick={() => setShowDeleteDialog(true)}
+                className="h-9 flex-1 text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
               >
-                <Search className="mr-1.5 h-3.5 w-3.5" />
-                Mark Found
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                Delete
               </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-              className="h-9 ml-auto text-red-600 border-red-200 hover:bg-red-50 dark:text-red-400 dark:border-red-800"
-            >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-              Delete
-            </Button>
+            </div>
           </div>
         </div>
       </DialogContent>
