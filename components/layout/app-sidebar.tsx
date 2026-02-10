@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -36,6 +37,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -149,6 +151,14 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user, logout, hasRole } = useAuth();
   const { hasPermission, isLoading: permissionsLoading } = usePermissions();
+  const { setOpenMobile, isMobile } = useSidebar();
+
+  // Close mobile sidebar on navigation
+  useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, isMobile, setOpenMobile]);
 
   // Filter items based on permissions (preferred) or roles (fallback)
   const filterByAccess = (items: NavItem[]) =>

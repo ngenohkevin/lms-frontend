@@ -398,7 +398,7 @@ export default function QuickScanPage() {
             </p>
           </div>
 
-          <div className="flex flex-col items-end gap-1 self-start sm:self-auto">
+          <div className="flex flex-col items-end gap-1 self-end sm:self-auto">
             <div className="flex items-center gap-2 rounded-lg border px-3 py-2">
               <Label htmlFor="continuous" className="text-sm font-medium cursor-pointer select-none">
                 Continuous

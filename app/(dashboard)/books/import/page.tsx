@@ -405,7 +405,7 @@ export default function BookImportPage() {
                 The following rows could not be imported
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>

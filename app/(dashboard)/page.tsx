@@ -150,14 +150,14 @@ export default function DashboardPage() {
           </p>
         </div>
         {isLibrarian && (
-          <div className="flex gap-2">
-            <Button asChild>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button asChild className="flex-1 sm:flex-initial">
               <Link href="/books/new">
                 <BookPlus className="mr-2 h-4 w-4" />
                 Add Book
               </Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="flex-1 sm:flex-initial">
               <Link href="/students/new">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Add Student
@@ -349,7 +349,7 @@ export default function DashboardPage() {
                 <CardDescription>Top categories by title count</CardDescription>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-hidden">
               {inventoryLoading ? (
                 <Skeleton className="h-[300px] w-full" />
               ) : topCategories.length > 0 ? (
@@ -357,19 +357,19 @@ export default function DashboardPage() {
                   <BarChart
                     data={topCategories}
                     layout="vertical"
-                    margin={{ left: 0, right: 12 }}
+                    margin={{ left: -10, right: 12 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
                     <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
                     <YAxis
                       type="category"
                       dataKey="category"
-                      fontSize={12}
+                      fontSize={11}
                       tickLine={false}
                       axisLine={false}
-                      width={100}
+                      width={80}
                       tickFormatter={(value: string) =>
-                        value.length > 14 ? value.slice(0, 14) + "..." : value
+                        value.length > 12 ? value.slice(0, 12) + "…" : value
                       }
                     />
                     <ChartTooltip content={<ChartTooltipContent />} />
@@ -397,15 +397,15 @@ export default function DashboardPage() {
 
         {/* Popular Books - Enhanced List */}
         <Card className={!isLibrarian ? "lg:col-span-2" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <CardTitle>Popular Books</CardTitle>
-                <CardDescription>Most borrowed books this month</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <BookOpen className="h-5 w-5 shrink-0 text-muted-foreground" />
+              <div className="min-w-0">
+                <CardTitle className="truncate">Popular Books</CardTitle>
+                <CardDescription className="truncate">Most borrowed books this month</CardDescription>
               </div>
             </div>
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="ghost" size="sm" asChild className="shrink-0">
               <Link href="/books">
                 View All <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
