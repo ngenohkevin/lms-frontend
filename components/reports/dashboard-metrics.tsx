@@ -31,6 +31,7 @@ interface MetricCardProps {
   };
   variant?: "default" | "primary" | "success" | "warning" | "danger";
   className?: string;
+  index?: number;
 }
 
 const variantStyles = {
@@ -69,11 +70,15 @@ function MetricCard({
   trend,
   variant = "default",
   className,
+  index = 0,
 }: MetricCardProps) {
   const styles = variantStyles[variant];
 
   return (
-    <Card className={cn(styles.card, className)}>
+    <Card
+      className={cn(styles.card, "animate-in fade-in slide-in-from-bottom-2 duration-500 fill-mode-both", className)}
+      style={{ animationDelay: `${index * 75}ms` }}
+    >
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="space-y-2">
@@ -161,6 +166,7 @@ export function DashboardMetricsCards({
         description="Books in the library"
         icon={Library}
         variant="primary"
+        index={0}
       />
       <MetricCard
         title="Active Transactions"
@@ -168,6 +174,7 @@ export function DashboardMetricsCards({
         description="Currently borrowed"
         icon={ArrowLeftRight}
         variant="success"
+        index={1}
       />
       <MetricCard
         title="Overdue"
@@ -175,6 +182,7 @@ export function DashboardMetricsCards({
         description="Books past due date"
         icon={AlertTriangle}
         variant={metrics.overdue_books > 0 ? "danger" : "default"}
+        index={2}
       />
       <MetricCard
         title="Pending Reservations"
@@ -182,6 +190,7 @@ export function DashboardMetricsCards({
         description="Awaiting fulfillment"
         icon={BookMarked}
         variant="warning"
+        index={3}
       />
 
       {showLibrarianMetrics && (
@@ -192,6 +201,7 @@ export function DashboardMetricsCards({
             description="Registered students"
             icon={Users}
             variant="primary"
+            index={4}
           />
           <MetricCard
             title="Borrowed Today"
@@ -199,6 +209,7 @@ export function DashboardMetricsCards({
             description="Books checked out today"
             icon={BookOpen}
             variant="success"
+            index={5}
           />
           <MetricCard
             title="Returned Today"
@@ -206,6 +217,7 @@ export function DashboardMetricsCards({
             description="Books returned today"
             icon={BookOpen}
             variant="success"
+            index={6}
           />
           <MetricCard
             title="Unpaid Fines"
@@ -213,6 +225,7 @@ export function DashboardMetricsCards({
             description="Outstanding fines"
             icon={DollarSign}
             variant={metrics.total_fines > 0 ? "warning" : "default"}
+            index={7}
           />
         </>
       )}

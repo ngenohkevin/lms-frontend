@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
-import { useDashboardMetrics, usePopularBooks, useBorrowingTrends } from "@/lib/hooks/use-reports";
+import {
+  useDashboardMetrics,
+  usePopularBooks,
+  useBorrowingTrends,
+  useInventoryReport,
+  useCategoryStats,
+  useOverdueReport,
+} from "@/lib/hooks/use-reports";
 import { DashboardMetricsCards } from "@/components/reports/dashboard-metrics";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +22,11 @@ import {
   ArrowLeftRight,
   Clock,
   Star,
+  TrendingUp,
+  BarChart3,
+  PieChart as PieChartIcon,
+  AlertTriangle,
+  BookOpen,
 } from "lucide-react";
 import { BookCoverImage } from "@/components/books/book-cover-image";
 import {
@@ -22,11 +34,31 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis } from "recharts";
-import { formatDate } from "@/lib/utils/format";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+} from "recharts";
+import { formatDate, formatNumber } from "@/lib/utils/format";
 
-const chartConfig = {
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+const trendsChartConfig = {
   borrowed: {
     label: "Borrowed",
     color: "hsl(var(--chart-1))",
@@ -37,11 +69,75 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const inventoryChartConfig = {
+  available: {
+    label: "Available",
+    color: "hsl(142, 71%, 45%)",
+  },
+  checked_out: {
+    label: "Checked Out",
+    color: "hsl(38, 92%, 50%)",
+  },
+  lost: {
+    label: "Lost",
+    color: "hsl(0, 84%, 60%)",
+  },
+} satisfies ChartConfig;
+
+const categoryChartConfig = {
+  total_books: {
+    label: "Total Books",
+    color: "hsl(var(--chart-1))",
+  },
+  total_borrowed: {
+    label: "Borrowed",
+    color: "hsl(var(--chart-3))",
+  },
+} satisfies ChartConfig;
+
+const INVENTORY_COLORS = ["hsl(142, 71%, 45%)", "hsl(38, 92%, 50%)", "hsl(0, 84%, 60%)"];
+
+const RANK_STYLES = [
+  "bg-amber-400/20 text-amber-600 dark:text-amber-400 border border-amber-400/30",
+  "bg-slate-300/20 text-slate-600 dark:text-slate-400 border border-slate-400/30",
+  "bg-orange-400/20 text-orange-600 dark:text-orange-400 border border-orange-400/30",
+];
+
+const OVERDUE_COLORS: Record<string, string> = {
+  "1-7 days": "text-amber-600 dark:text-amber-400",
+  "8-14 days": "text-orange-600 dark:text-orange-400",
+  "15-30 days": "text-red-500 dark:text-red-400",
+  "31+ days": "text-red-700 dark:text-red-300",
+};
+
 export default function DashboardPage() {
   const { user, isLibrarian } = useAuth();
   const { metrics, isLoading: metricsLoading } = useDashboardMetrics();
   const { books: popularBooks, isLoading: booksLoading } = usePopularBooks({ limit: 5 });
   const { trends, isLoading: trendsLoading } = useBorrowingTrends();
+  const { report: inventory, isLoading: inventoryLoading } = useInventoryReport();
+  const { stats: categoryStats, isLoading: categoryLoading } = useCategoryStats();
+  const { report: overdueReport, isLoading: overdueLoading } = useOverdueReport();
+
+  const inventoryPieData = inventory
+    ? [
+        { name: "Available", value: inventory.available_copies },
+        { name: "Checked Out", value: inventory.checked_out },
+        { name: "Lost", value: inventory.lost_books },
+      ]
+    : [];
+
+  const utilization = inventory && inventory.total_copies > 0
+    ? Math.round((inventory.checked_out / inventory.total_copies) * 100)
+    : 0;
+
+  const topCategories = [...categoryStats]
+    .sort((a, b) => b.total_books - a.total_books)
+    .slice(0, 8);
+
+  const maxBorrows = popularBooks.length > 0
+    ? Math.max(...popularBooks.map((b) => b.borrow_count))
+    : 1;
 
   return (
     <div className="space-y-6">
@@ -49,7 +145,7 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Welcome back, {user?.username?.split("@")[0] || "User"}!
+            {getGreeting()}, {user?.username?.split("@")[0] || "User"}!
           </h1>
           <p className="text-muted-foreground">
             Here&apos;s what&apos;s happening in the library today.
@@ -80,62 +176,236 @@ export default function DashboardPage() {
         showLibrarianMetrics={isLibrarian}
       />
 
-      {/* Charts and Tables Section */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Borrowing Trends Chart */}
-        {isLibrarian && (
+      {/* Primary Charts Row */}
+      {isLibrarian && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Borrowing Trends - AreaChart */}
           <Card>
-            <CardHeader>
-              <CardTitle>Borrowing Trends</CardTitle>
-              <CardDescription>
-                Book borrowing and returns over the past 30 days
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Borrowing Trends</CardTitle>
+                <CardDescription>
+                  Borrowing and returns over the past 30 days
+                </CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               {trendsLoading ? (
                 <Skeleton className="h-[300px] w-full" />
               ) : trends && trends.length > 0 ? (
-                <ChartContainer config={chartConfig} className="h-[300px] w-full">
-                  <LineChart data={trends}>
+                <ChartContainer config={trendsChartConfig} className="h-[300px] w-full">
+                  <AreaChart data={trends}>
+                    <defs>
+                      <linearGradient id="fillBorrowed" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-borrowed)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--color-borrowed)" stopOpacity={0.02} />
+                      </linearGradient>
+                      <linearGradient id="fillReturned" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="var(--color-returned)" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="var(--color-returned)" stopOpacity={0.02} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis
                       dataKey="date"
                       tickFormatter={(value) => formatDate(value, "MMM d")}
                       stroke="#888888"
                       fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
                     />
-                    <YAxis stroke="#888888" fontSize={12} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line
+                    <YAxis
+                      stroke="#888888"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          labelFormatter={(value) => formatDate(value, "EEEE, MMM d, yyyy")}
+                        />
+                      }
+                    />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Area
                       type="monotone"
                       dataKey="borrowed"
                       stroke="var(--color-borrowed)"
                       strokeWidth={2}
-                      dot={false}
+                      fill="url(#fillBorrowed)"
                     />
-                    <Line
+                    <Area
                       type="monotone"
                       dataKey="returned"
                       stroke="var(--color-returned)"
                       strokeWidth={2}
-                      dot={false}
+                      fill="url(#fillReturned)"
                     />
-                  </LineChart>
+                  </AreaChart>
                 </ChartContainer>
               ) : (
                 <div className="flex h-[300px] items-center justify-center text-muted-foreground">
-                  No data available
+                  No trend data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Inventory Status - Donut + Stats */}
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <PieChartIcon className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Inventory Status</CardTitle>
+                <CardDescription>
+                  Copy distribution across the library
+                </CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {inventoryLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : inventory ? (
+                <div className="flex flex-col sm:flex-row items-center gap-6">
+                  <ChartContainer config={inventoryChartConfig} className="h-[200px] w-[200px] shrink-0">
+                    <PieChart>
+                      <Pie
+                        data={inventoryPieData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={55}
+                        outerRadius={85}
+                        paddingAngle={3}
+                        dataKey="value"
+                        strokeWidth={0}
+                      >
+                        {inventoryPieData.map((_, index) => (
+                          <Cell key={index} fill={INVENTORY_COLORS[index]} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    </PieChart>
+                  </ChartContainer>
+                  <div className="flex-1 space-y-4 w-full">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Utilization</span>
+                        <span className="font-semibold">{utilization}%</span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-amber-500 transition-all duration-500"
+                          style={{ width: `${utilization}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Available</p>
+                        <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                          {formatNumber(inventory.available_copies)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Checked Out</p>
+                        <p className="text-xl font-bold text-amber-600 dark:text-amber-400">
+                          {formatNumber(inventory.checked_out)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Total Copies</p>
+                        <p className="text-xl font-bold">
+                          {formatNumber(inventory.total_copies)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">Lost</p>
+                        <p className="text-xl font-bold text-red-600 dark:text-red-400">
+                          {formatNumber(inventory.lost_books)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  No inventory data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Secondary Row */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Category Distribution - Horizontal BarChart */}
+        {isLibrarian && (
+          <Card>
+            <CardHeader className="flex flex-row items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Category Distribution</CardTitle>
+                <CardDescription>Top categories by book count</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {categoryLoading ? (
+                <Skeleton className="h-[300px] w-full" />
+              ) : topCategories.length > 0 ? (
+                <ChartContainer config={categoryChartConfig} className="h-[300px] w-full">
+                  <BarChart
+                    data={topCategories}
+                    layout="vertical"
+                    margin={{ left: 0, right: 12 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" horizontal={false} />
+                    <XAxis type="number" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis
+                      type="category"
+                      dataKey="category"
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={false}
+                      width={100}
+                      tickFormatter={(value: string) =>
+                        value.length > 14 ? value.slice(0, 14) + "..." : value
+                      }
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar
+                      dataKey="total_books"
+                      fill="var(--color-total_books)"
+                      radius={[0, 4, 4, 0]}
+                    />
+                    <Bar
+                      dataKey="total_borrowed"
+                      fill="var(--color-total_borrowed)"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <div className="flex h-[300px] items-center justify-center text-muted-foreground">
+                  No category data available
                 </div>
               )}
             </CardContent>
           </Card>
         )}
 
-        {/* Popular Books */}
+        {/* Popular Books - Enhanced List */}
         <Card className={!isLibrarian ? "lg:col-span-2" : ""}>
           <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Popular Books</CardTitle>
-              <CardDescription>Most borrowed books this month</CardDescription>
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Popular Books</CardTitle>
+                <CardDescription>Most borrowed books this month</CardDescription>
+              </div>
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link href="/books">
@@ -148,6 +418,7 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex items-center gap-4">
+                    <Skeleton className="h-5 w-5 rounded-full" />
                     <Skeleton className="h-12 w-9 rounded" />
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-3/4" />
@@ -158,34 +429,42 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : popularBooks && popularBooks.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {popularBooks.map((book, index) => (
                   <Link
                     key={book.book_id}
                     href={`/books/${book.book_id}`}
-                    className="flex items-center gap-4 rounded-lg p-2 transition-colors hover:bg-muted"
+                    className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted"
                   >
-                    <div className="relative">
-                      <BookCoverImage src={book.cover_url} alt={book.title} />
-                      <span className="absolute -top-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                        {index + 1}
-                      </span>
-                    </div>
+                    <span
+                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                        index < 3 ? RANK_STYLES[index] : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {index + 1}
+                    </span>
+                    <BookCoverImage src={book.cover_url} alt={book.title} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{book.title}</p>
-                      <p className="text-sm text-muted-foreground truncate">
+                      <p className="font-medium truncate text-sm">{book.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">
                         {book.author}
                       </p>
+                      <div className="mt-1 h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-primary/60 transition-all duration-500"
+                          style={{ width: `${(book.borrow_count / maxBorrows) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {book.average_rating && (
-                        <div className="flex items-center gap-1 text-sm">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <div className="flex items-center gap-1 text-xs">
+                          <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
                           {book.average_rating.toFixed(1)}
                         </div>
                       )}
-                      <Badge variant="secondary">
-                        {book.borrow_count} borrows
+                      <Badge variant="secondary" className="text-xs">
+                        {book.borrow_count}
                       </Badge>
                     </div>
                   </Link>
@@ -199,6 +478,52 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Overdue Breakdown */}
+      {isLibrarian && overdueReport && overdueReport.overdue_by_days && overdueReport.overdue_by_days.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <CardTitle>Overdue Breakdown</CardTitle>
+                <CardDescription>
+                  {formatNumber(overdueReport.total_overdue)} total overdue books by duration
+                </CardDescription>
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/reports">
+                Full Report <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {overdueLoading ? (
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
+                {overdueReport.overdue_by_days.map((item) => (
+                  <div
+                    key={item.range}
+                    className="rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                  >
+                    <p className="text-sm text-muted-foreground">{item.range}</p>
+                    <p className={`text-3xl font-bold mt-1 ${OVERDUE_COLORS[item.range] || "text-foreground"}`}>
+                      {formatNumber(item.count)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">books overdue</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Actions */}
       <div>
