@@ -68,6 +68,7 @@ interface BackendTransactionRow {
   book_title?: string;
   book_author?: string;
   book_code?: string;
+  book_cover_url?: string;
   status?: string;
   days_overdue?: number;
   student_deleted?: boolean;
@@ -183,6 +184,7 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
       title: bookTitle,
       author: bookAuthor,
       isbn: bookCode,
+      cover_url: tx.book_cover_url,
     },
     student: {
       id: String(tx.student_id),
