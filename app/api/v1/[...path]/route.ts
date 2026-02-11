@@ -73,12 +73,14 @@ async function proxyRequest(request: NextRequest, path: string[]) {
       });
     }
 
-    // Handle binary responses (images, files, etc.)
+    // Handle binary/download responses (images, files, exports, etc.)
     if (
       resContentType?.startsWith("image/") ||
       resContentType?.startsWith("application/octet-stream") ||
       resContentType?.includes("application/pdf") ||
-      resContentType?.includes("application/zip")
+      resContentType?.includes("application/zip") ||
+      resContentType?.includes("text/csv") ||
+      resContentType?.includes("application/vnd.openxmlformats")
     ) {
       const buffer = await response.arrayBuffer();
 

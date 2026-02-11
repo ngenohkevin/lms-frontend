@@ -26,6 +26,7 @@ import {
   IntervalSelect,
 } from "@/components/reports";
 import { useFinesCollectionReport } from "@/lib/hooks/use-reports";
+import { formatKsh } from "@/lib/utils/format";
 import type { FinesCollectionReportRequest } from "@/lib/types";
 
 export default function FinesCollectionReportPage() {
@@ -99,19 +100,19 @@ export default function FinesCollectionReportPage() {
               <SummaryGrid columns={4}>
                 <SummaryCard
                   title="Total Fines Generated"
-                  value={`KSH ${report.summary.total_fines_generated}`}
+                  value={formatKsh(report.summary.total_fines_generated)}
                   icon={<DollarSign className="h-4 w-4" />}
                   subtitle={`${report.summary.total_fine_records} records`}
                 />
                 <SummaryCard
                   title="Total Collected"
-                  value={`KSH ${report.summary.total_collected}`}
+                  value={formatKsh(report.summary.total_collected)}
                   icon={<DollarSign className="h-4 w-4" />}
                   valueClassName="text-green-600"
                 />
                 <SummaryCard
                   title="Outstanding"
-                  value={`KSH ${report.summary.total_outstanding}`}
+                  value={formatKsh(report.summary.total_outstanding)}
                   icon={<AlertCircle className="h-4 w-4" />}
                   subtitle={`${report.summary.students_with_outstanding} students`}
                   valueClassName={parseFloat(report.summary.total_outstanding) > 0 ? "text-destructive" : ""}
@@ -120,7 +121,7 @@ export default function FinesCollectionReportPage() {
                   title="Collection Rate"
                   value={`${report.summary.collection_rate}%`}
                   icon={<Percent className="h-4 w-4" />}
-                  subtitle={`Avg fine: KSH ${report.summary.average_fine}`}
+                  subtitle={`Avg fine: ${formatKsh(report.summary.average_fine)}`}
                 />
               </SummaryGrid>
             </PrintSection>
@@ -129,13 +130,13 @@ export default function FinesCollectionReportPage() {
             <SummaryGrid columns={2}>
               <SummaryCard
                 title="Total Waived"
-                value={`KSH ${report.summary.total_waived}`}
+                value={formatKsh(report.summary.total_waived)}
                 icon={<Receipt className="h-4 w-4" />}
                 subtitle="Fines waived by librarians"
               />
               <SummaryCard
                 title="Average Fine Amount"
-                value={`KSH ${report.summary.average_fine}`}
+                value={formatKsh(report.summary.average_fine)}
                 icon={<DollarSign className="h-4 w-4" />}
               />
             </SummaryGrid>
@@ -169,9 +170,9 @@ export default function FinesCollectionReportPage() {
                               <TableCell className="font-medium">Year {year.year_of_study}</TableCell>
                               <TableCell className="text-right">{year.fine_count}</TableCell>
                               <TableCell className="text-right hidden sm:table-cell">{year.students_affected}</TableCell>
-                              <TableCell className="text-right">KSH {year.total_fines}</TableCell>
-                              <TableCell className="text-right text-green-600 hidden sm:table-cell">KSH {year.paid_amount}</TableCell>
-                              <TableCell className="text-right text-destructive">KSH {year.outstanding_amount}</TableCell>
+                              <TableCell className="text-right">{formatKsh(year.total_fines)}</TableCell>
+                              <TableCell className="text-right text-green-600 hidden sm:table-cell">{formatKsh(year.paid_amount)}</TableCell>
+                              <TableCell className="text-right text-destructive">{formatKsh(year.outstanding_amount)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -209,9 +210,9 @@ export default function FinesCollectionReportPage() {
                             <TableRow key={i}>
                               <TableCell className="font-medium">{trend.period}</TableCell>
                               <TableCell className="text-right">{trend.fine_count}</TableCell>
-                              <TableCell className="text-right">KSH {trend.generated}</TableCell>
-                              <TableCell className="text-right text-green-600">KSH {trend.collected}</TableCell>
-                              <TableCell className="text-right text-destructive">KSH {trend.outstanding}</TableCell>
+                              <TableCell className="text-right">{formatKsh(trend.generated)}</TableCell>
+                              <TableCell className="text-right text-green-600">{formatKsh(trend.collected)}</TableCell>
+                              <TableCell className="text-right text-destructive">{formatKsh(trend.outstanding)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -261,9 +262,9 @@ export default function FinesCollectionReportPage() {
                               </TableCell>
                               <TableCell>Year {student.year_of_study}</TableCell>
                               <TableCell className="text-right">{student.fine_count}</TableCell>
-                              <TableCell className="text-right">KSH {student.total_fines}</TableCell>
+                              <TableCell className="text-right">{formatKsh(student.total_fines)}</TableCell>
                               <TableCell className="text-right font-medium text-destructive">
-                                KSH {student.outstanding_fines}
+                                {formatKsh(student.outstanding_fines)}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -319,7 +320,7 @@ export default function FinesCollectionReportPage() {
                                   : "N/A"}
                               </TableCell>
                               <TableCell className="text-right">{fine.days_overdue}</TableCell>
-                              <TableCell className="text-right font-medium">KSH {fine.fine_amount}</TableCell>
+                              <TableCell className="text-right font-medium">{formatKsh(fine.fine_amount)}</TableCell>
                               <TableCell>
                                 {fine.fine_waived ? (
                                   <Badge variant="secondary">Waived</Badge>

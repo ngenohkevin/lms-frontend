@@ -33,6 +33,16 @@ export function formatCurrency(amount: number): string {
   }).format(Math.round(amount))}`;
 }
 
+export function formatKsh(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "KSH 0";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "KSH 0";
+  return `KSH ${new Intl.NumberFormat("en-KE", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num)}`;
+}
+
 export function formatNumber(num: number): string {
   return new Intl.NumberFormat("en-US").format(num);
 }

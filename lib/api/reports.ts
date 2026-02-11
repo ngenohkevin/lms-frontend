@@ -43,6 +43,17 @@ function getDefaultDateRange() {
   };
 }
 
+// Wider default range (last 365 days) for activity/behavior reports
+function getWideDefaultDateRange() {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setFullYear(startDate.getFullYear() - 1);
+  return {
+    start_date: startDate.toISOString(),
+    end_date: endDate.toISOString(),
+  };
+}
+
 // Helper to safely parse number, returning 0 for NaN/null/undefined
 function safeNumber(value: unknown): number {
   if (value === null || value === undefined) return 0;
@@ -147,12 +158,30 @@ export const reportsApi = {
     return response.data || [];
   },
 
-  // Category statistics - GET /api/v1/reports/library-overview
+  // Category statistics - derived from inventory-status endpoint
+  // Backend returns { genres[], summary } — extract genre data as category stats
   getCategoryStats: async (): Promise<CategoryStats[]> => {
-    const response = await apiClient.get<ApiResponse<CategoryStats[]>>(
-      `${REPORTS_PREFIX}/library-overview`
+    interface BackendGenre {
+      genre: string;
+      total_books: number;
+      available_books: number;
+      borrowed_books: number;
+    }
+    interface BackendInventory {
+      genres: BackendGenre[];
+      summary: { total_books: number; available_books: number };
+    }
+    const response = await apiClient.get<ApiResponse<BackendInventory>>(
+      `${REPORTS_PREFIX}/inventory-status`
     );
-    return response.data || [];
+    const raw = response.data;
+    const genres = raw?.genres || [];
+    return genres.map((g) => ({
+      category: g.genre,
+      total_books: safeNumber(g.total_books),
+      total_borrowed: safeNumber(g.borrowed_books),
+      available: safeNumber(g.available_books),
+    }));
   },
 
   // Student activity report - POST /api/v1/reports/student-activity
@@ -227,18 +256,78 @@ export const reportsApi = {
   },
 
   // Overdue report - POST /api/v1/reports/overdue-books
-  // No required fields
+  // Backend returns { books, summary: { total_overdue, total_fines }, generated_at }
+  // Transform to frontend OverdueReport shape
   getOverdueReport: async (params?: {
     year?: number;
     days_overdue?: number;
   }): Promise<OverdueReport> => {
-    const response = await apiClient.post<ApiResponse<OverdueReport>>(
+    interface BackendOverdue {
+      books: Array<{
+        student_id: string;
+        student_name: string;
+        year_of_study: number;
+        book_title: string;
+        book_author: string;
+        due_date: string;
+        days_overdue: number;
+        fine_amount: string;
+        transaction_id: number;
+      }>;
+      summary: {
+        total_overdue: number;
+        total_fines: string;
+      };
+    }
+    const response = await apiClient.post<ApiResponse<BackendOverdue>>(
       `${REPORTS_PREFIX}/overdue-books`,
       {
         year_of_study: params?.year,
       }
     );
-    return response.data;
+    const raw = response.data;
+    const books = raw?.books || [];
+    const summary = raw?.summary || { total_overdue: 0, total_fines: "0" };
+
+    // Group overdue by year of study
+    const yearMap = new Map<number, { count: number; fineAmount: number }>();
+    for (const book of books) {
+      const year = book.year_of_study || 0;
+      const existing = yearMap.get(year) || { count: 0, fineAmount: 0 };
+      existing.count++;
+      existing.fineAmount += safeNumber(book.fine_amount);
+      yearMap.set(year, existing);
+    }
+    const overdue_by_year_of_study = Array.from(yearMap.entries()).map(
+      ([year, data]) => ({
+        year_of_study: year,
+        count: data.count,
+        fine_amount: data.fineAmount,
+      })
+    );
+
+    // Group overdue by days ranges
+    const dayRanges = [
+      { range: "1-7 days", min: 1, max: 7 },
+      { range: "8-14 days", min: 8, max: 14 },
+      { range: "15-30 days", min: 15, max: 30 },
+      { range: "30+ days", min: 31, max: Infinity },
+    ];
+    const overdue_by_days = dayRanges.map((r) => ({
+      range: r.range,
+      count: books.filter((b) => b.days_overdue >= r.min && b.days_overdue <= r.max).length,
+    }));
+
+    return {
+      total_overdue: safeNumber(summary.total_overdue),
+      total_fine_amount: safeNumber(summary.total_fines),
+      books: books.map((b) => ({
+        ...b,
+        fine_amount: b.fine_amount || "0",
+      })),
+      overdue_by_year_of_study,
+      overdue_by_days,
+    };
   },
 
   // Fine collection report - POST /api/v1/reports/borrowing-statistics
@@ -348,7 +437,7 @@ export const reportsApi = {
   getStudentActivityReport: async (
     params?: StudentActivityReportRequest
   ): Promise<StudentActivityReport> => {
-    const defaultDates = getDefaultDateRange();
+    const defaultDates = getWideDefaultDateRange();
     const response = await apiClient.post<ApiResponse<StudentActivityReport>>(
       `${REPORTS_PREFIX}/student-activity`,
       {
@@ -364,7 +453,7 @@ export const reportsApi = {
   getStudentBehaviorAnalysis: async (
     params?: StudentBehaviorAnalysisRequest
   ): Promise<StudentBehaviorAnalysisReport> => {
-    const defaultDates = getDefaultDateRange();
+    const defaultDates = getWideDefaultDateRange();
     const response = await apiClient.post<ApiResponse<StudentBehaviorAnalysisReport>>(
       `${REPORTS_PREFIX}/student-behavior-analysis`,
       {

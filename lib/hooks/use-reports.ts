@@ -129,7 +129,7 @@ export function usePopularBooks(params?: {
 
 export function useCategoryStats() {
   const { data, error, isLoading, mutate } = useSWR<CategoryStats[]>(
-    "/api/v1/reports/library-overview",
+    "/api/v1/reports/category-stats",
     () => reportsApi.getCategoryStats(),
     {
       onError: (err) => handleApiError(err, "Load category statistics"),

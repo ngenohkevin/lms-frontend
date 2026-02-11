@@ -25,6 +25,7 @@ import {
   ChartPrintFallback,
 } from "@/components/reports";
 import { useIndividualStudentReport } from "@/lib/hooks/use-reports";
+import { formatKsh } from "@/lib/utils/format";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -148,9 +149,9 @@ export default function StudentReportPage({ params }: PageProps) {
             />
             <SummaryCard
               title="Outstanding Fines"
-              value={`KSH ${fines_summary.outstanding_fines}`}
+              value={formatKsh(fines_summary.outstanding_fines)}
               icon={<DollarSign className="h-4 w-4" />}
-              subtitle={`Paid: KSH ${fines_summary.total_fines_paid}`}
+              subtitle={`Paid: ${formatKsh(fines_summary.total_fines_paid)}`}
               valueClassName={parseFloat(fines_summary.outstanding_fines) > 0 ? "text-destructive" : ""}
             />
           </SummaryGrid>
@@ -204,7 +205,7 @@ export default function StudentReportPage({ params }: PageProps) {
                         <TableCell className="font-medium">{activity.month}</TableCell>
                         <TableCell className="text-right">{activity.borrowed}</TableCell>
                         <TableCell className="text-right">{activity.returned}</TableCell>
-                        <TableCell className="text-right">KSH {activity.fines_incurred}</TableCell>
+                        <TableCell className="text-right">{formatKsh(activity.fines_incurred)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -220,7 +221,7 @@ export default function StudentReportPage({ params }: PageProps) {
                     { key: "month", label: "Month" },
                     { key: "borrowed", label: "Borrowed" },
                     { key: "returned", label: "Returned" },
-                    { key: "fines", label: "Fines", format: (v) => `KSH ${v}` },
+                    { key: "fines", label: "Fines", format: (v) => formatKsh(v) },
                   ]}
                 />
               </CardContent>
@@ -289,7 +290,7 @@ export default function StudentReportPage({ params }: PageProps) {
                         <TableCell className="text-right">
                           {parseFloat(tx.fine_amount) > 0 ? (
                             <span className={tx.fine_paid ? "" : "text-destructive"}>
-                              KSH {tx.fine_amount}
+                              {formatKsh(tx.fine_amount)}
                               {tx.fine_paid && (
                                 <span className="text-xs text-muted-foreground ml-1">(paid)</span>
                               )}

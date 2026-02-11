@@ -26,6 +26,7 @@ import {
   IntervalSelect,
 } from "@/components/reports";
 import { useLostBooksReport } from "@/lib/hooks/use-reports";
+import { formatKsh } from "@/lib/utils/format";
 import type { LostBooksReportRequest } from "@/lib/types";
 
 export default function LostBooksReportPage() {
@@ -104,14 +105,14 @@ export default function LostBooksReportPage() {
                 />
                 <SummaryCard
                   title="Total Replacement Value"
-                  value={`KSH ${report.summary.total_replacement_value}`}
+                  value={formatKsh(report.summary.total_replacement_value)}
                   icon={<DollarSign className="h-4 w-4" />}
                 />
                 <SummaryCard
                   title="Outstanding Amount"
-                  value={`KSH ${report.summary.total_outstanding}`}
+                  value={formatKsh(report.summary.total_outstanding)}
                   icon={<DollarSign className="h-4 w-4" />}
-                  subtitle={`Paid: KSH ${report.summary.total_paid}`}
+                  subtitle={`Paid: ${formatKsh(report.summary.total_paid)}`}
                   valueClassName={parseFloat(report.summary.total_outstanding) > 0 ? "text-destructive" : ""}
                 />
                 <SummaryCard
@@ -143,8 +144,8 @@ export default function LostBooksReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">{cat.genre || "Unknown"}</TableCell>
                             <TableCell className="text-right">{cat.lost_count}</TableCell>
-                            <TableCell className="text-right">KSH {cat.replacement_value}</TableCell>
-                            <TableCell className="text-right">KSH {cat.avg_replacement_cost}</TableCell>
+                            <TableCell className="text-right">{formatKsh(cat.replacement_value)}</TableCell>
+                            <TableCell className="text-right">{formatKsh(cat.avg_replacement_cost)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
@@ -175,7 +176,7 @@ export default function LostBooksReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">Year {item.year_of_study}</TableCell>
                             <TableCell className="text-right">{item.lost_count}</TableCell>
-                            <TableCell className="text-right">KSH {item.replacement_value}</TableCell>
+                            <TableCell className="text-right">{formatKsh(item.replacement_value)}</TableCell>
                             <TableCell className="text-right">{item.students_affected}</TableCell>
                           </TableRow>
                         ))}
@@ -213,7 +214,7 @@ export default function LostBooksReportPage() {
                           <TableRow key={i}>
                             <TableCell className="font-medium">{trend.period}</TableCell>
                             <TableCell className="text-right">{trend.lost_count}</TableCell>
-                            <TableCell className="text-right">KSH {trend.replacement_value}</TableCell>
+                            <TableCell className="text-right">{formatKsh(trend.replacement_value)}</TableCell>
                             <TableCell className="text-right">{trend.recovered}</TableCell>
                           </TableRow>
                         ))}
@@ -270,7 +271,7 @@ export default function LostBooksReportPage() {
                                 : "N/A"}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              KSH {book.replacement_cost}
+                              {formatKsh(book.replacement_cost)}
                             </TableCell>
                             <TableCell>
                               <Badge variant={book.fine_paid ? "default" : "destructive"}>

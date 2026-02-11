@@ -41,6 +41,7 @@ import {
   useStudentActivityReport,
   useStudentBehaviorAnalysis,
 } from "@/lib/hooks/use-reports";
+import { formatKsh } from "@/lib/utils/format";
 import type {
   StudentActivityReportRequest,
   StudentBehaviorAnalysisRequest,
@@ -227,7 +228,7 @@ export default function StudentActivityReportPage() {
                                 )}
                               </TableCell>
                               <TableCell className="text-right">
-                                KSH {s.total_fines}
+                                {formatKsh(s.total_fines)}
                               </TableCell>
                               <TableCell className="hidden sm:table-cell text-sm text-muted-foreground">
                                 {s.last_activity
