@@ -17,6 +17,10 @@ import type {
   LostBooksReportRequest,
   FinesCollectionReport,
   FinesCollectionReportRequest,
+  StudentActivityReport,
+  StudentActivityReportRequest,
+  StudentBehaviorAnalysisReport,
+  StudentBehaviorAnalysisRequest,
 } from "@/lib/types";
 
 const REPORTS_PREFIX = "/api/v1/reports";
@@ -266,27 +270,17 @@ export const reportsApi = {
   },
 
   // Export report - POST /api/v1/reports/export
+  // Backend expects JSON body: { report_type, format, parameters }
   downloadReport: async (
-    type: "borrowing" | "inventory" | "overdue" | "fines" | "students",
-    format: "pdf" | "csv",
-    params?: ReportParams
+    reportType: "borrowing_trends" | "popular_books" | "overdue_books" | "student_activity" | "inventory_status",
+    format: "csv" | "excel" | "pdf",
+    parameters?: Record<string, unknown>
   ): Promise<Blob> => {
-    const queryParams = new URLSearchParams();
-    queryParams.append("format", format);
-    queryParams.append("type", type);
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
-          queryParams.append(key, String(value));
-        }
-      });
-    }
-
-    const response = await fetch(`${REPORTS_PREFIX}/export?${queryParams.toString()}`, {
-      method: "POST",
-      credentials: "include",
+    return apiClient.downloadPost(`${REPORTS_PREFIX}/export`, {
+      report_type: reportType,
+      format,
+      parameters: parameters || {},
     });
-    return response.blob();
   },
 
   // ============================================
@@ -345,6 +339,38 @@ export const reportsApi = {
         interval: params?.interval || "month",
         paid_only: params?.paid_only,
         limit: params?.limit || 50,
+      }
+    );
+    return response.data;
+  },
+
+  // Student Activity Report - POST /api/v1/reports/student-activity
+  getStudentActivityReport: async (
+    params?: StudentActivityReportRequest
+  ): Promise<StudentActivityReport> => {
+    const defaultDates = getDefaultDateRange();
+    const response = await apiClient.post<ApiResponse<StudentActivityReport>>(
+      `${REPORTS_PREFIX}/student-activity`,
+      {
+        start_date: params?.start_date || defaultDates.start_date,
+        end_date: params?.end_date || defaultDates.end_date,
+        year_of_study: params?.year_of_study,
+      }
+    );
+    return response.data;
+  },
+
+  // Student Behavior Analysis - POST /api/v1/reports/student-behavior-analysis
+  getStudentBehaviorAnalysis: async (
+    params?: StudentBehaviorAnalysisRequest
+  ): Promise<StudentBehaviorAnalysisReport> => {
+    const defaultDates = getDefaultDateRange();
+    const response = await apiClient.post<ApiResponse<StudentBehaviorAnalysisReport>>(
+      `${REPORTS_PREFIX}/student-behavior-analysis`,
+      {
+        start_date: params?.start_date || defaultDates.start_date,
+        end_date: params?.end_date || defaultDates.end_date,
+        year_of_study: params?.year_of_study,
       }
     );
     return response.data;

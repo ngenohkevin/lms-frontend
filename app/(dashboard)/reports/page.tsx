@@ -34,13 +34,26 @@ import {
   Bar,
 } from "recharts";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   Download,
   BookX,
   DollarSign,
   FileText,
+  Users,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { formatDate, formatNumber, formatCurrency } from "@/lib/utils/format";
+import { format } from "date-fns";
+import { reportsApi } from "@/lib/api";
+import { toast } from "sonner";
 
 const chartConfig = {
   borrowed: {
@@ -61,8 +74,38 @@ const COLORS = [
   "hsl(var(--chart-5))",
 ];
 
+// Map tab names to backend report types
+const tabReportTypeMap: Record<string, "borrowing_trends" | "popular_books" | "overdue_books" | "inventory_status"> = {
+  overview: "borrowing_trends",
+  borrowing: "borrowing_trends",
+  inventory: "inventory_status",
+  overdue: "overdue_books",
+};
+
 export default function ReportsPage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    const reportType = tabReportTypeMap[activeTab];
+    if (!reportType) return;
+
+    setIsExporting(true);
+    try {
+      const blob = await reportsApi.downloadReport(reportType, "csv");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${reportType}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast.success("Report exported successfully");
+    } catch {
+      toast.error("Failed to export report");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const { metrics, isLoading: metricsLoading } = useDashboardMetrics();
   const { trends, isLoading: trendsLoading } = useBorrowingTrends();
@@ -83,8 +126,17 @@ export default function ReportsPage() {
           </div>
           <PermissionGuard permission={PermissionCodes.REPORTS_EXPORT} hideWhenDenied>
             <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="outline" className="flex-1 sm:flex-initial">
-                <Download className="mr-2 h-4 w-4" />
+              <Button
+                variant="outline"
+                className="flex-1 sm:flex-initial"
+                onClick={handleExport}
+                disabled={isExporting}
+              >
+                {isExporting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
                 Export Report
               </Button>
             </div>
@@ -92,9 +144,9 @@ export default function ReportsPage() {
         </div>
 
         {/* Quick Reports Links */}
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
           <Link href="/reports/lost-books">
-            <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Lost Books Report</CardTitle>
                 <BookX className="h-4 w-4 text-muted-foreground" />
@@ -110,7 +162,7 @@ export default function ReportsPage() {
             </Card>
           </Link>
           <Link href="/reports/fines">
-            <Card className="transition-colors hover:bg-muted/50 cursor-pointer">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Fines Collection Report</CardTitle>
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -125,7 +177,23 @@ export default function ReportsPage() {
               </CardContent>
             </Card>
           </Link>
-          <Card className="bg-muted/30">
+          <Link href="/reports/student-activity">
+            <Card className="transition-colors hover:bg-muted/50 cursor-pointer h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Student Activity Report</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Most active students, borrowing patterns, and behavior analysis
+                </p>
+                <div className="flex items-center text-sm text-primary">
+                  View Report <ArrowRight className="ml-1 h-4 w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+          <Card className="bg-muted/30 h-full">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Individual Student Reports</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -483,6 +551,69 @@ export default function ReportsPage() {
                             </Badge>
                           </div>
                         ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Overdue Books Table */}
+                {overdueReport.books && overdueReport.books.length > 0 && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Overdue Books</CardTitle>
+                      <CardDescription>
+                        {overdueReport.books.length} currently overdue items
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <Table className="min-w-[600px]">
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Student</TableHead>
+                              <TableHead>Book</TableHead>
+                              <TableHead className="hidden sm:table-cell">Due Date</TableHead>
+                              <TableHead className="text-right">Days Overdue</TableHead>
+                              <TableHead className="text-right">Fine</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {overdueReport.books.slice(0, 20).map((book) => (
+                              <TableRow key={book.transaction_id}>
+                                <TableCell>
+                                  <div>
+                                    <Link
+                                      href={`/students/${book.student_id}`}
+                                      className="font-medium text-primary hover:underline"
+                                    >
+                                      {book.student_name}
+                                    </Link>
+                                    <p className="text-xs text-muted-foreground">
+                                      Year {book.year_of_study}
+                                    </p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">{book.book_title}</p>
+                                    <p className="text-xs text-muted-foreground">{book.book_author}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="hidden sm:table-cell text-sm">
+                                  {book.due_date ? format(new Date(book.due_date), "MMM d, yyyy") : "N/A"}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Badge variant={book.days_overdue > 14 ? "destructive" : "secondary"}>
+                                    {book.days_overdue} days
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-right font-medium text-destructive">
+                                  {formatCurrency(parseFloat(book.fine_amount))}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       </div>
                     </CardContent>
                   </Card>

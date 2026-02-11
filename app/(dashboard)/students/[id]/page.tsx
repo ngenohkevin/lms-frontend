@@ -7,6 +7,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
 import { useStudent } from "@/lib/hooks/use-students";
 import { useStudentTransactionHistory } from "@/lib/hooks/use-transactions";
+import { useIndividualStudentReport } from "@/lib/hooks/use-reports";
 import { studentsApi } from "@/lib/api";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { PermissionCodes } from "@/lib/types/permission";
@@ -70,6 +71,10 @@ export default function StudentDetailPage() {
     transactions: transactionHistory,
     isLoading: isLoadingHistory
   } = useStudentTransactionHistory(studentId);
+  const {
+    report: studentReport,
+    isLoading: isLoadingReport,
+  } = useIndividualStudentReport(studentId ? parseInt(studentId) : null);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -326,7 +331,7 @@ export default function StudentDetailPage() {
           {/* Stats & Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Quick Stats */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
               <Card>
                 <CardContent className="pt-6">
                   <div className="flex items-center gap-4">
@@ -403,7 +408,8 @@ export default function StudentDetailPage() {
                 <TabsTrigger value="analytics">Analytics</TabsTrigger>
                 <TabsTrigger value="activity">Recent Activity</TabsTrigger>
               </TabsList>
-              <TabsContent value="analytics" className="mt-4">
+              <TabsContent value="analytics" className="mt-4 space-y-4">
+                {/* Summary */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Borrowing Analytics</CardTitle>
@@ -412,37 +418,105 @@ export default function StudentDetailPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="font-medium mb-3">Summary</h4>
-                        <div className="grid gap-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Books currently borrowed:</span>
-                            <span className="font-medium">{student?.current_books ?? 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Max books allowed:</span>
-                            <span className="font-medium">{student?.max_books ?? 5}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total books borrowed:</span>
-                            <span className="font-medium">{student?.total_borrowed ?? 0}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Total fines:</span>
-                            <span className="font-medium">{formatCurrency(student?.total_fines ?? 0)}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Unpaid fines:</span>
-                            <span className={`font-medium ${(student?.unpaid_fines ?? 0) > 0 ? "text-red-600" : ""}`}>
-                              {formatCurrency(student?.unpaid_fines ?? 0)}
-                            </span>
-                          </div>
-                        </div>
+                    <div className="grid gap-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Books currently borrowed:</span>
+                        <span className="font-medium">{student?.current_books ?? 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Max books allowed:</span>
+                        <span className="font-medium">{student?.max_books ?? 5}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total books borrowed:</span>
+                        <span className="font-medium">{student?.total_borrowed ?? 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Total fines:</span>
+                        <span className="font-medium">{formatCurrency(student?.total_fines ?? 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Unpaid fines:</span>
+                        <span className={`font-medium ${(student?.unpaid_fines ?? 0) > 0 ? "text-red-600" : ""}`}>
+                          {formatCurrency(student?.unpaid_fines ?? 0)}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Reading Preferences */}
+                {isLoadingReport ? (
+                  <Skeleton className="h-48" />
+                ) : studentReport?.reading_stats && studentReport.reading_stats.length > 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Reading Preferences</CardTitle>
+                      <CardDescription>
+                        Books read by genre
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {studentReport.reading_stats.map((stat) => {
+                          const maxBooks = Math.max(
+                            ...studentReport.reading_stats.map((s) => s.books_read)
+                          );
+                          const percentage = maxBooks > 0 ? (stat.books_read / maxBooks) * 100 : 0;
+                          return (
+                            <div key={stat.genre} className="space-y-1">
+                              <div className="flex items-center justify-between text-sm">
+                                <span className="font-medium">{stat.genre}</span>
+                                <span className="text-muted-foreground">
+                                  {stat.books_read} books &middot; avg {stat.avg_days_held} days
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-primary transition-all"
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
+
+                {/* Monthly Activity */}
+                {!isLoadingReport && studentReport?.monthly_activity && studentReport.monthly_activity.length > 0 ? (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Monthly Activity</CardTitle>
+                      <CardDescription>
+                        Borrowing and return activity over time
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        {studentReport.monthly_activity.map((month) => (
+                          <div
+                            key={month.month}
+                            className="flex items-center justify-between py-2 border-b last:border-0"
+                          >
+                            <span className="text-sm font-medium">{month.month}</span>
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="text-blue-600">{month.borrowed} borrowed</span>
+                              <span className="text-green-600">{month.returned} returned</span>
+                              {parseFloat(month.fines_incurred) > 0 && (
+                                <span className="text-destructive">
+                                  KSH {month.fines_incurred}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : null}
               </TabsContent>
               <TabsContent value="activity" className="mt-4">
                 <Card>

@@ -120,11 +120,11 @@ export const studentsApi = {
     const backendParams: Record<string, string | number | boolean | undefined> = {};
     if (params?.query) backendParams.q = params.query;
     if (params?.year_of_study) backendParams.year = params.year_of_study;
-    if (params?.status) backendParams.active = params.status === "active";
+    if (params?.status) backendParams.status = params.status;
     if (params?.page) backendParams.page = params.page;
     if (params?.per_page) backendParams.limit = params.per_page;
-    // Note: has_overdue and has_fines are frontend-only filters for now
-    // Backend would need to implement these
+    if (params?.has_fines) backendParams.has_fines = true;
+    if (params?.has_overdue) backendParams.has_overdue = true;
 
     const response = await apiClient.get<ApiResponse<BackendPaginatedStudents>>(STUDENTS_PREFIX, {
       params: backendParams,
@@ -144,9 +144,11 @@ export const studentsApi = {
     const backendParams: Record<string, string | number | boolean | undefined> = {};
     if (params.query) backendParams.q = params.query;
     if (params.year_of_study) backendParams.year = params.year_of_study;
-    if (params.status) backendParams.active = params.status === "active";
+    if (params.status) backendParams.status = params.status;
     if (params.page) backendParams.page = params.page;
     if (params.per_page) backendParams.limit = params.per_page;
+    if (params.has_fines) backendParams.has_fines = true;
+    if (params.has_overdue) backendParams.has_overdue = true;
 
     const response = await apiClient.get<ApiResponse<BackendPaginatedStudents>>(
       `${STUDENTS_PREFIX}/search`,
@@ -296,6 +298,36 @@ export const studentsApi = {
       `${STUDENTS_PREFIX}/${id}/reset-password`,
       { password: newPassword }
     );
+    return response.data;
+  },
+
+  // Get student statistics
+  getStatistics: async (): Promise<{
+    total_students: number;
+    by_year: Record<string, number>;
+  }> => {
+    const response = await apiClient.get<ApiResponse<{
+      total_students: number;
+      by_year: Record<string, number>;
+    }>>(`${STUDENTS_PREFIX}/statistics`);
+    return response.data;
+  },
+
+  // Get status statistics
+  getStatusStatistics: async (): Promise<{
+    total_students: number;
+    active_students: number;
+    inactive_students: number;
+    suspended_students: number;
+    status_breakdown: Record<string, number>;
+  }> => {
+    const response = await apiClient.get<ApiResponse<{
+      total_students: number;
+      active_students: number;
+      inactive_students: number;
+      suspended_students: number;
+      status_breakdown: Record<string, number>;
+    }>>(`${STUDENTS_PREFIX}/status/statistics`);
     return response.data;
   },
 

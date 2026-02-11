@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import { ArrowLeft, Users, TrendingUp, AlertCircle, Percent, Building, GraduationCap, Receipt, DollarSign } from "lucide-react";
+import { ArrowLeft, Users, TrendingUp, AlertCircle, Percent, GraduationCap, Receipt, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -151,70 +151,32 @@ export default function FinesCollectionReportPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Year</TableHead>
-                          <TableHead className="text-right">Fine Count</TableHead>
-                          <TableHead className="text-right">Students</TableHead>
-                          <TableHead className="text-right">Total Fines</TableHead>
-                          <TableHead className="text-right">Paid</TableHead>
-                          <TableHead className="text-right">Outstanding</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {report.by_year_of_study.map((year, i) => (
-                          <TableRow key={i}>
-                            <TableCell className="font-medium">Year {year.year_of_study}</TableCell>
-                            <TableCell className="text-right">{year.fine_count}</TableCell>
-                            <TableCell className="text-right">{year.students_affected}</TableCell>
-                            <TableCell className="text-right">KSH {year.total_fines}</TableCell>
-                            <TableCell className="text-right text-green-600">KSH {year.paid_amount}</TableCell>
-                            <TableCell className="text-right text-destructive">KSH {year.outstanding_amount}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table className="min-w-[600px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Year</TableHead>
+                            <TableHead className="text-right">Fine Count</TableHead>
+                            <TableHead className="text-right hidden sm:table-cell">Students</TableHead>
+                            <TableHead className="text-right">Total Fines</TableHead>
+                            <TableHead className="text-right hidden sm:table-cell">Paid</TableHead>
+                            <TableHead className="text-right">Outstanding</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
-              </PrintSection>
-            )}
-
-            {/* Fines by Year of Study */}
-            {report.by_year_of_study && report.by_year_of_study.length > 0 && (
-              <PrintSection title="Fines by Year of Study">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building className="h-5 w-5" />
-                      Breakdown by Year of Study
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Year of Study</TableHead>
-                          <TableHead className="text-right">Fine Count</TableHead>
-                          <TableHead className="text-right">Students</TableHead>
-                          <TableHead className="text-right">Total Fines</TableHead>
-                          <TableHead className="text-right">Paid</TableHead>
-                          <TableHead className="text-right">Outstanding</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {report.by_year_of_study.map((item, i) => (
-                          <TableRow key={i}>
-                            <TableCell className="font-medium">Year {item.year_of_study}</TableCell>
-                            <TableCell className="text-right">{item.fine_count}</TableCell>
-                            <TableCell className="text-right">{item.students_affected}</TableCell>
-                            <TableCell className="text-right">KSH {item.total_fines}</TableCell>
-                            <TableCell className="text-right text-green-600">KSH {item.paid_amount}</TableCell>
-                            <TableCell className="text-right text-destructive">KSH {item.outstanding_amount}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {report.by_year_of_study.map((year, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="font-medium">Year {year.year_of_study}</TableCell>
+                              <TableCell className="text-right">{year.fine_count}</TableCell>
+                              <TableCell className="text-right hidden sm:table-cell">{year.students_affected}</TableCell>
+                              <TableCell className="text-right">KSH {year.total_fines}</TableCell>
+                              <TableCell className="text-right text-green-600 hidden sm:table-cell">KSH {year.paid_amount}</TableCell>
+                              <TableCell className="text-right text-destructive">KSH {year.outstanding_amount}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
@@ -231,28 +193,30 @@ export default function FinesCollectionReportPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Period</TableHead>
-                          <TableHead className="text-right">Fine Count</TableHead>
-                          <TableHead className="text-right">Generated</TableHead>
-                          <TableHead className="text-right">Collected</TableHead>
-                          <TableHead className="text-right">Outstanding</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {report.trends.map((trend, i) => (
-                          <TableRow key={i}>
-                            <TableCell className="font-medium">{trend.period}</TableCell>
-                            <TableCell className="text-right">{trend.fine_count}</TableCell>
-                            <TableCell className="text-right">KSH {trend.generated}</TableCell>
-                            <TableCell className="text-right text-green-600">KSH {trend.collected}</TableCell>
-                            <TableCell className="text-right text-destructive">KSH {trend.outstanding}</TableCell>
+                    <div className="overflow-x-auto">
+                      <Table className="min-w-[600px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Period</TableHead>
+                            <TableHead className="text-right">Fine Count</TableHead>
+                            <TableHead className="text-right">Generated</TableHead>
+                            <TableHead className="text-right">Collected</TableHead>
+                            <TableHead className="text-right">Outstanding</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {report.trends.map((trend, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="font-medium">{trend.period}</TableCell>
+                              <TableCell className="text-right">{trend.fine_count}</TableCell>
+                              <TableCell className="text-right">KSH {trend.generated}</TableCell>
+                              <TableCell className="text-right text-green-600">KSH {trend.collected}</TableCell>
+                              <TableCell className="text-right text-destructive">KSH {trend.outstanding}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
@@ -272,39 +236,40 @@ export default function FinesCollectionReportPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Student</TableHead>
-                          <TableHead>Department</TableHead>
-                          <TableHead>Year</TableHead>
-                          <TableHead className="text-right">Fines</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                          <TableHead className="text-right">Outstanding</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {report.top_defaulters.map((student) => (
-                          <TableRow key={student.student_id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{student.student_name}</p>
-                                <p className="text-sm text-muted-foreground">{student.student_code}</p>
-                                {student.email && (
-                                  <p className="text-xs text-muted-foreground">{student.email}</p>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>Year {student.year_of_study}</TableCell>
-                            <TableCell className="text-right">{student.fine_count}</TableCell>
-                            <TableCell className="text-right">KSH {student.total_fines}</TableCell>
-                            <TableCell className="text-right font-medium text-destructive">
-                              KSH {student.outstanding_fines}
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table className="min-w-[600px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Student</TableHead>
+                            <TableHead>Year</TableHead>
+                            <TableHead className="text-right">Fines</TableHead>
+                            <TableHead className="text-right">Total</TableHead>
+                            <TableHead className="text-right">Outstanding</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {report.top_defaulters.map((student) => (
+                            <TableRow key={student.student_id}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{student.student_name}</p>
+                                  <p className="text-sm text-muted-foreground">{student.student_code}</p>
+                                  {student.email && (
+                                    <p className="text-xs text-muted-foreground hidden sm:block">{student.email}</p>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>Year {student.year_of_study}</TableCell>
+                              <TableCell className="text-right">{student.fine_count}</TableCell>
+                              <TableCell className="text-right">KSH {student.total_fines}</TableCell>
+                              <TableCell className="text-right font-medium text-destructive">
+                                KSH {student.outstanding_fines}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
@@ -321,52 +286,54 @@ export default function FinesCollectionReportPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Student</TableHead>
-                          <TableHead>Book</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead className="text-right">Days Overdue</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {report.recent_fines.map((fine) => (
-                          <TableRow key={fine.transaction_id}>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{fine.student_name}</p>
-                                <p className="text-sm text-muted-foreground">{fine.student_code}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div>
-                                <p className="font-medium">{fine.book_title}</p>
-                                <p className="text-xs text-muted-foreground">{fine.book_code}</p>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {fine.due_date
-                                ? format(new Date(fine.due_date), "MMM d, yyyy")
-                                : "N/A"}
-                            </TableCell>
-                            <TableCell className="text-right">{fine.days_overdue}</TableCell>
-                            <TableCell className="text-right font-medium">KSH {fine.fine_amount}</TableCell>
-                            <TableCell>
-                              {fine.fine_waived ? (
-                                <Badge variant="secondary">Waived</Badge>
-                              ) : fine.fine_paid ? (
-                                <Badge variant="default">Paid</Badge>
-                              ) : (
-                                <Badge variant="destructive">Unpaid</Badge>
-                              )}
-                            </TableCell>
+                    <div className="overflow-x-auto">
+                      <Table className="min-w-[600px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Student</TableHead>
+                            <TableHead>Book</TableHead>
+                            <TableHead className="hidden sm:table-cell">Due Date</TableHead>
+                            <TableHead className="text-right">Days Overdue</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                            <TableHead>Status</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </TableHeader>
+                        <TableBody>
+                          {report.recent_fines.map((fine) => (
+                            <TableRow key={fine.transaction_id}>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{fine.student_name}</p>
+                                  <p className="text-sm text-muted-foreground">{fine.student_code}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium">{fine.book_title}</p>
+                                  <p className="text-xs text-muted-foreground">{fine.book_code}</p>
+                                </div>
+                              </TableCell>
+                              <TableCell className="hidden sm:table-cell">
+                                {fine.due_date
+                                  ? format(new Date(fine.due_date), "MMM d, yyyy")
+                                  : "N/A"}
+                              </TableCell>
+                              <TableCell className="text-right">{fine.days_overdue}</TableCell>
+                              <TableCell className="text-right font-medium">KSH {fine.fine_amount}</TableCell>
+                              <TableCell>
+                                {fine.fine_waived ? (
+                                  <Badge variant="secondary">Waived</Badge>
+                                ) : fine.fine_paid ? (
+                                  <Badge variant="default">Paid</Badge>
+                                ) : (
+                                  <Badge variant="destructive">Unpaid</Badge>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>

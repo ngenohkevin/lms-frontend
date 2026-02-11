@@ -86,9 +86,22 @@ export interface BorrowingTrend {
   returned: number;
 }
 
+export interface OverdueBookDetail {
+  student_id: string;
+  student_name: string;
+  year_of_study: number;
+  book_title: string;
+  book_author: string;
+  due_date: string;
+  days_overdue: number;
+  fine_amount: string;
+  transaction_id: number;
+}
+
 export interface OverdueReport {
   total_overdue: number;
   total_fine_amount: number;
+  books?: OverdueBookDetail[];
   overdue_by_year_of_study: Array<{
     year_of_study: number;
     count: number;
@@ -330,4 +343,72 @@ export interface FinesCollectionReportRequest {
   interval?: string;
   paid_only?: boolean;
   limit?: number;
+}
+
+// ============================================
+// Student Activity Report Types
+// ============================================
+
+export interface StudentActivityDetail {
+  student_id: string;
+  student_name: string;
+  year_of_study: number;
+  total_borrows: number;
+  total_returns: number;
+  current_books: number;
+  overdue_books: number;
+  total_fines: string;
+  last_activity: string;
+}
+
+export interface StudentActivitySummary {
+  active_students: number;
+  total_borrows: number;
+  total_returns: number;
+  total_overdue: number;
+}
+
+export interface StudentActivityReport {
+  students: StudentActivityDetail[];
+  summary: StudentActivitySummary;
+  generated_at: string;
+}
+
+export interface StudentActivityReportRequest {
+  start_date?: string;
+  end_date?: string;
+  year_of_study?: number;
+}
+
+// ============================================
+// Student Behavior Analysis Types
+// ============================================
+
+export interface StudentBehaviorData {
+  year_of_study: number;
+  total_students: number;
+  avg_borrows_per_student: string;
+  avg_loan_duration_days: string;
+  avg_overdue_rate_percent: string;
+  heavy_users: number;
+  light_users: number;
+  popular_genres: string;
+}
+
+export interface StudentBehaviorSummary {
+  total_analyzed_students: number;
+  most_active_year: number;
+  overall_engagement_rate: string;
+}
+
+export interface StudentBehaviorAnalysisReport {
+  behavior_data: StudentBehaviorData[];
+  summary: StudentBehaviorSummary;
+  generated_at: string;
+}
+
+export interface StudentBehaviorAnalysisRequest {
+  start_date?: string;
+  end_date?: string;
+  year_of_study?: number;
 }

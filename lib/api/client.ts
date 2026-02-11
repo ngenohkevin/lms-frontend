@@ -391,6 +391,53 @@ class ApiClient {
     }
   }
 
+  // Download file as blob via POST with JSON body (for export endpoints)
+  async downloadPost(endpoint: string, data?: unknown, options?: RequestOptions): Promise<Blob> {
+    const url = this.buildUrl(endpoint, options?.params);
+    const doFetch = async (isRetry = false) => {
+      const response = await fetch(url, {
+        ...options,
+        method: "POST",
+        headers: this.getHeaders(),
+        body: data ? JSON.stringify(data) : undefined,
+        credentials: "include",
+      });
+      if (response.status === 401) {
+        if (isRetry) {
+          clearAuthCookies();
+          this.accessToken = null;
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          throw new Error("Unauthorized");
+        }
+        const refreshed = await this.refreshToken();
+        if (!refreshed) {
+          clearAuthCookies();
+          this.accessToken = null;
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          throw new Error("Unauthorized");
+        }
+        throw new Error("__TOKEN_REFRESHED__");
+      }
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`);
+      }
+      return response.blob();
+    };
+
+    try {
+      return await doFetch();
+    } catch (error) {
+      if (this.shouldRetry(error)) {
+        return await doFetch(true);
+      }
+      throw error;
+    }
+  }
+
   // Download file as blob with authentication
   async download(endpoint: string, options?: RequestOptions): Promise<Blob> {
     const url = this.buildUrl(endpoint, options?.params);

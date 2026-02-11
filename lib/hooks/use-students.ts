@@ -60,6 +60,25 @@ export function useStudent(id: string | null) {
   };
 }
 
+export function useStudentStats() {
+  const { data, error, isLoading, mutate } = useSWR(
+    "/api/v1/students/status/statistics",
+    () => studentsApi.getStatusStatistics(),
+    {
+      onError: (err) => handleApiError(err, "Load student statistics"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    stats: data,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
 export function useStudentAnalytics(id: string | null) {
   const { data, error, isLoading, mutate } = useSWR<StudentAnalytics>(
     id ? `/api/v1/students/${id}/analytics` : null,

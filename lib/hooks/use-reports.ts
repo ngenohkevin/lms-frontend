@@ -16,6 +16,10 @@ import type {
   LostBooksReportRequest,
   FinesCollectionReport,
   FinesCollectionReportRequest,
+  StudentActivityReport,
+  StudentActivityReportRequest,
+  StudentBehaviorAnalysisReport,
+  StudentBehaviorAnalysisRequest,
 } from "@/lib/types";
 
 // Helper to handle API errors consistently
@@ -247,6 +251,52 @@ export function useFinesCollectionReport(params?: FinesCollectionReportRequest) 
     () => reportsApi.getFinesCollectionReport(params),
     {
       onError: (err) => handleApiError(err, "Load fines collection report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    report: data,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
+export function useStudentActivityReport(params?: StudentActivityReportRequest) {
+  const key = params
+    ? ["/api/v1/reports/student-activity-report", params]
+    : "/api/v1/reports/student-activity-report";
+
+  const { data, error, isLoading, mutate } = useSWR<StudentActivityReport>(
+    key,
+    () => reportsApi.getStudentActivityReport(params),
+    {
+      onError: (err) => handleApiError(err, "Load student activity report"),
+      shouldRetryOnError: true,
+      errorRetryCount: 2,
+    }
+  );
+
+  return {
+    report: data,
+    isLoading,
+    error,
+    refresh: mutate,
+  };
+}
+
+export function useStudentBehaviorAnalysis(params?: StudentBehaviorAnalysisRequest) {
+  const key = params
+    ? ["/api/v1/reports/student-behavior-analysis", params]
+    : "/api/v1/reports/student-behavior-analysis";
+
+  const { data, error, isLoading, mutate } = useSWR<StudentBehaviorAnalysisReport>(
+    key,
+    () => reportsApi.getStudentBehaviorAnalysis(params),
+    {
+      onError: (err) => handleApiError(err, "Load student behavior analysis"),
       shouldRetryOnError: true,
       errorRetryCount: 2,
     }

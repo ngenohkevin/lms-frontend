@@ -128,7 +128,8 @@ export default function LostBooksReportPage() {
               <PrintSection title="Lost Books by Category">
                 <Card>
                   <CardContent className="pt-6">
-                    <Table>
+                    <div className="overflow-x-auto">
+                    <Table className="min-w-[600px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Genre/Category</TableHead>
@@ -148,6 +149,7 @@ export default function LostBooksReportPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
@@ -158,7 +160,8 @@ export default function LostBooksReportPage() {
               <PrintSection title="Lost Books by Year of Study">
                 <Card>
                   <CardContent className="pt-6">
-                    <Table>
+                    <div className="overflow-x-auto">
+                    <Table className="min-w-[600px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Year of Study</TableHead>
@@ -178,6 +181,7 @@ export default function LostBooksReportPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
@@ -194,7 +198,8 @@ export default function LostBooksReportPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Table>
+                    <div className="overflow-x-auto">
+                    <Table className="min-w-[600px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Period</TableHead>
@@ -214,6 +219,7 @@ export default function LostBooksReportPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
@@ -230,7 +236,8 @@ export default function LostBooksReportPage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <Table>
+                    <div className="overflow-x-auto">
+                    <Table className="min-w-[600px]">
                       <TableHeader>
                         <TableRow>
                           <TableHead>Book</TableHead>
@@ -263,7 +270,7 @@ export default function LostBooksReportPage() {
                                 : "N/A"}
                             </TableCell>
                             <TableCell className="text-right font-medium">
-                              ${book.replacement_cost}
+                              KSH {book.replacement_cost}
                             </TableCell>
                             <TableCell>
                               <Badge variant={book.fine_paid ? "default" : "destructive"}>
@@ -274,6 +281,7 @@ export default function LostBooksReportPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                   </CardContent>
                 </Card>
               </PrintSection>
