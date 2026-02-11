@@ -16,13 +16,19 @@ export function SWRProvider({ children }: SWRProviderProps) {
         revalidateOnFocus: false,
         revalidateOnReconnect: true,
         errorRetryCount: 3,
-        dedupingInterval: 2000,
-        // Don't retry on auth/permission errors (401, 403)
+        dedupingInterval: 5000,
+        // Don't retry on auth/permission/rate-limit errors
         onErrorRetry: (error, _key, _config, revalidate, { retryCount }) => {
           // Don't retry on permission/auth errors
           if (error?.message?.includes("Unauthorized") ||
               error?.message?.includes("INSUFFICIENT_PERMISSIONS") ||
               error?.message?.includes("Forbidden")) {
+            return;
+          }
+          // Don't retry on rate limit errors (429)
+          if (error?.message?.includes("Too many requests") ||
+              error?.message?.includes("RATE_LIMIT") ||
+              error?.message?.includes("429")) {
             return;
           }
           // Only retry up to 3 times

@@ -123,6 +123,10 @@ class ApiClient {
       throw new Error("__TOKEN_REFRESHED__");
     }
 
+    if (response.status === 429) {
+      throw new Error("Too many requests. Please try again later.");
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({
         message: response.statusText,

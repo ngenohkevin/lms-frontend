@@ -1,4 +1,6 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
 import { BookOpen } from "lucide-react";
 
 const sizeStyles = {
@@ -14,16 +16,18 @@ interface BookCoverImageProps {
 
 export function BookCoverImage({ src, alt, size = "sm" }: BookCoverImageProps) {
   const styles = sizeStyles[size];
+  const [hasError, setHasError] = useState(false);
 
-  if (src) {
+  if (src && !hasError) {
     return (
       <div className={`${styles.container} rounded overflow-hidden shrink-0 relative`}>
-        <Image
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
           src={src}
           alt={alt}
-          fill
-          className="object-cover"
-          sizes="40px"
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+          onError={() => setHasError(true)}
         />
       </div>
     );
