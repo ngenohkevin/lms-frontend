@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSWRConfig } from "swr";
-import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
 import { useBook } from "@/lib/hooks/use-books";
 import { useSeriesById } from "@/lib/hooks/use-series";
 import { booksApi } from "@/lib/api";
 import apiClient from "@/lib/api/client";
-import { cn } from "@/lib/utils";
+import { cn, proxiedImageUrl } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -240,13 +239,11 @@ export default function BookDetailPage() {
           <div className="shrink-0">
             <div className="relative w-[100px] sm:w-[150px] lg:w-[180px] rounded-lg overflow-hidden shadow-md">
               {book.cover_url ? (
-                <Image
-                  src={book.cover_url}
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={proxiedImageUrl(book.cover_url)}
                   alt={book.title}
-                  width={180}
-                  height={270}
                   className="w-full h-auto"
-                  priority
                 />
               ) : (
                 <div className="aspect-[2/3] bg-muted flex items-center justify-center">

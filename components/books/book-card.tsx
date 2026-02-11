@@ -1,11 +1,11 @@
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BookOpen, MapPin, Star, Calendar, Hash, AlertTriangle } from "lucide-react";
 import type { Book } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { cn, proxiedImageUrl } from "@/lib/utils";
 
 interface BookCardProps {
   book: Book;
@@ -22,19 +22,21 @@ export function BookCard({
 }: BookCardProps) {
   const isAvailable = book.available_copies > 0;
   const hasNoCopies = book.total_copies === 0;
+  const [imgError, setImgError] = useState(false);
 
   return (
     <Card className="group overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-1 flex flex-col">
       <Link href={`/books/${book.id}`} className="block">
         <div className="relative aspect-[3/4] bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
-          {book.cover_url ? (
+          {book.cover_url && !imgError ? (
             <>
-              <Image
-                src={book.cover_url}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={proxiedImageUrl(book.cover_url)}
                 alt={book.title}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                loading="lazy"
+                onError={() => setImgError(true)}
               />
               {/* Gradient overlay on hover */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />

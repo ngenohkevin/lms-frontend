@@ -3,7 +3,6 @@
 import { useState, useEffect, Suspense, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -37,6 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Book, Student, BookCopy } from "@/lib/types";
+import { proxiedImageUrl } from "@/lib/utils";
 import { CopySelector } from "@/components/books/copy-selector";
 
 // Debounce hook
@@ -494,11 +494,10 @@ function BorrowContent() {
                   <div className="flex gap-4">
                     <div className="shrink-0">
                       {selectedBook.cover_url ? (
-                        <Image
-                          src={selectedBook.cover_url}
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img
+                          src={proxiedImageUrl(selectedBook.cover_url)}
                           alt={selectedBook.title}
-                          width={80}
-                          height={120}
                           className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
                         />
                       ) : (

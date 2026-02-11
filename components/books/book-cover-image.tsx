@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { BookOpen } from "lucide-react";
+import { proxiedImageUrl } from "@/lib/utils";
 
 const sizeStyles = {
   sm: { container: "h-10 w-8", icon: "h-4 w-4" },
@@ -23,7 +24,7 @@ export function BookCoverImage({ src, alt, size = "sm" }: BookCoverImageProps) {
       <div className={`${styles.container} rounded overflow-hidden shrink-0 relative`}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
+          src={proxiedImageUrl(src)}
           alt={alt}
           className="absolute inset-0 w-full h-full object-cover"
           loading="lazy"

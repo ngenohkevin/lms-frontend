@@ -88,6 +88,16 @@ async function proxyRequest(request: NextRequest, path: string[]) {
         responseHeaders.set("content-disposition", contentDisposition);
       }
 
+      // Forward cache headers for proxied images
+      const cacheControl = response.headers.get("cache-control");
+      if (cacheControl) {
+        responseHeaders.set("cache-control", cacheControl);
+      }
+      const xCache = response.headers.get("x-cache");
+      if (xCache) {
+        responseHeaders.set("x-cache", xCache);
+      }
+
       return new NextResponse(buffer, {
         status: response.status,
         headers: responseHeaders,
