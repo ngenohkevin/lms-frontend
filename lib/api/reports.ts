@@ -73,10 +73,10 @@ export const reportsApi = {
     // Fetch both endpoints for complete data
     const [dashboardResponse, overviewResponse] = await Promise.all([
       apiClient.get<ApiResponse<DashboardMetricsResponse>>(
-        `${REPORTS_PREFIX}/dashboard-metrics`
+        `${REPORTS_PREFIX}/dashboard-metrics`,
       ),
       apiClient.get<ApiResponse<LibraryOverviewResponse>>(
-        `${REPORTS_PREFIX}/library-overview`
+        `${REPORTS_PREFIX}/library-overview`,
       ),
     ]);
 
@@ -91,37 +91,56 @@ export const reportsApi = {
       overdue_books: safeNumber(overview?.overdue_books),
       today_borrows: safeNumber(dashboard?.today_borrows),
       today_returns: safeNumber(dashboard?.today_returns),
-      pending_reservations: safeNumber(overview?.total_reservations ?? dashboard?.pending_reservations),
+      pending_reservations: safeNumber(
+        overview?.total_reservations ?? dashboard?.pending_reservations,
+      ),
       total_fines: safeNumber(overview?.total_fines),
-      available_books: safeNumber(overview?.available_books ?? dashboard?.available_books),
+      available_books: safeNumber(
+        overview?.available_books ?? dashboard?.available_books,
+      ),
     };
   },
 
   // Library overview - GET /api/v1/reports/library-overview
   getLibraryOverview: async (): Promise<LibraryOverviewResponse> => {
     const response = await apiClient.get<ApiResponse<LibraryOverviewResponse>>(
-      `${REPORTS_PREFIX}/library-overview`
+      `${REPORTS_PREFIX}/library-overview`,
     );
     return response.data;
   },
 
   // Borrowing trends - POST /api/v1/reports/borrowing-trends
-  // Requires: start_date, end_date, interval
-  getBorrowingTrends: async (params?: ReportParams): Promise<BorrowingTrend[]> => {
+  // Backend returns { periods: [...], summary: {...} }
+  getBorrowingTrends: async (
+    params?: ReportParams,
+  ): Promise<BorrowingTrend[]> => {
     const defaultDates = getDefaultDateRange();
-    const response = await apiClient.post<ApiResponse<BorrowingTrend[]>>(
+    interface BackendTrends {
+      periods?: Array<{
+        period: string;
+        borrow_count: number;
+        return_count: number;
+      }>;
+      summary?: Record<string, unknown>;
+    }
+    const response = await apiClient.post<ApiResponse<BackendTrends>>(
       `${REPORTS_PREFIX}/borrowing-trends`,
       {
         start_date: params?.from_date || defaultDates.start_date,
         end_date: params?.to_date || defaultDates.end_date,
         interval: params?.group_by || "day",
-      }
+      },
     );
-    return response.data || [];
+    const raw = response.data;
+    return (raw?.periods || []).map((p) => ({
+      date: p.period,
+      borrowed: safeNumber(p.borrow_count),
+      returned: safeNumber(p.return_count),
+    }));
   },
 
   // Popular books - POST /api/v1/reports/popular-books
-  // Requires: start_date, end_date
+  // Backend returns { books: [...], summary: {...} }
   getPopularBooks: async (params?: {
     limit?: number;
     from_date?: string;
@@ -131,31 +150,67 @@ export const reportsApi = {
     period?: string;
   }): Promise<PopularBook[]> => {
     const defaultDates = getDefaultDateRange();
-    const response = await apiClient.post<ApiResponse<PopularBook[]>>(
+    interface BackendPopular {
+      books?: Array<{
+        book_id: string;
+        title: string;
+        author: string;
+        genre?: string;
+        borrow_count: number;
+        unique_users: number;
+      }>;
+      summary?: Record<string, unknown>;
+    }
+    const response = await apiClient.post<ApiResponse<BackendPopular>>(
       `${REPORTS_PREFIX}/popular-books`,
       {
         start_date: params?.from_date || defaultDates.start_date,
         end_date: params?.to_date || defaultDates.end_date,
         limit: params?.limit || 10,
         year_of_study: params?.year,
-      }
+      },
     );
-    return response.data || [];
+    const raw = response.data;
+    return (raw?.books || []).map((b) => ({
+      book_id: b.book_id,
+      title: b.title,
+      author: b.author,
+      isbn: "",
+      borrow_count: safeNumber(b.borrow_count),
+    }));
   },
 
   // Borrowing statistics - POST /api/v1/reports/borrowing-statistics
-  // Requires: start_date, end_date
-  getBorrowingStats: async (params?: ReportParams & { year?: number }): Promise<BorrowingStats[]> => {
+  // Backend returns { monthly_data: [...], summary: {...} }
+  getBorrowingStats: async (
+    params?: ReportParams & { year?: number },
+  ): Promise<BorrowingStats[]> => {
     const defaultDates = getDefaultDateRange();
-    const response = await apiClient.post<ApiResponse<BorrowingStats[]>>(
+    interface BackendStats {
+      monthly_data?: Array<{
+        month: string;
+        total_borrows: number;
+        total_returns: number;
+        total_overdue: number;
+        unique_students: number;
+      }>;
+      summary?: Record<string, unknown>;
+    }
+    const response = await apiClient.post<ApiResponse<BackendStats>>(
       `${REPORTS_PREFIX}/borrowing-statistics`,
       {
         start_date: params?.from_date || defaultDates.start_date,
         end_date: params?.to_date || defaultDates.end_date,
         year_of_study: params?.year,
-      }
+      },
     );
-    return response.data || [];
+    const raw = response.data;
+    return (raw?.monthly_data || []).map((d) => ({
+      period: d.month,
+      total_borrowed: safeNumber(d.total_borrows),
+      total_returned: safeNumber(d.total_returns),
+      total_overdue: safeNumber(d.total_overdue),
+    }));
   },
 
   // Category statistics - derived from inventory-status endpoint
@@ -172,7 +227,7 @@ export const reportsApi = {
       summary: { total_books: number; available_books: number };
     }
     const response = await apiClient.get<ApiResponse<BackendInventory>>(
-      `${REPORTS_PREFIX}/inventory-status`
+      `${REPORTS_PREFIX}/inventory-status`,
     );
     const raw = response.data;
     const genres = raw?.genres || [];
@@ -185,7 +240,7 @@ export const reportsApi = {
   },
 
   // Student activity report - POST /api/v1/reports/student-activity
-  // Requires: start_date, end_date
+  // Backend returns { students: [...], summary: {...} }
   getStudentActivity: async (params?: {
     limit?: number;
     year?: number;
@@ -193,15 +248,36 @@ export const reportsApi = {
     period?: string;
   }): Promise<StudentActivity[]> => {
     const defaultDates = getDefaultDateRange();
-    const response = await apiClient.post<ApiResponse<StudentActivity[]>>(
+    interface BackendActivity {
+      students?: Array<{
+        student_id: string;
+        student_name: string;
+        year_of_study: number;
+        total_borrows: number;
+        current_books: number;
+        overdue_books: number;
+        total_fines: string;
+      }>;
+      summary?: Record<string, unknown>;
+    }
+    const response = await apiClient.post<ApiResponse<BackendActivity>>(
       `${REPORTS_PREFIX}/student-activity`,
       {
         start_date: defaultDates.start_date,
         end_date: defaultDates.end_date,
         year_of_study: params?.year,
-      }
+      },
     );
-    return response.data || [];
+    const raw = response.data;
+    return (raw?.students || []).map((s) => ({
+      student_id: s.student_id,
+      student_name: s.student_name,
+      year_of_study: s.year_of_study,
+      total_borrowed: safeNumber(s.total_borrows),
+      current_books: safeNumber(s.current_books),
+      overdue_count: safeNumber(s.overdue_books),
+      fine_amount: safeNumber(s.total_fines),
+    }));
   },
 
   // Inventory status - GET /api/v1/reports/inventory-status
@@ -231,14 +307,21 @@ export const reportsApi = {
     }
     const response = await apiClient.get<ApiResponse<BackendInventory>>(
       `${REPORTS_PREFIX}/inventory-status`,
-      { params }
+      { params },
     );
     const raw = response.data;
     const genres = raw?.genres || [];
-    const summary = raw?.summary || { total_books: 0, available_books: 0, overall_utilization: "0" };
+    const summary = raw?.summary || {
+      total_books: 0,
+      available_books: 0,
+      overall_utilization: "0",
+    };
 
     const availableCopies = safeNumber(summary.available_books);
-    const totalBorrowed = genres.reduce((sum, g) => sum + safeNumber(g.borrowed_books), 0);
+    const totalBorrowed = genres.reduce(
+      (sum, g) => sum + safeNumber(g.borrowed_books),
+      0,
+    );
 
     return {
       total_books: safeNumber(summary.total_books),
@@ -283,7 +366,7 @@ export const reportsApi = {
       `${REPORTS_PREFIX}/overdue-books`,
       {
         year_of_study: params?.year,
-      }
+      },
     );
     const raw = response.data;
     const books = raw?.books || [];
@@ -303,7 +386,7 @@ export const reportsApi = {
         year_of_study: year,
         count: data.count,
         fine_amount: data.fineAmount,
-      })
+      }),
     );
 
     // Group overdue by days ranges
@@ -315,7 +398,9 @@ export const reportsApi = {
     ];
     const overdue_by_days = dayRanges.map((r) => ({
       range: r.range,
-      count: books.filter((b) => b.days_overdue >= r.min && b.days_overdue <= r.max).length,
+      count: books.filter(
+        (b) => b.days_overdue >= r.min && b.days_overdue <= r.max,
+      ).length,
     }));
 
     return {
@@ -330,40 +415,17 @@ export const reportsApi = {
     };
   },
 
-  // Fine collection report - POST /api/v1/reports/borrowing-statistics
-  getFineReport: async (params?: ReportParams): Promise<{
-    total_fines: number;
-    total_collected: number;
-    total_pending: number;
-    by_period: Array<{
-      period: string;
-      fines: number;
-      collected: number;
-    }>;
-  }> => {
-    const defaultDates = getDefaultDateRange();
-    const response = await apiClient.post<ApiResponse<{
-      total_fines: number;
-      total_collected: number;
-      total_pending: number;
-      by_period: Array<{
-        period: string;
-        fines: number;
-        collected: number;
-      }>;
-    }>>(`${REPORTS_PREFIX}/borrowing-statistics`, {
-      start_date: params?.from_date || defaultDates.start_date,
-      end_date: params?.to_date || defaultDates.end_date,
-    });
-    return response.data;
-  },
-
   // Export report - POST /api/v1/reports/export
   // Backend expects JSON body: { report_type, format, parameters }
   downloadReport: async (
-    reportType: "borrowing_trends" | "popular_books" | "overdue_books" | "student_activity" | "inventory_status",
+    reportType:
+      | "borrowing_trends"
+      | "popular_books"
+      | "overdue_books"
+      | "student_activity"
+      | "inventory_status",
     format: "csv" | "excel" | "pdf",
-    parameters?: Record<string, unknown>
+    parameters?: Record<string, unknown>,
   ): Promise<Blob> => {
     return apiClient.downloadPost(`${REPORTS_PREFIX}/export`, {
       report_type: reportType,
@@ -379,7 +441,7 @@ export const reportsApi = {
   // Individual Student Report - GET /api/v1/reports/individual-student/:id
   getIndividualStudentReport: async (
     studentId: number,
-    params?: IndividualStudentReportRequest
+    params?: IndividualStudentReportRequest,
   ): Promise<IndividualStudentReport> => {
     const queryParams = new URLSearchParams();
     if (params?.limit) {
@@ -393,13 +455,14 @@ export const reportsApi = {
     }
     const queryString = queryParams.toString();
     const url = `${REPORTS_PREFIX}/individual-student/${studentId}${queryString ? `?${queryString}` : ""}`;
-    const response = await apiClient.get<ApiResponse<IndividualStudentReport>>(url);
+    const response =
+      await apiClient.get<ApiResponse<IndividualStudentReport>>(url);
     return response.data;
   },
 
   // Lost Books Report - POST /api/v1/reports/lost-books
   getLostBooksReport: async (
-    params?: LostBooksReportRequest
+    params?: LostBooksReportRequest,
   ): Promise<LostBooksReport> => {
     const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<LostBooksReport>>(
@@ -410,14 +473,14 @@ export const reportsApi = {
         year_of_study: params?.year_of_study,
         genre: params?.genre,
         interval: params?.interval || "month",
-      }
+      },
     );
     return response.data;
   },
 
   // Fines Collection Report - POST /api/v1/reports/fines-collection
   getFinesCollectionReport: async (
-    params?: FinesCollectionReportRequest
+    params?: FinesCollectionReportRequest,
   ): Promise<FinesCollectionReport> => {
     const defaultDates = getDefaultDateRange();
     const response = await apiClient.post<ApiResponse<FinesCollectionReport>>(
@@ -428,14 +491,14 @@ export const reportsApi = {
         interval: params?.interval || "month",
         paid_only: params?.paid_only,
         limit: params?.limit || 50,
-      }
+      },
     );
     return response.data;
   },
 
   // Student Activity Report - POST /api/v1/reports/student-activity
   getStudentActivityReport: async (
-    params?: StudentActivityReportRequest
+    params?: StudentActivityReportRequest,
   ): Promise<StudentActivityReport> => {
     const defaultDates = getWideDefaultDateRange();
     const response = await apiClient.post<ApiResponse<StudentActivityReport>>(
@@ -444,24 +507,23 @@ export const reportsApi = {
         start_date: params?.start_date || defaultDates.start_date,
         end_date: params?.end_date || defaultDates.end_date,
         year_of_study: params?.year_of_study,
-      }
+      },
     );
     return response.data;
   },
 
   // Student Behavior Analysis - POST /api/v1/reports/student-behavior-analysis
   getStudentBehaviorAnalysis: async (
-    params?: StudentBehaviorAnalysisRequest
+    params?: StudentBehaviorAnalysisRequest,
   ): Promise<StudentBehaviorAnalysisReport> => {
     const defaultDates = getWideDefaultDateRange();
-    const response = await apiClient.post<ApiResponse<StudentBehaviorAnalysisReport>>(
-      `${REPORTS_PREFIX}/student-behavior-analysis`,
-      {
-        start_date: params?.start_date || defaultDates.start_date,
-        end_date: params?.end_date || defaultDates.end_date,
-        year_of_study: params?.year_of_study,
-      }
-    );
+    const response = await apiClient.post<
+      ApiResponse<StudentBehaviorAnalysisReport>
+    >(`${REPORTS_PREFIX}/student-behavior-analysis`, {
+      start_date: params?.start_date || defaultDates.start_date,
+      end_date: params?.end_date || defaultDates.end_date,
+      year_of_study: params?.year_of_study,
+    });
     return response.data;
   },
 };
