@@ -18,11 +18,26 @@ vi.mock("@/lib/hooks/use-transactions", () => ({
   useRenewalEligibility: vi.fn(),
 }));
 
-// Mock transactionsApi
+// Mock transactionsApi and finesApi
 vi.mock("@/lib/api", () => ({
   transactionsApi: {
     renew: vi.fn(),
   },
+  finesApi: {
+    getStatistics: vi.fn().mockResolvedValue({ fine_per_day: 50 }),
+  },
+}));
+
+// Mock getFineSettings
+vi.mock("@/lib/api/settings", () => ({
+  getFineSettings: vi.fn().mockResolvedValue({ lost_book_fine: 500 }),
+}));
+
+// Mock useSWRConfig
+vi.mock("swr", () => ({
+  useSWRConfig: () => ({
+    mutate: vi.fn(),
+  }),
 }));
 
 const mockUseRenewalEligibility = vi.mocked(useRenewalEligibility);

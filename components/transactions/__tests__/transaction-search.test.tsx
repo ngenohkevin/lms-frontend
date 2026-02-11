@@ -15,7 +15,7 @@ describe("TransactionSearch", () => {
     render(<TransactionSearch onSearch={mockOnSearch} />);
 
     expect(
-      screen.getByPlaceholderText(/search by book title/i)
+      screen.getByPlaceholderText(/search books, students, barcodes/i)
     ).toBeInTheDocument();
   });
 
@@ -40,11 +40,8 @@ describe("TransactionSearch", () => {
     const user = userEvent.setup();
     render(<TransactionSearch onSearch={mockOnSearch} />);
 
-    const searchInput = screen.getByPlaceholderText(/search by book title/i);
-    await user.type(searchInput, "Test Book");
-
-    const searchButton = screen.getByRole("button", { name: /^search$/i });
-    await user.click(searchButton);
+    const searchInput = screen.getByPlaceholderText(/search books, students, barcodes/i);
+    await user.type(searchInput, "Test Book{enter}");
 
     expect(mockOnSearch).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -159,7 +156,7 @@ describe("TransactionSearch", () => {
       <TransactionSearch onSearch={mockOnSearch} initialParams={initialParams} />
     );
 
-    const searchInput = screen.getByPlaceholderText(/search by book title/i);
+    const searchInput = screen.getByPlaceholderText(/search books, students, barcodes/i);
     expect(searchInput).toHaveValue("Initial Query");
   });
 
