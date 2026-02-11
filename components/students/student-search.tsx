@@ -78,19 +78,47 @@ export function StudentSearch({
     (e?: React.FormEvent) => {
       e?.preventDefault();
 
-      if (onSearch) {
-        onSearch({
-          query: query || undefined,
-          department: department || undefined,
-          year_of_study: yearOfStudy || undefined,
-          status: status || undefined,
-          has_overdue: hasOverdue || undefined,
-          has_fines: hasFines || undefined,
-        });
-      }
+      onSearch?.({
+        query: query || undefined,
+        department: department || undefined,
+        year_of_study: yearOfStudy || undefined,
+        status: status || undefined,
+        has_overdue: hasOverdue || undefined,
+        has_fines: hasFines || undefined,
+      });
     },
     [query, department, yearOfStudy, status, hasOverdue, hasFines, onSearch]
   );
+
+  // Build current filter params with overrides — used by badge X buttons
+  // to pass the correct values directly (avoids stale state from setState + handleSearch)
+  const buildParams = (
+    overrides: Record<string, string | boolean | number | undefined> = {},
+  ) => {
+    const merged = {
+      query: query || undefined,
+      department: department || undefined,
+      year_of_study: yearOfStudy || undefined,
+      status: status || undefined,
+      has_overdue: hasOverdue || undefined,
+      has_fines: hasFines || undefined,
+      ...Object.fromEntries(
+        Object.entries(overrides).map(([k, v]) => [
+          k,
+          v === false || v === "" || v === 0 ? undefined : v,
+        ]),
+      ),
+    };
+    return merged;
+  };
+
+  const removeFilter = (
+    overrides: Record<string, string | boolean | number | undefined>,
+  ) => {
+    const params = buildParams(overrides);
+    setQuickFilter(null);
+    onSearch?.(params);
+  };
 
   const clearFilters = () => {
     setQuery("");
@@ -100,9 +128,7 @@ export function StudentSearch({
     setHasOverdue(false);
     setHasFines(false);
     setQuickFilter(null);
-    if (onSearch) {
-      onSearch({});
-    }
+    onSearch?.({});
   };
 
   const applyQuickFilter = (filterValue: string) => {
@@ -114,21 +140,36 @@ export function StudentSearch({
 
     setQuickFilter(filterValue);
 
+    // Build filter params and call onSearch directly to avoid stale state
+    const filterParams: Record<string, string | boolean | number | undefined> = {
+      query: query || undefined,
+      department: department || undefined,
+      year_of_study: yearOfStudy || undefined,
+      status: status || undefined,
+      has_overdue: hasOverdue || undefined,
+      has_fines: hasFines || undefined,
+    };
+
     switch (filterValue) {
       case "active":
         setStatus("active");
         setHasOverdue(false);
         setHasFines(false);
+        filterParams.status = "active";
+        filterParams.has_overdue = undefined;
+        filterParams.has_fines = undefined;
         break;
       case "overdue":
         setHasOverdue(true);
+        filterParams.has_overdue = true;
         break;
       case "fines":
         setHasFines(true);
+        filterParams.has_fines = true;
         break;
     }
 
-    setTimeout(() => handleSearch(), 0);
+    onSearch?.(filterParams);
   };
 
   const activeFiltersCount = [
@@ -161,7 +202,7 @@ export function StudentSearch({
 
         <div className="flex gap-2 flex-wrap sm:flex-nowrap">
           {/* Status dropdown (quick access) */}
-          <Select value={status || "all"} onValueChange={(val) => { setStatus(val === "all" ? "" : val as StudentStatus); setTimeout(() => handleSearch(), 0); }}>
+          <Select value={status || "all"} onValueChange={(val) => { const newStatus = val === "all" ? "" : val as StudentStatus; setStatus(newStatus); onSearch?.(buildParams({ status: newStatus })); }}>
             <SelectTrigger className="w-full sm:w-[140px] h-11">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -362,7 +403,7 @@ export function StudentSearch({
                 <button
                   onClick={() => {
                     setDepartment("");
-                    handleSearch();
+                    removeFilter({ department: "" });
                   }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
@@ -376,7 +417,7 @@ export function StudentSearch({
                 <button
                   onClick={() => {
                     setYearOfStudy(undefined);
-                    handleSearch();
+                    removeFilter({ year_of_study: 0 });
                   }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
@@ -390,7 +431,7 @@ export function StudentSearch({
                 <button
                   onClick={() => {
                     setStatus("");
-                    handleSearch();
+                    removeFilter({ status: "" });
                   }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
@@ -404,7 +445,7 @@ export function StudentSearch({
                 <button
                   onClick={() => {
                     setHasOverdue(false);
-                    handleSearch();
+                    removeFilter({ has_overdue: false });
                   }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
@@ -418,7 +459,7 @@ export function StudentSearch({
                 <button
                   onClick={() => {
                     setHasFines(false);
-                    handleSearch();
+                    removeFilter({ has_fines: false });
                   }}
                   className="ml-1 rounded-full p-0.5 hover:bg-muted-foreground/20"
                 >
