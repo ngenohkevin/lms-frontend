@@ -172,6 +172,11 @@ export function TransactionDetailDialog({
   const [foundReason, setFoundReason] = useState("");
   const [isMarkingFound, setIsMarkingFound] = useState(false);
 
+  const [showReturnDialog, setShowReturnDialog] = useState(false);
+  const [returnCondition, setReturnCondition] = useState<string>("good");
+  const [returnNotes, setReturnNotes] = useState("");
+  const [isReturning, setIsReturning] = useState(false);
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -271,6 +276,28 @@ export function TransactionDetailDialog({
       toast.error(err instanceof Error ? err.message : "Failed to cancel renewal");
     } finally {
       setIsCancellingRenewal(false);
+    }
+  };
+
+  const handleReturn = async () => {
+    if (!transaction) return;
+    setIsReturning(true);
+    try {
+      await transactionsApi.return(transaction.id, {
+        condition: returnCondition as "excellent" | "good" | "fair" | "poor" | "damaged",
+        condition_notes: returnNotes.trim() || undefined,
+      });
+      toast.success("Book returned successfully");
+      setShowReturnDialog(false);
+      setReturnCondition("good");
+      setReturnNotes("");
+      await invalidateRelatedCaches();
+      onRefresh?.();
+      onOpenChange(false);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to return book");
+    } finally {
+      setIsReturning(false);
     }
   };
 
@@ -692,6 +719,17 @@ export function TransactionDetailDialog({
                   <span className="ml-1 text-xs opacity-70">({getCancelTimeRemaining()})</span>
                 </Button>
               )}
+              {isActiveTransaction && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowReturnDialog(true)}
+                  className="h-9 flex-1 text-green-600 border-green-200 hover:bg-green-50 dark:text-green-400 dark:border-green-800"
+                >
+                  <CheckCircle className="mr-1.5 h-3.5 w-3.5" />
+                  Return
+                </Button>
+              )}
               {isActiveTransaction && canMarkAsLost() && (
                 <Button
                   variant="outline"
@@ -727,6 +765,64 @@ export function TransactionDetailDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* Return Dialog */}
+      <AlertDialog open={showReturnDialog} onOpenChange={setShowReturnDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Return Book
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Return &quot;{transaction.book?.title}&quot; and update its condition.
+              {isOverdue && (
+                <span className="block mt-2 text-amber-600">
+                  This book is {daysOverdue} day{daysOverdue !== 1 ? "s" : ""} overdue. An estimated fine of {formatCurrency(estimatedFine)} will be applied.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="return-condition">Condition *</Label>
+              <select
+                id="return-condition"
+                value={returnCondition}
+                onChange={(e) => setReturnCondition(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="excellent">Excellent</option>
+                <option value="good">Good</option>
+                <option value="fair">Fair</option>
+                <option value="poor">Poor</option>
+                <option value="damaged">Damaged</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="return-notes">Notes (optional)</Label>
+              <Textarea
+                id="return-notes"
+                placeholder="Any notes about the book's condition..."
+                value={returnNotes}
+                onChange={(e) => setReturnNotes(e.target.value)}
+                rows={2}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isReturning}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleReturn}
+              disabled={isReturning}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isReturning ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Return Book
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Cancel Dialog */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>

@@ -22,6 +22,7 @@ vi.mock("@/lib/hooks/use-transactions", () => ({
 vi.mock("@/lib/api", () => ({
   transactionsApi: {
     renew: vi.fn(),
+    return: vi.fn(),
   },
   finesApi: {
     getStatistics: vi.fn().mockResolvedValue({ fine_per_day: 50 }),
@@ -354,5 +355,88 @@ describe("TransactionDetailDialog", () => {
 
     // Should show renewal count (format is "2x renewed")
     expect(screen.getByText(/2x renewed/)).toBeInTheDocument();
+  });
+
+  // Return button tests
+  it("shows Return button for active transactions", () => {
+    render(
+      <TransactionDetailDialog
+        transaction={mockActiveTransaction}
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onRefresh={mockOnRefresh}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /return/i })).toBeInTheDocument();
+  });
+
+  it("shows Return button for overdue transactions", () => {
+    render(
+      <TransactionDetailDialog
+        transaction={mockOverdueTransaction}
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onRefresh={mockOnRefresh}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: /return/i })).toBeInTheDocument();
+  });
+
+  it("does not show Return button for returned transactions", () => {
+    mockUseRenewalEligibility.mockReturnValue({
+      canRenew: false,
+      reason: "Book already returned",
+      isLoading: false,
+      error: null,
+      refresh: vi.fn(),
+    });
+
+    render(
+      <TransactionDetailDialog
+        transaction={mockReturnedTransaction}
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onRefresh={mockOnRefresh}
+      />
+    );
+
+    expect(screen.queryByRole("button", { name: /^return$/i })).not.toBeInTheDocument();
+  });
+
+  it("calls return API with condition and notes", async () => {
+    const user = userEvent.setup();
+    mockTransactionsApi.return.mockResolvedValue(mockReturnedTransaction);
+
+    render(
+      <TransactionDetailDialog
+        transaction={mockActiveTransaction}
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        onRefresh={mockOnRefresh}
+      />
+    );
+
+    // Click Return button to open the return confirmation dialog
+    const returnButton = screen.getByRole("button", { name: /^return$/i });
+    await user.click(returnButton);
+
+    // Wait for the confirmation dialog to appear
+    await waitFor(() => {
+      // The AlertDialog title contains "Return Book"
+      expect(screen.getByRole("heading", { name: /return book/i })).toBeInTheDocument();
+    });
+
+    // Click the confirm action button
+    const confirmButtons = screen.getAllByRole("button", { name: /return book/i });
+    await user.click(confirmButtons[confirmButtons.length - 1]);
+
+    await waitFor(() => {
+      expect(mockTransactionsApi.return).toHaveBeenCalledWith("1", {
+        condition: "good",
+        condition_notes: undefined,
+      });
+    });
   });
 });

@@ -126,7 +126,7 @@ function extractFinePaid(finePaid: BackendTransactionRow["fine_paid"]): boolean 
 }
 
 // Map transaction type/status to frontend status
-function mapTransactionStatus(type: string, returnedDate?: string, backendStatus?: string): "active" | "returned" | "overdue" | "lost" | "cancelled" {
+function mapTransactionStatus(type: string, returnedDate?: string, backendStatus?: string, dueDate?: string): "active" | "returned" | "overdue" | "lost" | "cancelled" {
   // Use backend status if available
   if (backendStatus === "completed") return "returned";
   if (backendStatus === "cancelled") return "cancelled";
@@ -134,7 +134,9 @@ function mapTransactionStatus(type: string, returnedDate?: string, backendStatus
   // Check for lost status first (lost transactions have both type='lost' AND returned_date set)
   if (type === "lost") return "lost";
   if (returnedDate) return "returned";
-  return "active"; // Default to active, overdue would need date check
+  // Check if overdue based on due date
+  if (dueDate && !returnedDate && new Date() > new Date(dueDate)) return "overdue";
+  return "active";
 }
 
 // Backend transaction row with copy fields
@@ -163,8 +165,8 @@ function transformTransaction(tx: BackendTransactionRow | BackendTransactionRowW
     "Unknown";
   const studentCode = tx.student_code || tx.student_id_2 || "";
 
-  // Compute status from backend status + transaction type + returned date
-  const status = mapTransactionStatus(tx.transaction_type, tx.returned_date, tx.status);
+  // Compute status from backend status + transaction type + returned date + due date
+  const status = mapTransactionStatus(tx.transaction_type, tx.returned_date, tx.status, tx.due_date);
 
   return {
     id: String(tx.id),

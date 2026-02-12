@@ -245,7 +245,7 @@ export const handlers = [
           paid_amount: 12.5,
           unpaid_amount: 12.5,
         },
-        fine_per_day: 0.5,
+        fine_per_day: 50,
       },
     });
   }),

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTransactions, useTransactionStats } from "@/lib/hooks/use-transactions";
 import { useAuth } from "@/providers/auth-provider";
@@ -24,6 +24,7 @@ import type { Transaction, TransactionSearchParams, TransactionStatus } from "@/
 import { formatDate, formatRelativeTime, isOverdue, formatCurrency } from "@/lib/utils/format";
 import { TransactionDetailDialog } from "@/components/transactions/transaction-detail-dialog";
 import { TransactionSearch } from "@/components/transactions/transaction-search";
+import { getFineSettings } from "@/lib/api/settings";
 
 const statusColors: Record<TransactionStatus, string> = {
   active: "bg-blue-500/10 text-blue-700 border-blue-500/20",
@@ -44,6 +45,16 @@ export default function TransactionsPage() {
     per_page: 20,
     student_id: !canViewAll && isStudent ? String(user?.id) : undefined,
   });
+
+  const [fineRate, setFineRate] = useState(50);
+
+  useEffect(() => {
+    getFineSettings()
+      .then((settings) => {
+        if (settings?.fine_per_day > 0) setFineRate(settings.fine_per_day);
+      })
+      .catch(() => {});
+  }, []);
 
   const { stats, isLoading: statsLoading } = useTransactionStats();
   const { transactions, pagination, isLoading, refresh } = useTransactions(params);
@@ -142,20 +153,33 @@ export default function TransactionsPage() {
     {
       key: "fine",
       header: "Fine",
-      render: (tx: Transaction) => (
-        <span
-          className={`text-sm ${
-            tx.fine_amount > 0 && !tx.fine_paid
-              ? "text-destructive font-medium"
-              : ""
-          }`}
-        >
-          {tx.fine_amount > 0 ? formatCurrency(tx.fine_amount) : "-"}
-          {tx.fine_amount > 0 && tx.fine_paid && (
-            <span className="ml-1 text-green-600">(Paid)</span>
-          )}
-        </span>
-      ),
+      render: (tx: Transaction) => {
+        const hasActualFine = tx.fine_amount > 0;
+        const isOverdueTx = tx.status === "overdue" && !hasActualFine;
+        const estimatedFine = isOverdueTx && tx.due_date
+          ? Math.max(0, Math.ceil((Date.now() - new Date(tx.due_date).getTime()) / (1000 * 60 * 60 * 24))) * fineRate
+          : 0;
+        return (
+          <span
+            className={`text-sm ${
+              hasActualFine && !tx.fine_paid
+                ? "text-destructive font-medium"
+                : isOverdueTx
+                ? "text-amber-600 dark:text-amber-400"
+                : ""
+            }`}
+          >
+            {hasActualFine
+              ? formatCurrency(tx.fine_amount)
+              : isOverdueTx
+              ? `~${formatCurrency(estimatedFine)}`
+              : "-"}
+            {hasActualFine && tx.fine_paid && (
+              <span className="ml-1 text-green-600">(Paid)</span>
+            )}
+          </span>
+        );
+      },
     },
   ];
 

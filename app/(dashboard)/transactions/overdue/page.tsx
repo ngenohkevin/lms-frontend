@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useOverdueTransactions } from "@/lib/hooks/use-transactions";
+import { getFineSettings } from "@/lib/api/settings";
 import { AuthGuard } from "@/components/auth/auth-guard";
 import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
@@ -52,6 +53,15 @@ export default function OverdueTransactionsPage() {
   const [page, setPage] = useState(1);
   const [selectedTransaction, setSelectedTransaction] = useState<OverdueTransaction | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [fineRate, setFineRate] = useState(50);
+
+  useEffect(() => {
+    getFineSettings()
+      .then((settings) => {
+        if (settings?.fine_per_day > 0) setFineRate(settings.fine_per_day);
+      })
+      .catch(() => {});
+  }, []);
 
   const { overdueTransactions, pagination, isLoading, refresh } =
     useOverdueTransactions({
@@ -67,7 +77,7 @@ export default function OverdueTransactionsPage() {
   // Calculate summary stats
   const totalOverdue = pagination?.total || overdueTransactions.length;
   const totalEstimatedFines = overdueTransactions.reduce(
-    (sum, tx) => sum + (tx.calculated_fine || tx.days_overdue * 50),
+    (sum, tx) => sum + (tx.calculated_fine || tx.days_overdue * fineRate),
     0
   );
   const criticalCount = overdueTransactions.filter(
@@ -152,7 +162,7 @@ export default function OverdueTransactionsPage() {
       header: "Est. Fine",
       render: (tx: OverdueTransaction) => (
         <span className="font-medium text-amber-600 dark:text-amber-400">
-          {formatCurrency(tx.calculated_fine || tx.days_overdue * 50)}
+          {formatCurrency(tx.calculated_fine || tx.days_overdue * fineRate)}
         </span>
       ),
     },
