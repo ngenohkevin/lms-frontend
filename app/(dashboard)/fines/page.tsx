@@ -127,7 +127,7 @@ export default function FinesPage() {
       key: "book",
       header: "Book",
       render: (fine: Fine) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-[200px]">
           <BookCoverImage src={fine.book_cover_url} alt={fine.book_title || ""} size="sm" />
           <div className="min-w-0">
             <p className="font-medium truncate">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
@@ -140,8 +140,8 @@ export default function FinesPage() {
       key: "student",
       header: "Student",
       render: (fine: Fine) => (
-        <div>
-          <p className="font-medium">{fine.student_name || `Student #${fine.student_id}`}</p>
+        <div className="min-w-[120px]">
+          <p className="font-medium whitespace-nowrap">{fine.student_name || `Student #${fine.student_id}`}</p>
           {fine.student_code && (
             <p className="text-xs text-muted-foreground">{fine.student_code}</p>
           )}
@@ -152,7 +152,7 @@ export default function FinesPage() {
       key: "amount",
       header: "Amount",
       render: (fine: Fine) => (
-        <span className="font-semibold text-red-600">
+        <span className="font-semibold text-red-600 whitespace-nowrap">
           {formatCurrency(fine.amount)}
         </span>
       ),
@@ -161,7 +161,7 @@ export default function FinesPage() {
       key: "reason",
       header: "Reason",
       render: (fine: Fine) => (
-        <span className="text-sm">{fine.reason}</span>
+        <span className="text-sm whitespace-nowrap">{fine.reason}</span>
       ),
     },
     {
@@ -194,7 +194,7 @@ export default function FinesPage() {
       key: "date",
       header: "Date",
       render: (fine: Fine) => (
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
           {formatDate(fine.created_at)}
         </span>
       ),
@@ -258,11 +258,11 @@ export default function FinesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col gap-3 sm:gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Fine Management</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Fine Management</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage library fines, payments, and waivers
           </p>
         </div>
@@ -275,59 +275,59 @@ export default function FinesPage() {
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Fines</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-6 pb-2 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Fines</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">
               {formatCurrency(stats?.total_fines_amount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {stats?.total_fines_count || 0} fines total
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Unpaid</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-6 pb-2 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Unpaid</CardTitle>
+            <XCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-red-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-red-600">
               {formatCurrency(stats?.unpaid_fines_amount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {stats?.unpaid_fines_count || 0} unpaid fines
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Collected</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-6 pb-2 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Collected</CardTitle>
+            <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold text-green-600">
               {formatCurrency(stats?.paid_fines_amount || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               {stats?.paid_fines_count || 0} paid fines
             </p>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Daily Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-4 sm:p-6 pb-2 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium">Daily Rate</CardTitle>
+            <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="text-lg sm:text-2xl font-bold">
               {formatCurrency(stats?.fine_per_day || 0)}
             </div>
-            <p className="text-xs text-muted-foreground">per day overdue</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">per day overdue</p>
           </CardContent>
         </Card>
       </div>
@@ -335,24 +335,24 @@ export default function FinesPage() {
       {/* Students with High Fines Alert */}
       {highFineStudents && highFineStudents.length > 0 && (
         <Card className="border-yellow-500/50 bg-yellow-500/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-700">
-              <Users className="h-5 w-5" />
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-yellow-700 text-sm sm:text-base">
+              <Users className="h-4 w-4 sm:h-5 sm:w-5" />
               Students with High Fines
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               {highFineStudents.length} student(s) have unpaid fines exceeding KSH 5,000
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+            <div className="grid gap-2 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
               {highFineStudents.slice(0, 6).map((student) => (
                 <div
                   key={student.student_id}
-                  className="flex justify-between items-center p-2 rounded-md bg-background"
+                  className="flex justify-between items-center p-2 rounded-md bg-background text-sm"
                 >
-                  <span className="font-medium">{student.student_name}</span>
-                  <span className="text-red-600 font-semibold">
+                  <span className="font-medium truncate mr-2">{student.student_name}</span>
+                  <span className="text-red-600 font-semibold whitespace-nowrap">
                     {formatCurrency(student.total_fines)}
                   </span>
                 </div>
@@ -364,16 +364,16 @@ export default function FinesPage() {
 
       {/* Fines Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="p-4 sm:p-6">
           <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v as typeof activeTab); setPage(1); }}>
             <TabsList>
-              <TabsTrigger value="unpaid">Unpaid</TabsTrigger>
-              <TabsTrigger value="paid">Paid</TabsTrigger>
-              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="unpaid" className="text-xs sm:text-sm">Unpaid</TabsTrigger>
+              <TabsTrigger value="paid" className="text-xs sm:text-sm">Paid</TabsTrigger>
+              <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
           {finesError ? (
             <div className="text-center py-8 text-red-500">
               Error loading fines: {finesError.message}
@@ -393,7 +393,7 @@ export default function FinesPage() {
 
       {/* Pay Fine Dialog */}
       <AlertDialog open={actionType === "pay"} onOpenChange={() => { setActionType(null); setSelectedFine(null); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
             <AlertDialogDescription>
@@ -412,7 +412,7 @@ export default function FinesPage() {
 
       {/* Waive Fine Dialog */}
       <AlertDialog open={actionType === "waive"} onOpenChange={() => { setActionType(null); setSelectedFine(null); setWaiveReason(""); }}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle>Waive Fine</AlertDialogTitle>
             <AlertDialogDescription>
