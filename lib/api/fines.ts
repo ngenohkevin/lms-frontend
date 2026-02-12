@@ -35,31 +35,34 @@ function transformPagination(bp?: BackendPagination): PaginatedResponse<Fine>["p
   };
 }
 
-// Backend fine structure
+// Backend fine structure (matches services.Fine JSON tags)
 interface BackendFine {
-  id: number;
   transaction_id: number;
   student_id: number;
-  student_name?: string;
   student_code?: string;
+  student_name?: string;
+  student_email?: string;
+  book_id: number;
   book_title?: string;
   book_author?: string;
   book_cover_url?: string;
   amount: number;
-  reason?: string;
   paid: boolean;
-  waived: boolean;
-  waived_by?: number;
-  waived_at?: string;
-  waive_reason?: string;
   paid_at?: string;
+  waived: boolean;
+  waived_at?: string;
+  waived_by?: number;
+  waived_reason?: string;
+  due_date: string;
+  returned_date?: string;
+  days_overdue: number;
   created_at: string;
 }
 
 // Transform backend fine to frontend format
 function transformFine(fine: BackendFine): Fine {
   return {
-    id: String(fine.id),
+    id: String(fine.transaction_id),
     transaction_id: String(fine.transaction_id),
     student_id: String(fine.student_id),
     student_name: fine.student_name,
@@ -68,7 +71,7 @@ function transformFine(fine: BackendFine): Fine {
     book_author: fine.book_author,
     book_cover_url: fine.book_cover_url,
     amount: fine.amount,
-    reason: fine.reason || "Overdue book",
+    reason: fine.days_overdue > 0 ? `${fine.days_overdue} day(s) overdue` : "Overdue book",
     paid: fine.paid,
     paid_at: fine.paid_at,
     created_at: fine.created_at,
@@ -94,12 +97,14 @@ export interface FineStatistics {
   average_fine_amount: number;
 }
 
-// Student with high fines type
+// Student with high fines type (matches services.StudentWithHighFines JSON tags)
 export interface StudentWithHighFines {
   student_id: number;
+  student_code: string;
   student_name: string;
-  total_unpaid: number;
-  unpaid_count: number;
+  email: string;
+  total_fines: number;
+  fine_count: number;
 }
 
 export const finesApi = {
@@ -125,10 +130,10 @@ export const finesApi = {
 
   // Get unpaid fines for a student
   getUnpaidByStudent: async (studentId: string): Promise<Fine[]> => {
-    const response = await apiClient.get<ApiResponse<BackendFine[]>>(
+    const response = await apiClient.get<ApiResponse<{ fines: BackendFine[]; total: number; count: number }>>(
       `${FINES_PREFIX}/student/${studentId}/unpaid`
     );
-    return (response.data || []).map(transformFine);
+    return (response.data?.fines || []).map(transformFine);
   },
 
   // Get total unpaid fines for a student

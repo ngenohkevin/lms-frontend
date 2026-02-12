@@ -353,7 +353,7 @@ export default function FinesPage() {
                 >
                   <span className="font-medium">{student.student_name}</span>
                   <span className="text-red-600 font-semibold">
-                    {formatCurrency(student.total_unpaid)}
+                    {formatCurrency(student.total_fines)}
                   </span>
                 </div>
               ))}
