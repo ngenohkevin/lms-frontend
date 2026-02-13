@@ -17,11 +17,10 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import type { StaffUser, StaffUserFormData, StaffRole } from "@/lib/types";
+import type { StaffUser, StaffRole } from "@/lib/types";
 import { toast } from "sonner";
 
 const ROLES: { value: StaffRole; label: string; description: string }[] = [
-  { value: "super_admin", label: "Super Admin", description: "Supreme authority over all users and settings" },
   { value: "admin", label: "Admin", description: "Full system access" },
   {
     value: "librarian",
@@ -37,7 +36,7 @@ const userSchemaBase = z.object({
     .min(3, "Username must be at least 3 characters")
     .max(50, "Username must be at most 50 characters"),
   email: z.string().email("Invalid email address"),
-  role: z.enum(["super_admin", "admin", "librarian", "staff"], "Please select a role"),
+  role: z.enum(["admin", "librarian", "staff"], "Please select a role"),
 });
 
 const createUserSchema = userSchemaBase.extend({
@@ -51,6 +50,8 @@ const editUserSchema = userSchemaBase.extend({
     .optional()
     .or(z.literal("")),
 });
+
+type UserFormData = z.infer<typeof createUserSchema> | z.infer<typeof editUserSchema>;
 
 interface UserFormProps {
   user?: StaffUser;
@@ -71,13 +72,13 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     setValue,
     watch,
     formState: { errors },
-  } = useForm<StaffUserFormData>({
+  } = useForm<UserFormData>({
     resolver: zodResolver(schema),
     defaultValues: user
       ? {
           username: user.username,
           email: user.email,
-          role: user.role,
+          role: user.role as UserFormData["role"],
           password: "",
         }
       : {
@@ -85,7 +86,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
         },
   });
 
-  const onSubmit = async (data: StaffUserFormData) => {
+  const onSubmit = async (data: UserFormData) => {
     setIsLoading(true);
     setError(null);
 
@@ -94,7 +95,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
 
       if (isEditing) {
         // Only include password if it was changed
-        const updateData: Partial<StaffUserFormData> = {
+        const updateData: Partial<UserFormData> = {
           email: data.email,
           role: data.role,
         };
@@ -166,7 +167,7 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           <Label htmlFor="role">Role *</Label>
           <Select
             value={watch("role") || ""}
-            onValueChange={(value) => setValue("role", value as StaffRole)}
+            onValueChange={(value) => setValue("role", value as UserFormData["role"])}
           >
             <SelectTrigger>
               <SelectValue placeholder="Select role">

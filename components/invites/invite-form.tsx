@@ -30,7 +30,7 @@ import type { StaffRole, CreateInviteRequest } from "@/lib/types";
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["super_admin", "librarian", "admin", "staff"], "Please select a role"),
+  role: z.enum(["librarian", "admin", "staff"], "Please select a role"),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -41,11 +41,6 @@ interface InviteFormProps {
 }
 
 const ROLES: { value: StaffRole; label: string; description: string }[] = [
-  {
-    value: "super_admin",
-    label: "Super Admin",
-    description: "Supreme authority over all users and settings",
-  },
   {
     value: "admin",
     label: "Administrator",
@@ -233,7 +228,7 @@ export function InviteForm({ onSuccess, onCancel }: InviteFormProps) {
             <Label htmlFor="role">Role *</Label>
             <Select
               value={selectedRole}
-              onValueChange={(value) => setValue("role", value as StaffRole)}
+              onValueChange={(value) => setValue("role", value as InviteFormData["role"])}
               disabled={isLoading}
             >
               <SelectTrigger>

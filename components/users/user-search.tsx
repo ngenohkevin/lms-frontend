@@ -73,7 +73,6 @@ export function UserSearch({ onSearch }: UserSearchProps) {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All roles</SelectItem>
-            <SelectItem value="super_admin">Super Admin</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="librarian">Librarian</SelectItem>
             <SelectItem value="staff">Staff</SelectItem>
