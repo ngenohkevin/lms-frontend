@@ -22,6 +22,7 @@ import {
   DollarSign,
   BookCopy,
   Activity,
+  ScrollText,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
@@ -146,6 +147,12 @@ const transactionNavItems: NavItem[] = [
 ];
 
 const systemNavItems: NavItem[] = [
+  {
+    title: "Audit Logs",
+    href: "/audit-logs",
+    icon: ScrollText,
+    permission: PermissionCodes.AUDIT_LOGS_VIEW,
+  },
   {
     title: "Notifications",
     href: "/notifications",

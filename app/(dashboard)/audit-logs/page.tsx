@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { AuthGuard } from "@/components/auth/auth-guard";
@@ -26,7 +25,6 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
-  ArrowLeft,
   Download,
   ScrollText,
   CalendarIcon,
@@ -96,7 +94,6 @@ function actionColor(action: string) {
 }
 
 export default function AuditLogsPage() {
-  const router = useRouter();
   const [filters, setFilters] = useState<AuditLogFilters>({
     page: 1,
     per_page: 20,
@@ -227,19 +224,11 @@ export default function AuditLogsPage() {
         {/* Header */}
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <Button
-              variant="ghost"
-              className="-ml-2"
-              onClick={() => router.back()}
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
-            <h1 className="text-3xl font-bold tracking-tight mt-2 flex items-center gap-2">
-              <ScrollText className="h-7 w-7" />
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2">
+              <ScrollText className="h-6 w-6 sm:h-7 sm:w-7" />
               Audit Logs
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               View system activity and changes
             </p>
           </div>

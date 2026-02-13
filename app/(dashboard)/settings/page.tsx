@@ -22,7 +22,6 @@ import {
   Building2,
   GraduationCap,
   DollarSign,
-  ScrollText,
 } from "lucide-react";
 
 interface SettingsLink {
@@ -89,13 +88,6 @@ const settingsLinks: SettingsLink[] = [
     href: "/settings/series",
     icon: Library,
     permission: PermissionCodes.SERIES_VIEW,
-  },
-  {
-    title: "Audit Logs",
-    description: "View system activity and changes",
-    href: "/settings/audit-logs",
-    icon: ScrollText,
-    permission: PermissionCodes.AUDIT_LOGS_VIEW,
   },
 ];
 
