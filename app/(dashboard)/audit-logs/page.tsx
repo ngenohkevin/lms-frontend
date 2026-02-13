@@ -192,9 +192,12 @@ export default function AuditLogsPage() {
     {
       key: "record_id",
       header: "Record",
-      render: (log: AuditLog) => (
-        <span className="font-mono text-sm">#{log.record_id}</span>
-      ),
+      render: (log: AuditLog) =>
+        log.record_id === 0 ? (
+          <span className="text-xs text-muted-foreground">N/A</span>
+        ) : (
+          <span className="font-mono text-sm">#{log.record_id}</span>
+        ),
     },
     {
       key: "user_id",

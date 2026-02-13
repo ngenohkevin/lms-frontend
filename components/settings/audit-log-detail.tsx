@@ -71,7 +71,13 @@ export function AuditLogDetail({
               </div>
               <div>
                 <p className="text-muted-foreground">Record ID</p>
-                <p className="font-medium">{log.record_id}</p>
+                <p className="font-medium">
+                  {log.record_id === 0 ? (
+                    <span className="text-muted-foreground font-normal">N/A — no specific record</span>
+                  ) : (
+                    log.record_id
+                  )}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground">User ID</p>
