@@ -73,6 +73,7 @@ export interface UserOverridesResponse {
 export interface PermissionMatrixEntry {
   code: string;
   name: string;
+  super_admin: boolean;
   admin: boolean;
   librarian: boolean;
   staff: boolean;
@@ -132,6 +133,7 @@ export const PermissionCodes = {
   // Users
   USERS_VIEW: "users.view",
   USERS_MANAGE: "users.manage",
+  USERS_ONLINE: "users.online",
 
   // Invites
   INVITES_MANAGE: "invites.manage",

@@ -27,18 +27,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Check, X, Save, Shield, UserCog, User, ArrowLeft } from "lucide-react";
+import { Check, X, Save, Shield, UserCog, User, Crown, ArrowLeft } from "lucide-react";
 import type { StaffRole, PermissionMatrixEntry } from "@/lib/types";
 import { PermissionCategoryNames } from "@/lib/types";
 import { usePermissions } from "@/providers/permission-provider";
 
 const roleIcons: Record<StaffRole, React.ComponentType<{ className?: string }>> = {
+  super_admin: Crown,
   admin: Shield,
   librarian: UserCog,
   staff: User,
 };
 
 const roleLabels: Record<StaffRole, string> = {
+  super_admin: "Super Admin",
   admin: "Admin",
   librarian: "Librarian",
   staff: "Staff",
@@ -77,6 +79,7 @@ export default function PermissionsPage() {
     try {
       // Group changes by role
       const roleChanges: Record<StaffRole, string[]> = {
+        super_admin: [],
         admin: [],
         librarian: [],
         staff: [],
@@ -85,7 +88,7 @@ export default function PermissionsPage() {
       // Build the new permission sets for each role
       for (const cat of categories) {
         for (const perm of cat.permissions) {
-          for (const role of ["admin", "librarian", "staff"] as StaffRole[]) {
+          for (const role of ["super_admin", "admin", "librarian", "staff"] as StaffRole[]) {
             const effectiveValue = getEffectiveValue(perm, role);
             if (effectiveValue) {
               roleChanges[role].push(perm.code);
@@ -95,7 +98,7 @@ export default function PermissionsPage() {
       }
 
       // Save each role's permissions
-      for (const role of ["admin", "librarian", "staff"] as StaffRole[]) {
+      for (const role of ["super_admin", "admin", "librarian", "staff"] as StaffRole[]) {
         await permissionsApi.updateRolePermissions(role, {
           permissions: roleChanges[role],
         });
@@ -190,8 +193,8 @@ export default function PermissionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              {(["admin", "librarian", "staff"] as StaffRole[]).map((role) => {
+            <div className="grid gap-4 md:grid-cols-4">
+              {(["super_admin", "admin", "librarian", "staff"] as StaffRole[]).map((role) => {
                 const RoleIcon = roleIcons[role];
                 const permCount = categories.reduce(
                   (acc, cat) =>
@@ -245,7 +248,7 @@ export default function PermissionsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[300px]">Permission</TableHead>
-                    {(["admin", "librarian", "staff"] as StaffRole[]).map((role) => {
+                    {(["super_admin", "admin", "librarian", "staff"] as StaffRole[]).map((role) => {
                       const RoleIcon = roleIcons[role];
                       return (
                         <TableHead key={role} className="text-center w-[120px]">
@@ -262,7 +265,7 @@ export default function PermissionsPage() {
                   {categories.map((category) => (
                     <>
                       <TableRow key={category.category} className="bg-muted/50">
-                        <TableCell colSpan={4} className="font-semibold">
+                        <TableCell colSpan={5} className="font-semibold">
                           {PermissionCategoryNames[category.category] || category.category}
                         </TableCell>
                       </TableRow>
@@ -276,7 +279,7 @@ export default function PermissionsPage() {
                               </p>
                             </div>
                           </TableCell>
-                          {(["admin", "librarian", "staff"] as StaffRole[]).map(
+                          {(["super_admin", "admin", "librarian", "staff"] as StaffRole[]).map(
                             (role) => {
                               const value = getEffectiveValue(perm, role);
                               const isChanged = changes[perm.code]?.[role] !== undefined;

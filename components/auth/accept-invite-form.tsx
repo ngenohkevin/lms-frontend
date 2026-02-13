@@ -54,6 +54,7 @@ interface AcceptInviteFormProps {
 }
 
 const roleColors: Record<StaffRole, string> = {
+  super_admin: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400",
   admin: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
   librarian: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
   staff: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",

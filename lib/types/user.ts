@@ -1,4 +1,4 @@
-export type StaffRole = "admin" | "librarian" | "staff";
+export type StaffRole = "super_admin" | "admin" | "librarian" | "staff";
 
 export interface StaffUser {
   id: string;
@@ -93,4 +93,19 @@ export interface SetupCheckResponse {
 export interface InviteSearchParams {
   page?: number;
   per_page?: number;
+}
+
+// Online presence types
+export interface OnlineUser {
+  user_id: number;
+  username: string;
+  role: StaffRole;
+  last_seen: string;
+  ip_address?: string;
+  path?: string;
+}
+
+export interface OnlineUsersResponse {
+  users: OnlineUser[];
+  total: number;
 }

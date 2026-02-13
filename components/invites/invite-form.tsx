@@ -30,7 +30,7 @@ import type { StaffRole, CreateInviteRequest } from "@/lib/types";
 const inviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   name: z.string().min(2, "Name must be at least 2 characters"),
-  role: z.enum(["librarian", "admin", "staff"], "Please select a role"),
+  role: z.enum(["super_admin", "librarian", "admin", "staff"], "Please select a role"),
 });
 
 type InviteFormData = z.infer<typeof inviteSchema>;
@@ -42,6 +42,16 @@ interface InviteFormProps {
 
 const ROLES: { value: StaffRole; label: string; description: string }[] = [
   {
+    value: "super_admin",
+    label: "Super Admin",
+    description: "Supreme authority over all users and settings",
+  },
+  {
+    value: "admin",
+    label: "Administrator",
+    description: "Full access to all features",
+  },
+  {
     value: "librarian",
     label: "Librarian",
     description: "Can manage books, students, and transactions",
@@ -50,11 +60,6 @@ const ROLES: { value: StaffRole; label: string; description: string }[] = [
     value: "staff",
     label: "Staff",
     description: "Can view and check out books",
-  },
-  {
-    value: "admin",
-    label: "Administrator",
-    description: "Full access to all features",
   },
 ];
 

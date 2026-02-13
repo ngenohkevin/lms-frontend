@@ -18,24 +18,27 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { ArrowLeft, Save, Shield, UserCog, User } from "lucide-react";
+import { ArrowLeft, Save, Shield, UserCog, User, Crown } from "lucide-react";
 import type { StaffRole } from "@/lib/types";
 import { PermissionCategoryNames } from "@/lib/types";
 import { usePermissions } from "@/providers/permission-provider";
 
 const roleIcons: Record<StaffRole, React.ComponentType<{ className?: string }>> = {
+  super_admin: Crown,
   admin: Shield,
   librarian: UserCog,
   staff: User,
 };
 
 const roleLabels: Record<StaffRole, string> = {
+  super_admin: "Super Admin",
   admin: "Admin",
   librarian: "Librarian",
   staff: "Staff",
 };
 
 const roleDescriptions: Record<StaffRole, string> = {
+  super_admin: "Supreme authority over all users, settings, and system features.",
   admin: "Full system access with all permissions enabled by default.",
   librarian: "Library management access for day-to-day operations.",
   staff: "Basic read-only access for viewing library data.",
@@ -47,7 +50,7 @@ export default function RolePermissionsPage() {
   const role = params.role as StaffRole;
 
   // Validate role
-  const isValidRole = ["admin", "librarian", "staff"].includes(role);
+  const isValidRole = ["super_admin", "admin", "librarian", "staff"].includes(role);
 
   const { permissions: rolePermissions, isLoading: loadingRole, refresh } = useRolePermissions(isValidRole ? role : null);
   const { categories, isLoading: loadingAll } = useAllPermissions();

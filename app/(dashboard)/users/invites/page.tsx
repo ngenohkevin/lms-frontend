@@ -39,6 +39,7 @@ import {
   Shield,
   UserCog,
   User,
+  Crown,
 } from "lucide-react";
 import type { UserInvite, InviteSearchParams, InviteStatus, StaffRole } from "@/lib/types";
 import { formatDistanceToNow } from "date-fns";
@@ -62,12 +63,14 @@ const statusConfig: Record<InviteStatus, { label: string; icon: React.ComponentT
 };
 
 const roleColors: Record<StaffRole, string> = {
+  super_admin: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   admin: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
   librarian: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
   staff: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
 };
 
 const roleIcons: Record<StaffRole, React.ComponentType<{ className?: string }>> = {
+  super_admin: Crown,
   admin: Shield,
   librarian: UserCog,
   staff: User,
@@ -158,7 +161,7 @@ export default function InvitesPage() {
         return (
           <Badge variant="outline" className={`${roleColors[invite.role]} capitalize`}>
             <RoleIcon className="mr-1 h-3 w-3" />
-            {invite.role}
+            {invite.role === "super_admin" ? "Super Admin" : invite.role}
           </Badge>
         );
       },

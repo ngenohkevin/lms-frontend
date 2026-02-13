@@ -36,6 +36,7 @@ interface AuthContextType {
   hasRole: (roles: UserRole | UserRole[]) => boolean;
   isLibrarian: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
   isStudent: boolean;
 }
 
@@ -159,8 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout,
     refreshUser,
     hasRole,
-    isLibrarian: user?.role === "librarian" || user?.role === "admin",
-    isAdmin: user?.role === "admin",
+    isLibrarian: user?.role === "librarian" || user?.role === "admin" || user?.role === "super_admin",
+    isAdmin: user?.role === "admin" || user?.role === "super_admin",
+    isSuperAdmin: user?.role === "super_admin",
     isStudent: user?.role === "student",
   };
 

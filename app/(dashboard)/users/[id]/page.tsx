@@ -36,6 +36,7 @@ import {
   ShieldCheck,
   UserCog,
   User,
+  Crown,
   CheckCircle,
   XCircle,
   Mail,
@@ -49,12 +50,14 @@ import { toast } from "sonner";
 import type { StaffRole } from "@/lib/types";
 
 const roleColors: Record<StaffRole, string> = {
+  super_admin: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   admin: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
   librarian: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
   staff: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
 };
 
 const roleIcons: Record<StaffRole, React.ComponentType<{ className?: string }>> = {
+  super_admin: Crown,
   admin: Shield,
   librarian: UserCog,
   staff: User,
@@ -326,8 +329,10 @@ export default function UserDetailPage() {
                 <div className="flex items-center gap-3">
                   <RoleIcon className="h-8 w-8 text-muted-foreground" />
                   <div>
-                    <p className="font-medium capitalize">{user.role}</p>
+                    <p className="font-medium capitalize">{user.role === "super_admin" ? "Super Admin" : user.role}</p>
                     <p className="text-sm text-muted-foreground">
+                      {user.role === "super_admin" &&
+                        "Supreme authority over all users, settings, and system features"}
                       {user.role === "admin" &&
                         "Full access to all system features including user management"}
                       {user.role === "librarian" &&
@@ -342,9 +347,19 @@ export default function UserDetailPage() {
               <div className="space-y-2">
                 <p className="text-sm font-medium">Capabilities</p>
                 <ul className="text-sm text-muted-foreground space-y-1">
+                  {user.role === "super_admin" && (
+                    <>
+                      <li>• Delete any user regardless of who invited them</li>
+                      <li>• Manage all users, admins, and roles</li>
+                      <li>• View online user presence</li>
+                      <li>• Configure system settings</li>
+                      <li>• Access all reports and analytics</li>
+                      <li>• Full access to every feature</li>
+                    </>
+                  )}
                   {user.role === "admin" && (
                     <>
-                      <li>• Manage all users and roles</li>
+                      <li>• Manage users they invited</li>
                       <li>• Configure system settings</li>
                       <li>• Access all reports and analytics</li>
                       <li>• Manage books and categories</li>

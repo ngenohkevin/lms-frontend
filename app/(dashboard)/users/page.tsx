@@ -12,18 +12,20 @@ import { DataTable } from "@/components/shared/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, Shield, UserCog, User } from "lucide-react";
+import { Plus, Shield, UserCog, User, Crown } from "lucide-react";
 import type { StaffUser, StaffUserSearchParams, StaffRole } from "@/lib/types";
 import { getInitials } from "@/lib/utils/format";
 import { formatDistanceToNow } from "date-fns";
 
 const roleColors: Record<StaffRole, string> = {
+  super_admin: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
   admin: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20",
   librarian: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20",
   staff: "bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20",
 };
 
 const roleIcons: Record<StaffRole, React.ComponentType<{ className?: string }>> = {
+  super_admin: Crown,
   admin: Shield,
   librarian: UserCog,
   staff: User,
@@ -92,7 +94,7 @@ export default function UsersPage() {
             className={`${roleColors[user.role]} capitalize`}
           >
             <RoleIcon className="mr-1 h-3 w-3" />
-            {user.role}
+            {user.role === "super_admin" ? "Super Admin" : user.role}
           </Badge>
         );
       },

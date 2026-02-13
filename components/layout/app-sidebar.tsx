@@ -21,6 +21,7 @@ import {
   AlertTriangle,
   DollarSign,
   BookCopy,
+  Activity,
 } from "lucide-react";
 import { useAuth } from "@/providers/auth-provider";
 import { usePermissions } from "@/providers/permission-provider";
@@ -55,7 +56,7 @@ interface NavItem {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   permission?: string; // Permission code to check (takes precedence over roles)
-  roles?: ("admin" | "librarian" | "staff")[];
+  roles?: ("super_admin" | "admin" | "librarian" | "staff")[];
 }
 
 const mainNavItems: NavItem[] = [
@@ -98,6 +99,12 @@ const managementNavItems: NavItem[] = [
     permission: PermissionCodes.USERS_VIEW,
   },
   {
+    title: "Online Users",
+    href: "/users/online",
+    icon: Activity,
+    permission: PermissionCodes.USERS_ONLINE,
+  },
+  {
     title: "Reports",
     href: "/reports",
     icon: BarChart3,
@@ -107,7 +114,7 @@ const managementNavItems: NavItem[] = [
     title: "Settings",
     href: "/settings",
     icon: Settings,
-    roles: ["admin", "librarian"],
+    roles: ["super_admin", "admin", "librarian"],
   },
 ];
 
@@ -189,6 +196,8 @@ export function AppSidebar() {
 
   const getRoleBadgeColor = (role?: string) => {
     switch (role) {
+      case "super_admin":
+        return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20";
       case "admin":
         return "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20";
       case "librarian":
@@ -374,7 +383,7 @@ export function AppSidebar() {
                     getRoleBadgeColor(user?.role)
                   )}
                 >
-                  {user?.role || "Unknown"}
+                  {user?.role === "super_admin" ? "Super Admin" : user?.role || "Unknown"}
                 </Badge>
               </div>
               <ChevronUp className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-foreground transition-colors" />
