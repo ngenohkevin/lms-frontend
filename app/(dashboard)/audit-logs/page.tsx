@@ -69,8 +69,10 @@ const ACTION_OPTIONS = [
 ];
 
 const USER_TYPE_OPTIONS = [
+  { value: "super_admin", label: "Super Admin" },
+  { value: "admin", label: "Admin" },
   { value: "librarian", label: "Librarian" },
-  { value: "student", label: "Student" },
+  { value: "staff", label: "Staff" },
   { value: "system", label: "System" },
 ];
 
