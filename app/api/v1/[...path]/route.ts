@@ -32,7 +32,7 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     headers.set("user-agent", userAgent);
   }
 
-  const forwardedFor = request.headers.get("x-forwarded-for") || request.ip;
+  const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     headers.set("x-forwarded-for", forwardedFor);
   }
