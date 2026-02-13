@@ -32,6 +32,17 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     headers.set("user-agent", userAgent);
   }
 
+  // Forward all client IP headers (Cloudflare → Traefik → Next.js → Go)
+  const cfConnectingIP = request.headers.get("cf-connecting-ip");
+  if (cfConnectingIP) {
+    headers.set("cf-connecting-ip", cfConnectingIP);
+  }
+
+  const xRealIP = request.headers.get("x-real-ip");
+  if (xRealIP) {
+    headers.set("x-real-ip", xRealIP);
+  }
+
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     headers.set("x-forwarded-for", forwardedFor);
