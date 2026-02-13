@@ -125,10 +125,10 @@ export default function FinesPage() {
       key: "book",
       header: "Book",
       render: (fine: Fine) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 max-w-[250px]">
           <BookCoverImage src={fine.book_cover_url} alt={fine.book_title || ""} size="sm" />
           <div className="min-w-0">
-            <p className="font-medium truncate">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
+            <p className="font-medium truncate text-sm">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
             <p className="text-xs text-muted-foreground truncate">{fine.book_author}</p>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function FinesPage() {
       header: "Student",
       render: (fine: Fine) => (
         <div>
-          <p className="font-medium">{fine.student_name || `Student #${fine.student_id}`}</p>
+          <p className="font-medium text-sm whitespace-nowrap">{fine.student_name || `Student #${fine.student_id}`}</p>
           {fine.student_code && (
             <p className="text-xs text-muted-foreground">{fine.student_code}</p>
           )}
@@ -150,7 +150,7 @@ export default function FinesPage() {
       key: "amount",
       header: "Amount",
       render: (fine: Fine) => (
-        <span className={`font-bold ${fine.paid ? "text-green-600" : "text-destructive"}`}>
+        <span className={`font-bold whitespace-nowrap ${fine.paid ? "text-green-600" : "text-destructive"}`}>
           {formatCurrency(fine.amount)}
         </span>
       ),
@@ -158,6 +158,7 @@ export default function FinesPage() {
     {
       key: "reason",
       header: "Reason",
+      className: "hidden md:table-cell",
       render: (fine: Fine) => (
         <span className="text-sm text-muted-foreground line-clamp-1">
           {fine.reason || "Overdue return"}
@@ -167,16 +168,18 @@ export default function FinesPage() {
     {
       key: "created_at",
       header: "Created",
+      className: "hidden lg:table-cell",
       render: (fine: Fine) => (
-        <span className="text-sm">{formatDate(fine.created_at)}</span>
+        <span className="text-sm whitespace-nowrap">{formatDate(fine.created_at)}</span>
       ),
     },
     {
       key: "paid_at",
       header: "Paid At",
+      className: "hidden lg:table-cell",
       render: (fine: Fine) =>
         fine.paid_at ? (
-          <span className="text-sm text-green-600">{formatDate(fine.paid_at)}</span>
+          <span className="text-sm text-green-600 whitespace-nowrap">{formatDate(fine.paid_at)}</span>
         ) : (
           <span className="text-sm text-muted-foreground">-</span>
         ),
@@ -186,7 +189,7 @@ export default function FinesPage() {
       header: "",
       render: (fine: Fine) =>
         !fine.paid && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button
               variant="outline"
               size="sm"
@@ -196,7 +199,7 @@ export default function FinesPage() {
                 setActionType("pay");
               }}
             >
-              <CreditCard className="h-4 w-4 mr-1" />
+              <CreditCard className="h-3.5 w-3.5 mr-1" />
               Pay
             </Button>
             <Button
@@ -208,7 +211,7 @@ export default function FinesPage() {
                 setActionType("waive");
               }}
             >
-              <XCircle className="h-4 w-4 mr-1" />
+              <XCircle className="h-3.5 w-3.5 mr-1" />
               Waive
             </Button>
           </div>
@@ -218,83 +221,83 @@ export default function FinesPage() {
 
   return (
     <AuthGuard requiredRoles={["admin", "librarian"]}>
-      <div className="space-y-6">
-        <Button
-          variant="ghost"
-          className="-ml-2"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-
+      <div className="space-y-3 sm:space-y-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <DollarSign className="h-8 w-8 text-amber-600" />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="-ml-2"
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4" />
+            Back
+          </Button>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-2 mt-1">
+            <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-amber-600" />
             Fine Management
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Track and manage library fines
           </p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 grid-cols-3">
           {isLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-4 w-4" />
                 </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16" />
+                <CardContent className="p-3 sm:p-4 pt-0">
+                  <Skeleton className="h-7 w-16" />
                 </CardContent>
               </Card>
             ))
           ) : (
             <>
               <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Total Fines
                   </CardTitle>
-                  <DollarSign className="h-4 w-4 text-muted-foreground" />
+                  <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
+                <CardContent className="p-3 sm:p-4 pt-0">
+                  <div className="text-xl sm:text-2xl font-bold">
                     {pagination?.total || fines.length}
                   </div>
                 </CardContent>
               </Card>
               <Card className="border-amber-500/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Outstanding
                   </CardTitle>
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-amber-600" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-amber-600">
+                <CardContent className="p-3 sm:p-4 pt-0">
+                  <div className="text-lg sm:text-2xl font-bold text-amber-600">
                     {formatCurrency(totalUnpaid)}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {unpaidFines.length} unpaid fines
                   </p>
                 </CardContent>
               </Card>
               <Card className="border-green-500/50">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+                  <CardTitle className="text-xs sm:text-sm font-medium">
                     Collected
                   </CardTitle>
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-green-600" />
                 </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
+                <CardContent className="p-3 sm:p-4 pt-0">
+                  <div className="text-lg sm:text-2xl font-bold text-green-600">
                     {formatCurrency(totalPaid)}
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {paidFines.length} paid fines
                   </p>
                 </CardContent>
@@ -311,7 +314,7 @@ export default function FinesPage() {
             <TabsTrigger value="paid">Paid</TabsTrigger>
           </TabsList>
 
-          <TabsContent value={activeTab} className="mt-4">
+          <TabsContent value={activeTab} className="mt-3">
             <DataTable
               data={fines}
               columns={columns}

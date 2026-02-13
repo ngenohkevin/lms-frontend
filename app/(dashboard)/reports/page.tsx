@@ -58,20 +58,20 @@ import { toast } from "sonner";
 const chartConfig = {
   borrowed: {
     label: "Borrowed",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
   returned: {
     label: "Returned",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
 ];
 
 // Map tab names to backend report types

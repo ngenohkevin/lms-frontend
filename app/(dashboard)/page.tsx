@@ -60,11 +60,11 @@ function getGreeting(): string {
 const trendsChartConfig = {
   borrowed: {
     label: "Borrowed",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-1)",
   },
   returned: {
     label: "Returned",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 

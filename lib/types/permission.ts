@@ -181,6 +181,9 @@ export const PermissionCodes = {
   // Settings
   SETTINGS_VIEW: "settings.view",
   SETTINGS_FINES: "settings.fines",
+
+  // Audit Logs
+  AUDIT_LOGS_VIEW: "audit_logs.view",
 } as const;
 
 export type PermissionCode = (typeof PermissionCodes)[keyof typeof PermissionCodes];
@@ -204,4 +207,5 @@ export const PermissionCategoryNames: Record<string, string> = {
   languages: "Languages",
   series: "Series",
   settings: "Settings",
+  audit_logs: "Audit Logs",
 };

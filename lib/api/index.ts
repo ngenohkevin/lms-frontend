@@ -11,3 +11,4 @@ export { usersApi } from "./users";
 export { invitesApi } from "./invites";
 export { permissionsApi } from "./permissions";
 export { presenceApi } from "./presence";
+export { auditLogsApi } from "./audit-logs";

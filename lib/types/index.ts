@@ -8,3 +8,4 @@ export * from "./notification";
 export * from "./report";
 export * from "./user";
 export * from "./permission";
+export * from "./audit-log";
