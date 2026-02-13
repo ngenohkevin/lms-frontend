@@ -116,7 +116,7 @@ export function AuditLogDetail({
                 <p className="text-sm font-medium text-muted-foreground mb-1">
                   Previous Values
                 </p>
-                <pre className="rounded-md border bg-muted/50 p-3 text-xs overflow-x-auto">
+                <pre className="rounded-md border bg-muted/50 p-3 text-xs whitespace-pre-wrap break-all">
                   {formatJson(log.old_values)}
                 </pre>
               </div>
@@ -128,7 +128,7 @@ export function AuditLogDetail({
                 <p className="text-sm font-medium text-muted-foreground mb-1">
                   New Values
                 </p>
-                <pre className="rounded-md border bg-muted/50 p-3 text-xs overflow-x-auto">
+                <pre className="rounded-md border bg-muted/50 p-3 text-xs whitespace-pre-wrap break-all">
                   {formatJson(log.new_values)}
                 </pre>
               </div>
