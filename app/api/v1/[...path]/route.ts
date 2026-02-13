@@ -26,6 +26,17 @@ async function proxyRequest(request: NextRequest, path: string[]) {
     headers.set("cookie", cookie);
   }
 
+  // Forward user-agent and client IP for audit logging
+  const userAgent = request.headers.get("user-agent");
+  if (userAgent) {
+    headers.set("user-agent", userAgent);
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for") || request.ip;
+  if (forwardedFor) {
+    headers.set("x-forwarded-for", forwardedFor);
+  }
+
   try {
     let body: string | FormData | null = null;
 
