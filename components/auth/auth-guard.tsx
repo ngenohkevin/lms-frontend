@@ -101,7 +101,7 @@ export function AuthGuard({
 
   // Fallback to role check if no permissions specified (legacy support)
   if (requiredRoles && requiredRoles.length > 0 && user) {
-    if (!requiredRoles.includes(user.role)) {
+    if (user.role !== "super_admin" && !requiredRoles.includes(user.role)) {
       return (
         <div className="flex h-screen flex-col items-center justify-center gap-4">
           <h1 className="text-2xl font-bold">Access Denied</h1>
