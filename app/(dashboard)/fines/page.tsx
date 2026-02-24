@@ -161,7 +161,7 @@ export default function FinesPage() {
       key: "reason",
       header: "Reason",
       render: (fine: Fine) => (
-        <span className="text-sm whitespace-nowrap">{fine.reason}</span>
+        <span className="text-sm max-w-[250px] block">{fine.reason}</span>
       ),
     },
     {

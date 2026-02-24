@@ -53,6 +53,7 @@ interface BackendFine {
   waived_at?: string;
   waived_by?: number;
   waived_reason?: string;
+  reason?: string;
   due_date: string;
   returned_date?: string;
   days_overdue: number;
@@ -61,6 +62,10 @@ interface BackendFine {
 
 // Transform backend fine to frontend format
 function transformFine(fine: BackendFine): Fine {
+  // Use backend reason if available, otherwise compute a fallback
+  const reason = fine.reason ||
+    (fine.days_overdue > 0 ? `${fine.days_overdue} day(s) overdue` : "Overdue book");
+
   return {
     id: String(fine.transaction_id),
     transaction_id: String(fine.transaction_id),
@@ -71,9 +76,14 @@ function transformFine(fine: BackendFine): Fine {
     book_author: fine.book_author,
     book_cover_url: fine.book_cover_url,
     amount: fine.amount,
-    reason: fine.days_overdue > 0 ? `${fine.days_overdue} day(s) overdue` : "Overdue book",
+    reason,
     paid: fine.paid,
     paid_at: fine.paid_at,
+    waived: fine.waived,
+    waived_reason: fine.waived_reason,
+    due_date: fine.due_date,
+    returned_date: fine.returned_date,
+    days_overdue: fine.days_overdue,
     created_at: fine.created_at,
   };
 }

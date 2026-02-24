@@ -142,6 +142,11 @@ export interface Fine {
   reason: string;
   paid: boolean;
   paid_at?: string;
+  waived?: boolean;
+  waived_reason?: string;
+  due_date?: string;
+  returned_date?: string;
+  days_overdue?: number;
   created_at: string;
 }
 
