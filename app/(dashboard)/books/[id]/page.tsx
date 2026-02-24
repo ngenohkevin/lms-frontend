@@ -156,13 +156,12 @@ export default function BookDetailPage() {
           undefined,
           { revalidate: true }
         );
+        // Only cooldown after a successful update
+        setRefreshCooldown(true);
+        setTimeout(() => setRefreshCooldown(false), 30000);
       } else {
         toast.info("No new data found from ISBN lookup");
       }
-
-      // 30-second cooldown to prevent spam
-      setRefreshCooldown(true);
-      setTimeout(() => setRefreshCooldown(false), 30000);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to refresh from ISBN"
