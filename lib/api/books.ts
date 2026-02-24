@@ -217,6 +217,17 @@ export const booksApi = {
     return response.data;
   },
 
+  // Refresh book data from ISBN — only fills empty fields
+  refreshISBN: async (id: string): Promise<{ book: Book; updated: string[] }> => {
+    const response = await apiClient.post<ApiResponse<{ book: Book; updated: string[] }>>(
+      `${BOOKS_PREFIX}/${id}/refresh-isbn`,
+    );
+    return {
+      book: transformBook(response.data?.book),
+      updated: response.data?.updated || [],
+    };
+  },
+
   // Upload book cover
   uploadCover: async (id: string, file: File): Promise<Book> => {
     const formData = new FormData();

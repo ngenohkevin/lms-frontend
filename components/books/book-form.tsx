@@ -24,7 +24,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Loader2, Search, ChevronDown } from "lucide-react";
+import { Loader2, Search, ChevronDown, RefreshCw } from "lucide-react";
 import { useCategories } from "@/lib/hooks";
 import type { Book, BookFormData, Author, BookType } from "@/lib/types";
 import { BOOK_LANGUAGES, BOOK_FORMATS, BOOK_TYPES } from "@/lib/types/book";
@@ -68,6 +68,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
   const { mutate } = useSWRConfig();
   const [isLoading, setIsLoading] = useState(false);
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingAuthors, setIsLoadingAuthors] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -258,6 +259,112 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
     }
   };
 
+  // Refresh ISBN data for existing books — only fills empty fields
+  const handleISBNRefresh = async () => {
+    if (!isbn || isbn.length < 10) {
+      toast.error("This book has no valid ISBN to refresh from");
+      return;
+    }
+
+    setIsRefreshing(true);
+    setError(null);
+
+    try {
+      const result = await booksApi.lookupISBN(isbn);
+      const updated: string[] = [];
+
+      // Only fill fields that are currently empty
+      if (result.title && !watch("title")) {
+        setValue("title", result.title);
+        updated.push("title");
+      }
+      if (result.authors && !watch("author")) {
+        setValue("author", result.authors);
+        updated.push("author");
+      }
+      if (result.publisher && !watch("publisher")) {
+        setValue("publisher", result.publisher);
+        updated.push("publisher");
+      }
+      if (result.published_year && !watch("publication_year")) {
+        setValue("publication_year", result.published_year);
+        updated.push("publication year");
+      }
+      if (result.description && !watch("description")) {
+        setValue("description", result.description);
+        updated.push("description");
+      }
+      if (result.page_count && !watch("pages")) {
+        setValue("pages", result.page_count);
+        updated.push("pages");
+      }
+      if (result.language && !watch("language")) {
+        setValue("language", result.language);
+        updated.push("language");
+      }
+      if (result.cover_image_url && !watch("cover_image_url")) {
+        setValue("cover_image_url", result.cover_image_url);
+        updated.push("cover image");
+      }
+
+      // Try to match genre if category is empty
+      if (result.genre && !watch("category")) {
+        const matchedCategory = categories.find(
+          (cat) => cat.name.toLowerCase() === result.genre?.toLowerCase()
+        );
+        if (matchedCategory) {
+          setValue("category", matchedCategory.name);
+          setValue("category_id", matchedCategory.id);
+          updated.push("category");
+        } else {
+          setSuggestedGenre(result.genre);
+          updated.push("genre suggestion");
+        }
+      }
+
+      // Auto-create authors if author field was empty
+      if (result.authors && updated.includes("author")) {
+        const authorNames = parseAuthorNames(result.authors);
+        const createdAuthors: Author[] = [];
+
+        for (const authorName of authorNames) {
+          try {
+            const existingAuthors = await authorsApi.search(authorName, 1, 10);
+            const exactMatch = existingAuthors.data.find(
+              (a) => a.name.toLowerCase() === authorName.toLowerCase()
+            );
+            if (exactMatch) {
+              createdAuthors.push(exactMatch);
+            } else {
+              const newAuthor = await authorsApi.create({ name: authorName });
+              createdAuthors.push(newAuthor);
+            }
+          } catch {
+            console.debug(`Could not process author: ${authorName}`);
+          }
+        }
+
+        if (createdAuthors.length > 0) {
+          setSelectedAuthors(createdAuthors);
+        }
+      }
+
+      if (updated.length > 0) {
+        toast.success(`Updated: ${updated.join(", ")}`);
+      } else {
+        toast.info("No new data found — all fields already have values");
+      }
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "Failed to refresh ISBN data"
+      );
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   // Helper function to parse author names from various formats
   const parseAuthorNames = (authorString: string): string[] => {
     // Handle common separators: comma, "and", "&", semicolon
@@ -381,7 +488,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
               className="flex-1"
               disabled={isEditing}
             />
-            {!isEditing && (
+            {!isEditing ? (
               <Button
                 type="button"
                 variant="outline"
@@ -394,7 +501,21 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
                   <Search className="h-4 w-4" />
                 )}
               </Button>
-            )}
+            ) : isbn && isbn.length >= 10 ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleISBNRefresh}
+                disabled={isRefreshing}
+                title="Refresh missing data from ISBN (only fills empty fields)"
+              >
+                {isRefreshing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+              </Button>
+            ) : null}
           </div>
           {errors.isbn && (
             <p className="text-sm text-destructive">{errors.isbn.message}</p>

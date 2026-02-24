@@ -36,6 +36,7 @@ import {
   ChevronUp,
   Hash,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BOOK_LANGUAGES, BOOK_FORMATS } from "@/lib/types/book";
@@ -63,6 +64,8 @@ export default function BookDetailPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDownloadingQR, setIsDownloadingQR] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshCooldown, setRefreshCooldown] = useState(false);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -112,6 +115,60 @@ export default function BookDetailPage() {
       );
     } finally {
       setIsDownloadingQR(false);
+    }
+  };
+
+  // Check if book has fields that could be filled from ISBN data
+  const hasMissingData = book && book.isbn && (
+    !book.cover_url ||
+    !book.description ||
+    !book.publisher ||
+    !book.publication_year ||
+    !book.language ||
+    !(book.pages || book.page_count)
+  );
+
+  const handleRefreshISBN = async () => {
+    if (!book || refreshCooldown) return;
+
+    setIsRefreshing(true);
+    try {
+      const { updated } = await booksApi.refreshISBN(String(book.id));
+
+      if (updated.length > 0) {
+        const labels: Record<string, string> = {
+          cover_image_url: "cover image",
+          description: "description",
+          publisher: "publisher",
+          published_year: "publication year",
+          language: "language",
+          page_count: "pages",
+        };
+        const readableFields = updated.map((f) => labels[f] || f);
+        toast.success(`Updated: ${readableFields.join(", ")}`);
+
+        // Revalidate the book data in SWR cache
+        await mutate(
+          (key) =>
+            typeof key === "string"
+              ? key.includes("/api/v1/books")
+              : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
+          undefined,
+          { revalidate: true }
+        );
+      } else {
+        toast.info("No new data found from ISBN lookup");
+      }
+
+      // 30-second cooldown to prevent spam
+      setRefreshCooldown(true);
+      setTimeout(() => setRefreshCooldown(false), 30000);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to refresh from ISBN"
+      );
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -217,6 +274,25 @@ export default function BookDetailPage() {
               )}
               <span className="hidden sm:inline">QR Code</span>
             </Button>
+            {hasMissingData && (
+              <Button
+                variant="outline"
+                size="icon"
+                className="cursor-pointer sm:size-auto sm:h-9 sm:px-4"
+                onClick={handleRefreshISBN}
+                disabled={isRefreshing || refreshCooldown}
+                title="Fill missing data from ISBN lookup"
+              >
+                {isRefreshing ? (
+                  <Loader2 className="h-4 w-4 animate-spin sm:mr-2" />
+                ) : (
+                  <RefreshCw className="h-4 w-4 sm:mr-2" />
+                )}
+                <span className="hidden sm:inline">
+                  {refreshCooldown ? "Wait..." : "Refresh ISBN"}
+                </span>
+              </Button>
+            )}
             <Button variant="outline" size="icon" className="cursor-pointer sm:size-auto sm:h-9 sm:px-4" asChild>
               <Link href={`/books/${book.id}/edit`}>
                 <Edit className="h-4 w-4 sm:mr-2" />
