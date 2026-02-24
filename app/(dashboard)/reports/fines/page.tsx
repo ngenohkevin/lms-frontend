@@ -296,6 +296,7 @@ export default function FinesCollectionReportPage() {
                             <TableHead className="hidden sm:table-cell">Due Date</TableHead>
                             <TableHead className="text-right">Days Overdue</TableHead>
                             <TableHead className="text-right">Amount</TableHead>
+                            <TableHead>Reason</TableHead>
                             <TableHead>Status</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -321,6 +322,9 @@ export default function FinesCollectionReportPage() {
                               </TableCell>
                               <TableCell className="text-right">{fine.days_overdue}</TableCell>
                               <TableCell className="text-right font-medium">{formatKsh(fine.fine_amount)}</TableCell>
+                              <TableCell>
+                                <span className="text-sm max-w-[200px] block">{fine.fine_reason || "-"}</span>
+                              </TableCell>
                               <TableCell>
                                 {fine.fine_waived ? (
                                   <Badge variant="secondary">Waived</Badge>

@@ -177,6 +177,7 @@ export interface TransactionHistoryItem {
   returned_date?: string;
   status: string;
   fine_amount: string;
+  fine_reason: string;
   fine_paid: boolean;
   days_overdue: number;
   renewal_count: number;
@@ -318,6 +319,7 @@ export interface FinePaymentHistoryItem {
   fine_waived: boolean;
   fine_waived_at?: string;
   fine_waived_reason: string;
+  fine_reason: string;
   due_date: string;
   returned_date?: string;
   days_overdue: number;

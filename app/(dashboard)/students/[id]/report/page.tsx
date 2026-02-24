@@ -289,12 +289,15 @@ export default function StudentReportPage({ params }: PageProps) {
                         </TableCell>
                         <TableCell className="text-right">
                           {parseFloat(tx.fine_amount) > 0 ? (
-                            <span className={tx.fine_paid ? "" : "text-destructive"}>
-                              {formatKsh(tx.fine_amount)}
+                            <div className={tx.fine_paid ? "" : "text-destructive"}>
+                              <span>{formatKsh(tx.fine_amount)}</span>
                               {tx.fine_paid && (
                                 <span className="text-xs text-muted-foreground ml-1">(paid)</span>
                               )}
-                            </span>
+                              {tx.fine_reason && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{tx.fine_reason}</p>
+                              )}
+                            </div>
                           ) : (
                             "-"
                           )}
