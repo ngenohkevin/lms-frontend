@@ -29,6 +29,7 @@ import { useCategories } from "@/lib/hooks";
 import type { Book, BookFormData, Author, BookType } from "@/lib/types";
 import { BOOK_LANGUAGES, BOOK_FORMATS, BOOK_TYPES } from "@/lib/types/book";
 import { toast } from "sonner";
+import { proxiedImageUrl } from "@/lib/utils";
 import { SeriesSelector } from "./series-selector";
 import { AuthorSelector } from "./author-selector";
 import { CategorySelector } from "./category-selector";
@@ -317,7 +318,7 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
             ? key.includes("/api/v1/books")
             : Array.isArray(key) && key[0]?.includes("/api/v1/books"),
         undefined,
-        { revalidate: false }
+        { revalidate: true }
       );
 
       onSuccess?.(result);
@@ -606,8 +607,9 @@ export function BookForm({ book, onSuccess, onCancel }: BookFormProps) {
             </p>
             {watch("cover_image_url") && (
               <div className="mt-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={watch("cover_image_url")}
+                  src={proxiedImageUrl(watch("cover_image_url"))}
                   alt="Book cover preview"
                   className="h-32 w-auto rounded border object-contain"
                   onError={(e) => {

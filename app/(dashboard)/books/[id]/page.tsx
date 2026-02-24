@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
@@ -48,9 +48,16 @@ export default function BookDetailPage() {
   const { mutate } = useSWRConfig();
   const { isLibrarian, isAdmin } = useAuth();
   const bookId = params.id as string;
+  const [coverError, setCoverError] = useState(false);
 
   const { book, isLoading, error } = useBook(bookId);
   const { series: bookSeries } = useSeriesById(book?.series_id ?? null);
+
+  // Reset cover error when book data changes (e.g., after updating the cover URL)
+  const coverUrl = book?.cover_url;
+  useEffect(() => {
+    setCoverError(false);
+  }, [coverUrl]);
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -238,12 +245,13 @@ export default function BookDetailPage() {
           {/* Cover Image */}
           <div className="shrink-0">
             <div className="relative w-[100px] sm:w-[150px] lg:w-[180px] rounded-lg overflow-hidden shadow-md">
-              {book.cover_url ? (
+              {book.cover_url && !coverError ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={proxiedImageUrl(book.cover_url)}
                   alt={book.title}
                   className="w-full h-auto"
+                  onError={() => setCoverError(true)}
                 />
               ) : (
                 <div className="aspect-[2/3] bg-muted flex items-center justify-center">

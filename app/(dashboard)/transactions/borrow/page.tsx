@@ -36,7 +36,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import type { Book, Student, BookCopy } from "@/lib/types";
-import { proxiedImageUrl } from "@/lib/utils";
+import { cn, proxiedImageUrl } from "@/lib/utils";
 import { CopySelector } from "@/components/books/copy-selector";
 
 // Debounce hook
@@ -499,12 +499,18 @@ function BorrowContent() {
                           src={proxiedImageUrl(selectedBook.cover_url)}
                           alt={selectedBook.title}
                           className="w-[60px] sm:w-[80px] h-auto rounded-md shadow-sm object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                          }}
                         />
-                      ) : (
-                        <div className="w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center">
-                          <BookOpen className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      )}
+                      ) : null}
+                      <div className={cn(
+                        "w-[60px] sm:w-[80px] aspect-[2/3] rounded-md bg-muted flex items-center justify-center",
+                        selectedBook.cover_url && "hidden"
+                      )}>
+                        <BookOpen className="h-6 w-6 text-muted-foreground" />
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0 pr-14 sm:pr-16">
                       <p className="font-medium leading-snug">{selectedBook.title}</p>
