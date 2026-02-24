@@ -140,7 +140,7 @@ const transactionNavItems: NavItem[] = [
   },
   {
     title: "Fines",
-    href: "/transactions/fines",
+    href: "/fines",
     icon: DollarSign,
     permission: PermissionCodes.FINES_MANAGE,
   },
