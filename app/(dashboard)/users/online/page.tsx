@@ -24,10 +24,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Shield, UserCog, User, Crown, Activity } from "lucide-react";
+import {
+  ArrowLeft,
+  Shield,
+  UserCog,
+  User,
+  Crown,
+  Activity,
+  Smartphone,
+  Tablet,
+  Monitor,
+  Laptop,
+} from "lucide-react";
 import { getInitials } from "@/lib/utils/format";
 import { formatDistanceToNow } from "date-fns";
-import type { StaffRole, OnlineUsersResponse } from "@/lib/types";
+import type { StaffRole, DeviceType, OnlineUsersResponse } from "@/lib/types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const roleColors: Record<StaffRole, string> = {
   super_admin: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20",
@@ -49,6 +66,38 @@ const roleLabels: Record<StaffRole, string> = {
   librarian: "Librarian",
   staff: "Staff",
 };
+
+const deviceConfig: Record<
+  DeviceType,
+  { icon: React.ComponentType<{ className?: string }>; label: string }
+> = {
+  iphone: { icon: Smartphone, label: "iPhone" },
+  ipad: { icon: Tablet, label: "iPad" },
+  android_phone: { icon: Smartphone, label: "Android Phone" },
+  android_tablet: { icon: Tablet, label: "Android Tablet" },
+  mac: { icon: Laptop, label: "Mac" },
+  windows: { icon: Monitor, label: "Windows PC" },
+  linux: { icon: Monitor, label: "Linux" },
+  chromebook: { icon: Laptop, label: "Chromebook" },
+  unknown: { icon: Monitor, label: "Unknown Device" },
+};
+
+function DeviceIcon({ device }: { device?: DeviceType }) {
+  const config = deviceConfig[device || "unknown"];
+  const Icon = config.icon;
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Icon className="h-4 w-4 text-muted-foreground" />
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{config.label}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
 
 export default function OnlineUsersPage() {
   const router = useRouter();
@@ -162,6 +211,7 @@ export default function OnlineUsersPage() {
                               <RoleIcon className="mr-1 h-3 w-3" />
                               {roleLabels[user.role]}
                             </Badge>
+                            <DeviceIcon device={user.device} />
                           </div>
                         </div>
                         <div className="text-right text-sm text-muted-foreground">
@@ -191,6 +241,7 @@ export default function OnlineUsersPage() {
                       <TableRow>
                         <TableHead>User</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Device</TableHead>
                         <TableHead>Last Activity</TableHead>
                         <TableHead>Current Page</TableHead>
                       </TableRow>
@@ -223,6 +274,14 @@ export default function OnlineUsersPage() {
                                 <RoleIcon className="mr-1 h-3 w-3" />
                                 {roleLabels[user.role]}
                               </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <DeviceIcon device={user.device} />
+                                <span className="text-sm text-muted-foreground">
+                                  {deviceConfig[user.device || "unknown"].label}
+                                </span>
+                              </div>
                             </TableCell>
                             <TableCell className="text-muted-foreground">
                               {formatDistanceToNow(new Date(user.last_seen), {

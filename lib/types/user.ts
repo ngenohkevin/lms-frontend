@@ -96,6 +96,17 @@ export interface InviteSearchParams {
 }
 
 // Online presence types
+export type DeviceType =
+  | "iphone"
+  | "ipad"
+  | "android_phone"
+  | "android_tablet"
+  | "mac"
+  | "windows"
+  | "linux"
+  | "chromebook"
+  | "unknown";
+
 export interface OnlineUser {
   user_id: number;
   username: string;
@@ -103,6 +114,7 @@ export interface OnlineUser {
   last_seen: string;
   ip_address?: string;
   path?: string;
+  device?: DeviceType;
 }
 
 export interface OnlineUsersResponse {
