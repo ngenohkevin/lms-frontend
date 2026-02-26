@@ -125,26 +125,14 @@ export default function FinesPage() {
   const columns = [
     {
       key: "book",
-      header: "Book",
+      header: "Book / Student",
       render: (fine: Fine) => (
-        <div className="flex items-center gap-3 min-w-[200px]">
+        <div className="flex items-center gap-3">
           <BookCoverImage src={fine.book_cover_url} alt={fine.book_title || ""} size="sm" />
           <div className="min-w-0">
-            <p className="font-medium truncate">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
-            <p className="text-xs text-muted-foreground truncate">{fine.book_author}</p>
+            <p className="font-medium truncate max-w-[250px]">{fine.book_title || `Transaction #${fine.transaction_id}`}</p>
+            <p className="text-xs text-muted-foreground truncate">{fine.student_name}{fine.student_code ? ` (${fine.student_code})` : ""}</p>
           </div>
-        </div>
-      ),
-    },
-    {
-      key: "student",
-      header: "Student",
-      render: (fine: Fine) => (
-        <div className="min-w-[120px]">
-          <p className="font-medium whitespace-nowrap">{fine.student_name || `Student #${fine.student_id}`}</p>
-          {fine.student_code && (
-            <p className="text-xs text-muted-foreground">{fine.student_code}</p>
-          )}
         </div>
       ),
     },
@@ -152,60 +140,40 @@ export default function FinesPage() {
       key: "amount",
       header: "Amount",
       render: (fine: Fine) => (
-        <span className="font-semibold text-red-600 whitespace-nowrap">
-          {formatCurrency(fine.amount)}
-        </span>
+        <div>
+          <span className={`font-semibold whitespace-nowrap ${fine.paid ? "text-green-600" : "text-red-600"}`}>
+            {formatCurrency(fine.amount)}
+          </span>
+          <Badge
+            variant="outline"
+            className={`ml-2 ${
+              fine.paid
+                ? "bg-green-500/10 text-green-700 border-green-500/20"
+                : "bg-red-500/10 text-red-700 border-red-500/20"
+            }`}
+          >
+            {fine.paid ? "Paid" : "Unpaid"}
+          </Badge>
+        </div>
       ),
     },
     {
       key: "reason",
       header: "Reason",
       render: (fine: Fine) => (
-        <span className="text-sm max-w-[250px] block">{fine.reason}</span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (fine: Fine) => (
-        <Badge
-          variant="outline"
-          className={
-            fine.paid
-              ? "bg-green-500/10 text-green-700 border-green-500/20"
-              : "bg-red-500/10 text-red-700 border-red-500/20"
-          }
-        >
-          {fine.paid ? (
-            <>
-              <CheckCircle className="mr-1 h-3 w-3" />
-              Paid
-            </>
-          ) : (
-            <>
-              <XCircle className="mr-1 h-3 w-3" />
-              Unpaid
-            </>
-          )}
-        </Badge>
-      ),
-    },
-    {
-      key: "date",
-      header: "Date",
-      render: (fine: Fine) => (
-        <span className="text-sm text-muted-foreground whitespace-nowrap">
-          {formatDate(fine.created_at)}
-        </span>
+        <div>
+          <p className="text-sm truncate max-w-[200px]">{fine.reason}</p>
+          <p className="text-xs text-muted-foreground">{formatDate(fine.created_at)}</p>
+        </div>
       ),
     },
     ...(isLibrarian
       ? [
           {
             key: "actions",
-            header: "Actions",
+            header: "",
             render: (fine: Fine) => (
-              <div className="flex gap-2">
+              <div className="flex gap-1">
                 {!fine.paid && (
                   <>
                     <Button
