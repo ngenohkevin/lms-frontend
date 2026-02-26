@@ -189,7 +189,7 @@ export default function FinesPage() {
                     {isAdmin && (
                       <Button
                         size="sm"
-                        variant="ghost"
+                        variant="outline"
                         onClick={() => {
                           setSelectedFine(fine);
                           setActionType("waive");
